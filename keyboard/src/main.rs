@@ -2,7 +2,7 @@ use std::io;
 
 fn main() {
     let mut buffer = String::new();
-    let _ = io::stdin().read_line(&mut buffer);
+    io::stdin().read_line(&mut buffer).expect("failed to read line");
 
-    println!("read then wrote: {}", buffer);
+    println!("read then wrote: {buffer}");
 }
