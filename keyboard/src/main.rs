@@ -1,50 +1,15 @@
 use std::io;
+use std::fs;
 
-// const HIRAGANA_A: [(char, char); 1] = [('a', 'あ')];
-// const HIRAGANA_I: [(char, char); 1] = [('i', 'い')];
-// const HIRAGANA_U: [(char, char); 1] = [('u', 'う')];
-// const HIRAGANA_E: [(char, char); 1] = [('e', 'え')];
-// const HIRAGANA_O: [(char, char); 1] = [('o', 'お')];
+use serde::Deserialize;
 
-const HIRAGANA_CHART : &str = r#"
-{
-  "a": "あ",
-  "i": "い",
-  "u": "う",
-  "e": "え",
-  "o": "お",
-  "k": [
-    {
-      "a": "か"
-    },
-    {
-      "i": "き"
-    },
-    {
-      "u": "く"
-    },
-    {
-      "e": "け"
-    },
-    {
-      "o": "こ"
-    },
-    {
-      "y": [
-        {
-          "a": "ゃ"
-        },
-        {
-          "u": "ゅ"
-        },
-        {
-          "o": "ょ"
-        }
-      ]
-    }
-  ]
+#[derive(Debug, Deserialize)]
+struct Kana {
+    key: String,
+    value: String,
+    #[serde(default)]
+    next: Vec<Kana>,
 }
-"#;
 
 fn main() {
     let mut buffer = String::new();
@@ -52,8 +17,15 @@ fn main() {
 
     println!("read then wrote: {buffer}");
 
-    let json: serde_json::Value =
-        serde_json::from_str(HIRAGANA_CHART).expect("JSON was not well-formatted");
+    // json parsing
+    let file = fs::File::open("kana/hiragana.json")
+      .expect("file should open read only");
+    let json = fs::read_to_string("kana/hiragana.json")
+      .expect("couldnt read kana/hiragana.json");
+
+    let result = serde_json::from_str::<Kana>(&json).unwrap();
+    
+    dbg!(&result);
 
     println!("{json}");
 }

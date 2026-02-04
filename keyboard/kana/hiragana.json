@@ -1,0 +1,70 @@
+{
+  "key": "",
+  "value": "",
+  "next": [
+    {
+      "key": "a",
+      "value": "あ"
+    },
+    {
+      "key": "i",
+      "value": "い"
+    },
+    {
+      "key": "u",
+      "value": "う"
+    },
+    {
+      "key": "e",
+      "value": "え"
+    },
+    {
+      "key": "o",
+      "value": "お"
+    },
+    {
+      "key": "k",
+      "value": "",
+      "next": [
+        {
+          "key": "a",
+          "value": "か"
+        },
+        {
+          "key": "i",
+          "value": "き"
+        },
+        {
+          "key": "u",
+          "value": "く"
+        },
+        {
+          "key": "e",
+          "value": "け"
+        },
+        {
+          "key": "o",
+          "value": "こ"
+        },
+        {
+          "key": "y",
+          "value": "き",
+          "next": [
+            {
+              "key": "a",
+              "value": "ゃ"
+            },
+            {
+              "key": "u",
+              "value": "ゅ"
+            },
+            {
+              "key": "o",
+              "value": "ょ"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
