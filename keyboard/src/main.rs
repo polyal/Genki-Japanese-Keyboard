@@ -11,6 +11,14 @@ struct Kana {
     next: Vec<Kana>,
 }
 
+fn iterate_kana(head: &Kana) {
+    println!("key: {}", head.key);
+    println!("value: {}", head.value);
+    for child in &head.next {
+        iterate_kana(child);
+    }
+}
+
 fn main() {
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).expect("failed to read line");
@@ -18,14 +26,11 @@ fn main() {
     println!("read then wrote: {buffer}");
 
     // json parsing
-    let file = fs::File::open("kana/hiragana.json")
-      .expect("file should open read only");
     let json = fs::read_to_string("kana/hiragana.json")
       .expect("couldnt read kana/hiragana.json");
 
-    let result = serde_json::from_str::<Kana>(&json).unwrap();
+    let roots = serde_json::from_str::<Kana>(&json).unwrap();
     
-    dbg!(&result);
-
-    println!("{json}");
+    // dbg!(&result);
+    iterate_kana(&roots);
 }
