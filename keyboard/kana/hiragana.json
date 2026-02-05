@@ -1,6 +1,5 @@
 {
-  "key": "$",
-  "next": [
+  "roots": [
     {
       "key": "a",
       "value": "あ"

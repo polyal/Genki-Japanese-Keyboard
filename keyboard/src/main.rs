@@ -4,12 +4,27 @@ use std::fs;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
+struct Head {
+    #[serde(default)]
+    roots: Vec<Kana>,
+}
+
+#[derive(Debug, Deserialize)]
 struct Kana {
     key: char,
     value: Option<char>,
     ext: Option<char>,
     #[serde(default)]
     next: Vec<Kana>,
+}
+
+fn iterate_head<F>(head: &Head, cb: &mut F)
+where 
+  F: FnMut(&Kana, bool), 
+  {
+    for root in &head.roots {
+        iterate_kana(root, cb);
+    }
 }
 
 fn iterate_kana<F>(head: &Kana, cb: &mut F)
@@ -58,8 +73,8 @@ fn main() {
       }
     };
 
-    let head = serde_json::from_str::<Kana>(&json).unwrap();
+    let head = serde_json::from_str::<Head>(&json).unwrap();
     
     // dbg!(&result);
-    iterate_kana(&head, &mut hiragana_creator);
+    iterate_head(&head, &mut hiragana_creator);
 }
