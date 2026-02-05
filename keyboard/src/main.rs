@@ -12,8 +12,7 @@ struct Head {
 #[derive(Debug, Deserialize)]
 struct Kana {
     key: char,
-    value: Option<char>,
-    ext: Option<char>,
+    value: Option<String>,
     #[serde(default)]
     next: Vec<Kana>,
 }
@@ -49,25 +48,21 @@ fn main() {
       .expect("couldnt read kana/hiragana.json");
 
     let mut single_hiragana = String::new();
-    let mut chars_pushed: Vec<u8> = Vec::new();
+    let mut chars_pushed: Vec<usize> = Vec::new();
 
     let mut hiragana_creator = |node: &Kana, pre: bool| {
       if pre {
-        let mut num_pushed: u8 = 0;
-        if let Some(value) = node.value {
-          single_hiragana.push(value);
-          num_pushed += 1;
-          if let Some(ext) = node.ext {
-            single_hiragana.push(ext);
-            num_pushed += 1;
-          }
+        let mut pushed_size: usize = 0;
+        if let Some(value) = &node.value {
+          single_hiragana.push_str(&value);
+          pushed_size = value.chars().count();
           println!("{single_hiragana}");
         }
-        chars_pushed.push(num_pushed);
+        chars_pushed.push(pushed_size);
       }
       else {
-        let num_pushed = chars_pushed.pop();
-        for _i in 1..=num_pushed.unwrap() {
+        let pushed_size = chars_pushed.pop();
+        for _i in 1..=pushed_size.unwrap() {
           single_hiragana.pop();
         }
       }

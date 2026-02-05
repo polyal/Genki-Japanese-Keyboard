@@ -48,18 +48,15 @@
           "next": [
             {
               "key": "a",
-              "value": "き",
-              "ext": "ゃ"
+              "value": "きゃ"
             },
             {
               "key": "u",
-              "value": "き",
-              "ext": "ゅ"
+              "value": "きゅ"
             },
             {
               "key": "o",
-              "value": "き",
-              "ext": "ょ"
+              "value": "きょ"
             }
           ]
         }
@@ -81,18 +78,15 @@
             },
             {
               "key": "a",
-              "value": "し",
-              "ext": "ゃ"
+              "value": "しゃ"
             },
             {
               "key": "u",
-              "value": "し",
-              "ext": "ゅ"
+              "value": "しゅ"
             },
             {
               "key": "o",
-              "value": "し",
-              "ext": "ょ"
+              "value": "しょ"
             }
           ]
         },
@@ -148,18 +142,15 @@
             },
             {
               "key": "a",
-              "value": "ち",
-              "ext": "ゃ"
+              "value": "ちゃ"
             },
             {
               "key": "u",
-              "value": "ち",
-              "ext": "ゅ"
+              "value": "ちゅ"
             },
             {
               "key": "o",
-              "value": "ち",
-              "ext": "ょ"
+              "value": "ちょ"
             }
           ]
         }
@@ -193,18 +184,15 @@
           "next": [
             {
               "key": "a",
-              "value": "に",
-              "ext": "ゃ"
+              "value": "にゃ"
             },
             {
               "key": "u",
-              "value": "に",
-              "ext": "ゅ"
+              "value": "にゅ"
             },
             {
               "key": "o",
-              "value": "に",
-              "ext": "ょ"
+              "value": "にょ"
             }
           ]
         }
@@ -234,18 +222,15 @@
           "next": [
             {
               "key": "a",
-              "value": "ひ",
-              "ext": "ゃ"
+              "value": "ひゃ"
             },
             {
               "key": "u",
-              "value": "ひ",
-              "ext": "ゅ"
+              "value": "ひゅ"
             },
             {
               "key": "o",
-              "value": "ひ",
-              "ext": "ょ"
+              "value": "ひょ"
             }
           ]
         }
@@ -288,18 +273,15 @@
           "next": [
             {
               "key": "a",
-              "value": "み",
-              "ext": "ゃ"
+              "value": "みゃ"
             },
             {
               "key": "u",
-              "value": "み",
-              "ext": "ゅ"
+              "value": "みゅ"
             },
             {
               "key": "o",
-              "value": "み",
-              "ext": "ょ"
+              "value": "みょ"
             }
           ]
         }
@@ -350,18 +332,15 @@
           "next": [
             {
               "key": "a",
-              "value": "り",
-              "ext": "ゃ"
+              "value": "りゃ"
             },
             {
               "key": "u",
-              "value": "り",
-              "ext": "ゅ"
+              "value": "りゅ"
             },
             {
               "key": "o",
-              "value": "り",
-              "ext": "ょ"
+              "value": "りょ"
             }
           ]
         }
@@ -412,18 +391,15 @@
           "next": [
             {
               "key": "a",
-              "value": "ぎ",
-              "ext": "ゃ"
+              "value": "ぎゃ"
             },
             {
               "key": "u",
-              "value": "ぎ",
-              "ext": "ゅ"
+              "value": "ぎゅ"
             },
             {
               "key": "o",
-              "value": "ぎ",
-              "ext": "ょ"
+              "value": "ぎょ"
             }
           ]
         }
@@ -467,18 +443,15 @@
         },
         {
           "key": "a",
-          "value": "じ",
-          "ext": "ゃ"
+          "value": "じゃ"
         },
         {
           "key": "u",
-          "value": "じ",
-          "ext": "ゅ"
+          "value": "じゅ"
         },
         {
           "key": "o",
-          "value": "じ",
-          "ext": "ょ"
+          "value": "じょ"
         }
       ]
     },
@@ -527,18 +500,15 @@
           "next": [
             {
               "key": "a",
-              "value": "び",
-              "ext": "ゃ"
+              "value": "びゃ"
             },
             {
               "key": "u",
-              "value": "び",
-              "ext": "ゅ"
+              "value": "びゅ"
             },
             {
               "key": "o",
-              "value": "び",
-              "ext": "ょ"
+              "value": "びょ"
             }
           ]
         }
@@ -572,18 +542,15 @@
           "next": [
             {
               "key": "a",
-              "value": "び",
-              "ext": "ゃ"
+              "value": "びゃ"
             },
             {
               "key": "u",
-              "value": "び",
-              "ext": "ゅ"
+              "value": "びゅ"
             },
             {
               "key": "o",
-              "value": "び",
-              "ext": "ょ"
+              "value": "びょ"
             }
           ]
         }
