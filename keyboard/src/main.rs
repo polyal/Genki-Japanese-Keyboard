@@ -17,59 +17,74 @@ struct Kana {
     next: Vec<Kana>,
 }
 
-fn iterate_head<F>(head: &Head, cb: &mut F)
-where 
-  F: FnMut(&Kana, bool), 
-  {
-    for root in &head.roots {
-        iterate_kana(root, cb);
-    }
+struct RomanjiToHiraganaConverter {
+  head: Head,
+  phrase: String,
 }
 
-fn iterate_kana<F>(head: &Kana, cb: &mut F)
-where 
-  F: FnMut(&Kana, bool), 
-  {
-    cb(&head, true);
-    for child in &head.next {
-        iterate_kana(child, cb);
+impl RomanjiToHiraganaConverter {
+  fn new(json: String) -> Self {
+    RomanjiToHiraganaConverter {
+      head: serde_json::from_str::<Head>(&json).unwrap(),
+      phrase: String::new(),
     }
-    cb(&head, false);
+  }
+
+  fn iterate_head<F>(head: &Head, cb: &mut F)
+  where 
+    F: FnMut(&Kana) -> bool, 
+    {
+      for root in &head.roots {
+          Self::iterate_kana(root, cb);
+      }
+  }
+
+  fn iterate_kana<F>(node: &Kana, cb: &mut F)
+  where 
+    F: FnMut(&Kana) -> bool, 
+    {
+      cb(&node);
+      for child in &node.next {
+          Self::iterate_kana(child, cb);
+      }
+  }
+
+  fn convert(&mut self, romanji: &String) -> String {
+    self.phrase = romanji.clone();
+    let mut hiragana = String::new();
+
+    let mut hiragana_creator = |node: &Kana| -> bool {
+      let first = self.phrase.chars().next();
+      if let Some(first) = &first {
+        if node.key == *first {
+          self.phrase.drain(..1);
+          if *first == node.key {
+            if let Some(value) = &node.value {
+              hiragana.push_str(value);
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    };
+
+    Self::iterate_head(&self.head, &mut hiragana_creator);
+    
+    return hiragana;
+  }
 }
+
 
 fn main() {
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).expect("failed to read line");
 
-    println!("read then wrote: {buffer}");
-
-    // json parsing
+    // read hiragana rules json
     let json = fs::read_to_string("kana/hiragana.json")
       .expect("couldnt read kana/hiragana.json");
 
-    let mut single_hiragana = String::new();
-    let mut chars_pushed: Vec<usize> = Vec::new();
-
-    let mut hiragana_creator = |node: &Kana, pre: bool| {
-      if pre {
-        let mut pushed_size: usize = 0;
-        if let Some(value) = &node.value {
-          single_hiragana.push_str(&value);
-          pushed_size = value.chars().count();
-          println!("{single_hiragana}");
-        }
-        chars_pushed.push(pushed_size);
-      }
-      else {
-        let pushed_size = chars_pushed.pop();
-        for _i in 1..=pushed_size.unwrap() {
-          single_hiragana.pop();
-        }
-      }
-    };
-
-    let head = serde_json::from_str::<Head>(&json).unwrap();
-    
-    // dbg!(&result);
-    iterate_head(&head, &mut hiragana_creator);
+    let mut converter = RomanjiToHiraganaConverter::new(json);
+    let hiragana = converter.convert(&buffer);
+    println!("converted {buffer} -> {hiragana}");
 }
