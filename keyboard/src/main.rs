@@ -19,8 +19,8 @@ struct Kana {
 
 struct Phrase {
   romanji: String,
-  hiragana: String,
   buffer: String,
+  kana: String,
 }
 
 impl Phrase {
@@ -28,18 +28,18 @@ impl Phrase {
     Phrase {
       romanji: phrase.clone(),
       buffer: phrase.clone(),
-      hiragana: String::new(),
+      kana: String::new(),
     }
   }
 }
 
-struct RomanjiToHiraganaConverter {
+struct RomanjiToKanaConverter {
   head: Head,
 }
 
-impl RomanjiToHiraganaConverter {
+impl RomanjiToKanaConverter {
   fn new(json: String) -> Self {
-    RomanjiToHiraganaConverter {
+    RomanjiToKanaConverter {
       head: serde_json::from_str::<Head>(&json).unwrap(),
     }
   }
@@ -51,6 +51,8 @@ impl RomanjiToHiraganaConverter {
           return true;
         }
         else {
+          // not matched on current root
+          // reset buffer and try next root
           phrase.buffer = phrase.romanji.clone();
         }
       }
@@ -77,7 +79,7 @@ impl RomanjiToHiraganaConverter {
       if node.key == *first {
         phrase.buffer.drain(..1);
         if let Some(value) = &node.value {
-          phrase.hiragana.push_str(value);
+          phrase.kana.push_str(value);
         }
         return true;
       }
@@ -90,19 +92,20 @@ impl RomanjiToHiraganaConverter {
 
     while phrase.romanji.chars().count() > 1 {
       if self.iterate_head(&mut phrase) {
+        // matched romanji
         phrase.romanji = phrase.buffer.clone();
       }
       else {
         let first = phrase.buffer.chars().next();
         if let Some(first) = &first {
-          phrase.hiragana.push(*first);
+          phrase.kana.push(*first);
         }
         phrase.romanji.drain(..1);
         phrase.buffer = phrase.romanji.clone();
       }
     }
     
-    return phrase.hiragana.clone();
+    return phrase.kana.clone();
   }
 }
 
@@ -115,7 +118,7 @@ fn main() {
     let json = fs::read_to_string("kana/hiragana.json")
       .expect("couldnt read kana/hiragana.json");
 
-    let mut converter = RomanjiToHiraganaConverter::new(json);
-    let hiragana = converter.convert(&buffer);
-    println!("converted {buffer} -> {hiragana}");
+    let mut converter = RomanjiToKanaConverter::new(json);
+    let kana = converter.convert(&buffer);
+    println!("converted {buffer} -> {kana}");
 }
