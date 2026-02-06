@@ -31,6 +31,43 @@ impl Phrase {
       kana: String::new(),
     }
   }
+
+  fn compare(&mut self, node: &Kana) -> bool {
+    let first = self.buffer.chars().next();
+    if let Some(first) = &first {
+      if node.key == *first {
+        self.buffer.drain(..1);
+        if let Some(value) = &node.value {
+          self.kana.push_str(value);
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  fn done(&self) -> bool {
+    // last char is new line so dont consume
+    return !(self.romanji.chars().count() > 1);
+  }
+
+  fn next(&mut self) {
+    // matched romanji
+    // buffer holds remainng phrase to be converted
+    self.romanji = self.buffer.clone();
+  }
+
+  fn skip(&mut self) {
+    // cant match romanji
+    // push unmatched char onto result
+    let first = self.romanji.chars().next();
+    if let Some(first) = &first {
+      self.kana.push(*first);
+      // continue match with next char
+      self.romanji.drain(..1);
+      self.buffer = self.romanji.clone();
+    }
+  }
 }
 
 struct RomanjiToKanaConverter {
@@ -61,7 +98,7 @@ impl RomanjiToKanaConverter {
 
   fn iterate_kana(&self, node: &Kana, phrase: &mut Phrase) -> bool
     {
-      let mut matched = self.match_char(&node, phrase);
+      let mut matched = phrase.compare(&node);
       if matched {
         for child in &node.next {
           matched = self.iterate_kana(child, phrase);
@@ -73,39 +110,15 @@ impl RomanjiToKanaConverter {
       return matched;
     }
 
-  fn match_char(&self, node: &Kana, phrase: &mut Phrase) -> bool {
-    let first = phrase.buffer.chars().next();
-    if let Some(first) = &first {
-      if node.key == *first {
-        phrase.buffer.drain(..1);
-        if let Some(value) = &node.value {
-          phrase.kana.push_str(value);
-        }
-        return true;
-      }
-    }
-    return false;
-  }
-
   fn convert(&mut self, romanji: &String) -> String {
     let mut phrase = Phrase::new(&romanji);
 
-    while phrase.romanji.chars().count() > 1 {
+    while !phrase.done() {
       if self.iterate_head(&mut phrase) {
-        // matched romanji
-        // buffer holds remainng phrase to be converted
-        phrase.romanji = phrase.buffer.clone();
+        phrase.next();
       }
       else {
-        // cant match romanji
-        // push unmatched char onto result
-        let first = phrase.buffer.chars().next();
-        if let Some(first) = &first {
-          phrase.kana.push(*first);
-        }
-        // continue match with next char
-        phrase.romanji.drain(..1);
-        phrase.buffer = phrase.romanji.clone();
+        phrase.skip();
       }
     }
     
