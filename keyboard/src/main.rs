@@ -118,9 +118,9 @@ fn main() {
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).expect("failed to read line");
 
-    // read hiragana rules json
-    let json = fs::read_to_string("kana/hiragana.json")
-      .expect("couldnt read kana/hiragana.json");
+    // read hiragana/katakana rules json
+    let json = fs::read_to_string("kana/rules.json")
+      .expect("couldnt read kana/rules.json");
 
     let mut converter = RomanjiToKanaConverter::new(json);
     let kana = converter.convert(&buffer);
