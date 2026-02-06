@@ -93,13 +93,17 @@ impl RomanjiToKanaConverter {
     while phrase.romanji.chars().count() > 1 {
       if self.iterate_head(&mut phrase) {
         // matched romanji
+        // buffer holds remainng phrase to be converted
         phrase.romanji = phrase.buffer.clone();
       }
       else {
+        // cant match romanji
+        // push unmatched char onto result
         let first = phrase.buffer.chars().next();
         if let Some(first) = &first {
           phrase.kana.push(*first);
         }
+        // continue match with next char
         phrase.romanji.drain(..1);
         phrase.buffer = phrase.romanji.clone();
       }
