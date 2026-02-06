@@ -35,19 +35,20 @@ impl RomanjiToHiraganaConverter {
     F: FnMut(&Kana) -> bool, 
     {
       for root in &head.roots {
-          Self::iterate_kana(root, cb);
+        Self::iterate_kana(root, cb);
       }
-  }
+    }
 
   fn iterate_kana<F>(node: &Kana, cb: &mut F)
   where 
     F: FnMut(&Kana) -> bool, 
     {
-      cb(&node);
-      for child in &node.next {
+      if cb(&node) == true {
+        for child in &node.next {
           Self::iterate_kana(child, cb);
-      }
-  }
+        }
+      } 
+    }
 
   fn convert(&mut self, romanji: &String) -> String {
     self.phrase = romanji.clone();
@@ -58,12 +59,10 @@ impl RomanjiToHiraganaConverter {
       if let Some(first) = &first {
         if node.key == *first {
           self.phrase.drain(..1);
-          if *first == node.key {
-            if let Some(value) = &node.value {
-              hiragana.push_str(value);
-              return true;
-            }
+          if let Some(value) = &node.value {
+            hiragana.push_str(value);
           }
+          return true;
         }
       }
       return false;
