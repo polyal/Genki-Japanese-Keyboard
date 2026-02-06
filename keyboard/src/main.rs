@@ -70,6 +70,13 @@ impl Phrase {
   }
 }
 
+#[derive(PartialEq)]
+enum CompareResult {
+    Matched,
+    Partial,
+    False
+}
+
 struct RomanjiToKanaConverter {
   head: Head,
 }
@@ -84,30 +91,41 @@ impl RomanjiToKanaConverter {
   fn iterate_head(&self, phrase: &mut Phrase) -> bool
     {
       for root in &self.head.roots {
-        if self.iterate_kana(root, phrase) {
-          return true;
-        }
-        else {
-          // not matched on current root
-          // reset buffer and try next root
-          phrase.buffer = phrase.romanji.clone();
+        match self.iterate_kana(root, phrase) {
+          CompareResult::Matched => return true,
+          CompareResult::Partial => {
+            // not matched on current root
+            // reset buffer and try next root
+            phrase.buffer = phrase.romanji.clone();
+            continue;
+          },
+          CompareResult::False => continue,
         }
       }
       return false;
     }
 
-  fn iterate_kana(&self, node: &Kana, phrase: &mut Phrase) -> bool
+  fn iterate_kana(&self, node: &Kana, phrase: &mut Phrase) -> CompareResult
     {
-      let mut matched = phrase.compare(&node);
+      let mut compare_result = CompareResult::False;
+      let matched = phrase.compare(&node);
       if matched {
         for child in &node.next {
-          matched = self.iterate_kana(child, phrase);
-          if matched {
-            break;
+          compare_result = self.iterate_kana(child, phrase);
+          match compare_result {
+            CompareResult::Matched => break,
+            CompareResult::Partial => break,
+            CompareResult::False => continue,
           }
         }
+        if node.next.is_empty() || compare_result == CompareResult::Matched {
+          compare_result = CompareResult::Matched;
+        }
+        else {
+          compare_result = CompareResult::Partial;
+        }
       }
-      return matched;
+      return compare_result;
     }
 
   fn convert(&mut self, romanji: &String) -> String {
