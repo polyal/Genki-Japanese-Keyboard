@@ -17,60 +17,76 @@ struct Kana {
     next: Vec<Kana>,
 }
 
+struct Phrase {
+  romanji: String,
+  hiragana: String
+}
+
+impl Phrase {
+  fn new(phrase: &String) -> Self {
+    Phrase {
+      romanji: phrase.clone(),
+      hiragana: String::new(),
+    }
+  }
+}
+
 struct RomanjiToHiraganaConverter {
   head: Head,
-  phrase: String,
 }
 
 impl RomanjiToHiraganaConverter {
   fn new(json: String) -> Self {
     RomanjiToHiraganaConverter {
       head: serde_json::from_str::<Head>(&json).unwrap(),
-      phrase: String::new(),
     }
   }
 
-  fn iterate_head<F>(head: &Head, cb: &mut F)
-  where 
-    F: FnMut(&Kana) -> bool, 
+  fn iterate_head(&self, phrase: &mut Phrase)
     {
-      for root in &head.roots {
-        Self::iterate_kana(root, cb);
+      for root in &self.head.roots {
+        if self.iterate_kana(root, phrase) {
+          break;
+        }
       }
     }
 
-  fn iterate_kana<F>(node: &Kana, cb: &mut F)
-  where 
-    F: FnMut(&Kana) -> bool, 
+  fn iterate_kana(&self, node: &Kana, phrase: &mut Phrase) -> bool
     {
-      if cb(&node) == true {
+      let mut matched = false;
+      if self.match_char(&node, phrase){
         for child in &node.next {
-          Self::iterate_kana(child, cb);
+          if self.iterate_kana(child, phrase) {
+            matched = true;
+            break;
+          }
         }
-      } 
+      }
+      return matched;
     }
+
+  fn match_char(&self, node: &Kana, phrase: &mut Phrase) -> bool {
+    let first = phrase.romanji.chars().next();
+    if let Some(first) = &first {
+      if node.key == *first {
+        phrase.romanji.drain(..1);
+        if let Some(value) = &node.value {
+          phrase.hiragana.push_str(value);
+        }
+        return true;
+      }
+    }
+    return false;
+  }
 
   fn convert(&mut self, romanji: &String) -> String {
-    self.phrase = romanji.clone();
-    let mut hiragana = String::new();
+    let mut phrase = Phrase::new(&romanji);
 
-    let mut hiragana_creator = |node: &Kana| -> bool {
-      let first = self.phrase.chars().next();
-      if let Some(first) = &first {
-        if node.key == *first {
-          self.phrase.drain(..1);
-          if let Some(value) = &node.value {
-            hiragana.push_str(value);
-          }
-          return true;
-        }
-      }
-      return false;
-    };
-
-    Self::iterate_head(&self.head, &mut hiragana_creator);
+    while phrase.romanji.chars().count() > 1 {
+      self.iterate_head(&mut phrase);
+    }
     
-    return hiragana;
+    return phrase.hiragana.clone();
   }
 }
 
