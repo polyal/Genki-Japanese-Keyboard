@@ -19,13 +19,15 @@ struct Kana {
 
 struct Phrase {
   romanji: String,
-  hiragana: String
+  hiragana: String,
+  buffer: String,
 }
 
 impl Phrase {
   fn new(phrase: &String) -> Self {
     Phrase {
       romanji: phrase.clone(),
+      buffer: phrase.clone(),
       hiragana: String::new(),
     }
   }
@@ -42,22 +44,26 @@ impl RomanjiToHiraganaConverter {
     }
   }
 
-  fn iterate_head(&self, phrase: &mut Phrase)
+  fn iterate_head(&self, phrase: &mut Phrase) -> bool
     {
       for root in &self.head.roots {
         if self.iterate_kana(root, phrase) {
-          break;
+          return true;
+        }
+        else {
+          phrase.buffer = phrase.romanji.clone();
         }
       }
+      return false;
     }
 
   fn iterate_kana(&self, node: &Kana, phrase: &mut Phrase) -> bool
     {
-      let mut matched = false;
-      if self.match_char(&node, phrase){
+      let mut matched = self.match_char(&node, phrase);
+      if matched {
         for child in &node.next {
-          if self.iterate_kana(child, phrase) {
-            matched = true;
+          matched = self.iterate_kana(child, phrase);
+          if matched {
             break;
           }
         }
@@ -66,10 +72,10 @@ impl RomanjiToHiraganaConverter {
     }
 
   fn match_char(&self, node: &Kana, phrase: &mut Phrase) -> bool {
-    let first = phrase.romanji.chars().next();
+    let first = phrase.buffer.chars().next();
     if let Some(first) = &first {
       if node.key == *first {
-        phrase.romanji.drain(..1);
+        phrase.buffer.drain(..1);
         if let Some(value) = &node.value {
           phrase.hiragana.push_str(value);
         }
@@ -83,7 +89,17 @@ impl RomanjiToHiraganaConverter {
     let mut phrase = Phrase::new(&romanji);
 
     while phrase.romanji.chars().count() > 1 {
-      self.iterate_head(&mut phrase);
+      if self.iterate_head(&mut phrase) {
+        phrase.romanji = phrase.buffer.clone();
+      }
+      else {
+        let first = phrase.buffer.chars().next();
+        if let Some(first) = &first {
+          phrase.hiragana.push(*first);
+        }
+        phrase.romanji.drain(..1);
+        phrase.buffer = phrase.romanji.clone();
+      }
     }
     
     return phrase.hiragana.clone();
