@@ -47,13 +47,12 @@ impl Phrase {
   }
 
   fn done(&self) -> bool {
-    // last char is new line so dont consume
-    return !(self.romanji.chars().count() > 1);
+    return self.romanji.is_empty();
   }
 
   fn next(&mut self) {
     // matched romanji
-    // buffer holds remainng phrase to be converted
+    // buffer holds remaining phrase to be converted
     self.romanji = self.buffer.clone();
   }
 
@@ -65,8 +64,16 @@ impl Phrase {
       self.kana.push(*first);
       // continue match with next char
       self.romanji.drain(..1);
-      self.buffer = self.romanji.clone();
+      self.reset();
     }
+  }
+
+  fn reset(&mut self) {
+    self.buffer = self.romanji.clone();
+  }
+
+  fn get_kana(self) -> String {
+    return self.kana;
   }
 }
 
@@ -88,7 +95,7 @@ impl RomanjiToKanaConverter {
     }
   }
 
-  fn iterate_head(&self, phrase: &mut Phrase) -> bool
+  fn convert_phrase(&self, phrase: &mut Phrase) -> bool
     {
       for root in &self.head.roots {
         match self.iterate_kana(root, phrase) {
@@ -96,7 +103,7 @@ impl RomanjiToKanaConverter {
           CompareResult::Partial => {
             // not matched on current root
             // reset buffer and try next root
-            phrase.buffer = phrase.romanji.clone();
+            phrase.reset();
             continue;
           },
           CompareResult::False => continue,
@@ -130,17 +137,15 @@ impl RomanjiToKanaConverter {
 
   fn convert(&mut self, romanji: &String) -> String {
     let mut phrase = Phrase::new(&romanji);
-
     while !phrase.done() {
-      if self.iterate_head(&mut phrase) {
+      if self.convert_phrase(&mut phrase) {
         phrase.next();
       }
       else {
         phrase.skip();
       }
     }
-    
-    return phrase.kana.clone();
+    return phrase.get_kana();
   }
 }
 
@@ -148,6 +153,7 @@ impl RomanjiToKanaConverter {
 fn main() {
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).expect("failed to read line");
+    buffer.pop(); // remove '\n'
 
     // read hiragana/katakana rules json
     let json = fs::read_to_string("kana/rules.json")
