@@ -1,7 +1,7 @@
 {
   "lessons": [
     {
-      "index": "0",
+      "index": 0,
       "name_en": "Greetings and Numbers",
       "name_jp": "あいさつ と すうじ",
       "vocab": [
@@ -82,7 +82,7 @@
             },
             {
               "en": "i am...",
-              "jp": "。。。です"
+              "jp": "~です"
             },
             {
               "en": "nice to meet you",
@@ -208,6 +208,322 @@
             {
               "en": "100",
               "jp": "ひゃく"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "name_en": "New Friends",
+      "name_jp": "あたらちいともだち",
+      "vocab": [
+        {
+          "name": "School",
+          "phrases": [
+            {
+              "en": "college",
+              "jp": "だいがく"
+            },
+            {
+              "en": "high school",
+              "jp": "こうこう"
+            },
+            {
+              "en": "student",
+              "jp": "がくせい"
+            },
+            {
+              "en": "college student",
+              "jp": "だいがくせい"
+            },
+            {
+              "en": "interntional student",
+              "jp": "りゅうがくせい"
+            },
+            {
+              "en": "teacher",
+              "jp": "せんせい"
+            },
+            {
+              "en": "...year student",
+              "jp": "~ねんせい"
+            },
+            {
+              "en": "first-year student",
+              "jp": "いちねんせい"
+            },
+            {
+              "en": "major",
+              "jp": "せんこう"
+            }
+          ]
+        },
+        {
+          "name": "Person",
+          "phrases": [
+            {
+              "en": "I",
+              "jp": "わたし"
+            },
+            {
+              "en": "friend",
+              "jp": "ともだち"
+            },
+            {
+              "en": "Mr/Ms...",
+              "jp": "~さん"
+            },
+            {
+              "en": "...people",
+              "jp": "~じん"
+            },
+            {
+              "en": "Japanese people",
+              "jp": "にほんじん"
+            }
+          ]
+        },
+        {
+          "name": "Time",
+          "phrases": [
+            {
+              "en": "ima",
+              "jp": "いま"
+            },
+            {
+              "en": "A.M.",
+              "jp": "ごぜん"
+            },
+            {
+              "en": "P.M.",
+              "jp": "ごご"
+            },
+            {
+              "en": "o'clock",
+              "jp": "~じ"
+            },
+            {
+              "en": "one o'clock",
+              "jp": "いちじ"
+            },
+            {
+              "en": "half",
+              "jp": "はん"
+            },
+            {
+              "en": "half past two",
+              "jp": "にじはん"
+            }
+          ]
+        },
+        {
+          "name": "Others",
+          "phrases": [
+            {
+              "en": "Japan",
+              "jp": "にほん"
+            },
+            {
+              "en": "America",
+              "jp": "アメリカ"
+            },
+            {
+              "en": "...language",
+              "jp": "~ご"
+            },
+            {
+              "en": "Japanaese language",
+              "jp": "にほんご"
+            },
+            {
+              "en": "...years old",
+              "jp": "~さい"
+            },
+            {
+              "en": "telephone",
+              "jp": "でんわ"
+            },
+            {
+              "en": "number...",
+              "jp": "~ばん"
+            },
+            {
+              "en": "number",
+              "jp": "ばんごう"
+            },
+            {
+              "en": "name",
+              "jp": "なまえ"
+            },
+            {
+              "en": "what",
+              "jp": "なん/なに"
+            }
+          ]
+        },
+        {
+          "name": "Expressions",
+          "phrases": [
+            {
+              "en": "um...",
+              "jp": "あのう"
+            },
+            {
+              "en": "yes",
+              "jp": "はい"
+            },
+            {
+              "en": "that's right",
+              "jp": "そうです"
+            },
+            {
+              "en": "I see",
+              "jp": "そうですか"
+            }
+          ]
+        },
+        {
+          "name": "Countries (くに)",
+          "phrases": [
+            {
+              "en": "Britain",
+              "jp": "イギリス"
+            },
+            {
+              "en": "Australia",
+              "jp": "オーストラリア"
+            },
+            {
+              "en": "Korea",
+              "jp": "かんこく"
+            },
+            {
+              "en": "Canada",
+              "jp": "カナダ"
+            },
+            {
+              "en": "China",
+              "jp": "ちゅうごく"
+            },
+            {
+              "en": "India",
+              "jp": "インド"
+            },
+            {
+              "en": "Egypt",
+              "jp": "エジプト"
+            },
+            {
+              "en": "Philippines",
+              "jp": "フィリピン"
+            }
+          ]
+        },
+        {
+          "name": "Majors (せんこう)",
+          "phrases": [
+            {
+              "en": "Asian studies",
+              "jp": "アジアけんきゅう"
+            },
+            {
+              "en": "economics",
+              "jp": "けいざい"
+            },
+            {
+              "en": "engineering",
+              "jp": "こうがく"
+            },
+            {
+              "en": "international relations",
+              "jp": "こくさいかんけい"
+            },
+            {
+              "en": "computer",
+              "jp": "コンピューター"
+            },
+            {
+              "en": "politics",
+              "jp": "せいじ"
+            },
+            {
+              "en": "biology",
+              "jp": "せいぶつがく"
+            },
+            {
+              "en": "business",
+              "jp": "ビジネス"
+            },
+            {
+              "en": "literature",
+              "jp": "ぶんがく"
+            },
+            {
+              "en": "history",
+              "jp": "れきし"
+            }
+          ]
+        },
+        {
+          "name": "Occupations (しごと)",
+          "phrases": [
+            {
+              "en": "doctor",
+              "jp": "いしゃ"
+            },
+            {
+              "en": "office worker",
+              "jp": "かいしゃいん"
+            },
+            {
+              "en": "nurse",
+              "jp": "かんごし"
+            },
+            {
+              "en": "high school student",
+              "jp": "こうこうせい"
+            },
+            {
+              "en": "housewife",
+              "jp": "しゅふ"
+            },
+            {
+              "en": "graduate student",
+              "jp": "だいがくいんせい"
+            },
+            {
+              "en": "lawyer",
+              "jp": "べんごし"
+            }
+          ]
+        },
+        {
+          "name": "Family (かぞく)",
+          "phrases": [
+            {
+              "en": "mother",
+              "jp": "おかあさん"
+            },
+            {
+              "en": "father",
+              "jp": "おとうさん"
+            },
+            {
+              "en": "older sister",
+              "jp": "おねえさん"
+            },
+            {
+              "en": "older brother",
+              "jp": "おにいさん"
+            },
+            {
+              "en": "youner sister",
+              "jp": "いもうと"
+            },
+            {
+              "en": "younger brother",
+              "jp": "おとうと"
             }
           ]
         }

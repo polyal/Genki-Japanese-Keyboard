@@ -25,7 +25,7 @@ pub struct Lessons {
 
 #[derive(Debug, Deserialize)]
 pub struct Lesson {
-  pub index: String,
+  pub index: usize,
   pub name_en: String,
   pub name_jp: String,
   #[serde(default)]
