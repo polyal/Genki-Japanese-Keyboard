@@ -148,3 +148,18 @@ impl RomanjiToKanaConverter {
     return phrase.get_kana();
   }
 }
+
+
+#[cfg(test)]
+mod tests {
+  // Note this useful idiom: importing names from outer (for mod tests) scope.
+  use super::*;
+
+  #[test]
+  fn test_a() {
+	let buffer = "a".to_string();
+	let mut converter = RomanjiToKanaConverter::new();
+	let kana = converter.convert(&buffer);
+	assert_eq!(kana, "あ");
+  }
+}
