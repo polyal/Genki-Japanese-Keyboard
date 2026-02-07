@@ -6,7 +6,7 @@
       "name_jp": "あいさつ と すうじ",
       "vocab": [
         {
-          "name": "Greetings",
+          "name": "Greetings (あいさつ)",
           "phrases": [
             {
               "en": "good morning",
@@ -91,7 +91,7 @@
           ]
         },
         {
-          "name": "Numbers",
+          "name": "Numbers (すうじ)",
           "phrases": [
             {
               "en": "0",
@@ -524,6 +524,143 @@
             {
               "en": "younger brother",
               "jp": "おとうと"
+            }
+          ]
+        },
+        {
+          "name": "Time (じかん)",
+          "phrases": [
+            {
+              "en": "1 o'clock",
+              "jp": "いちじ"
+            },
+            {
+              "en": "2 o'clock",
+              "jp": "にじ"
+            },
+            {
+              "en": "3 o'clock",
+              "jp": "さんじ"
+            },
+            {
+              "en": "4 o'clock",
+              "jp": "よじ"
+            },
+            {
+              "en": "5 o'clock",
+              "jp": "ごじ"
+            },
+            {
+              "en": "6 o'clock",
+              "jp": "ろくじ"
+            },
+            {
+              "en": "7 o'clock",
+              "jp": "しちじ"
+            },
+            {
+              "en": "8 o'clock",
+              "jp": "はちじ"
+            },
+            {
+              "en": "9 o'clock",
+              "jp": "くじ"
+            },
+            {
+              "en": "10 o'clock",
+              "jp": "じゅうじ"
+            },
+            {
+              "en": "11 o'clock",
+              "jp": "じゅういちじ"
+            },
+            {
+              "en": "12 o'clock",
+              "jp": "じゅうにじ"
+            },
+            {
+              "en": "1 minute",
+              "jp": "いっぷん"
+            },
+            {
+              "en": "2 minutes",
+              "jp": "にふん"
+            },
+            {
+              "en": "3 minutes",
+              "jp": "さんぷん"
+            },
+            {
+              "en": "4 minutes",
+              "jp": "よんぷん"
+            },
+            {
+              "en": "5 minutes",
+              "jp": "ごふん"
+            },
+            {
+              "en": "6 minutes",
+              "jp": "ろっぷん"
+            },
+            {
+              "en": "7 minutes",
+              "jp": "ななふん"
+            },
+            {
+              "en": "8 minutes",
+              "jp": "はっぷん"
+            },
+            {
+              "en": "9 minutes",
+              "jp": "きゅうふん"
+            },
+            {
+              "en": "10 minutes",
+              "jp": "じゅぷん"
+            },
+            {
+              "en": "11 minutes",
+              "jp": "じゅういっぷん"
+            },
+            {
+              "en": "12 minutes",
+              "jp": "じゅうにふん"
+            },
+            {
+              "en": "13 minutes",
+              "jp": "じゅうさんぷん"
+            },
+            {
+              "en": "14 minutes",
+              "jp": "じゅうよんぷん"
+            },
+            {
+              "en": "15 minutes",
+              "jp": "じゅうごふん"
+            },
+            {
+              "en": "16 minutes",
+              "jp": "じゅうろっぷん"
+            },
+            {
+              "en": "17 minutes",
+              "jp": "じゅうななふん"
+            },
+            {
+              "en": "18 minutes",
+              "jp": "じゅうはっぷん"
+            },
+            {
+              "en": "19 minutes",
+              "jp": "じゅうきゅうふん"
+            },
+            {
+              "en": "20 minutes",
+              "jp": "にじゅっぷん"
+            },
+            {
+              "en": "30 minutes",
+              "jp": "さんじゅっぷん"
             }
           ]
         }
