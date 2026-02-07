@@ -1,0 +1,96 @@
+{
+  "lessons": [
+    {
+      "index": "0",
+      "name_en": "Greetings and Numbers",
+      "name_jp": "あいさつ と すうじ",
+      "vocab": [
+        {
+          "name": "Greetings",
+          "phrases": [
+            {
+              "en": "good morning",
+              "jp": "おはよう"
+            },
+            {
+              "en": "good morning (polite)",
+              "jp": "おはよう ございます"
+            },
+            {
+              "en": "good afernoon",
+              "jp": "こんにちは"
+            },
+            {
+              "en": "good afernoon",
+              "jp": "こんにちは"
+            },
+            {
+              "en": "good evening",
+              "jp": "こんばんは"
+            },
+            {
+              "en": "goodbye",
+              "jp": "さようなら"
+            },
+            {
+              "en": "goodnight",
+              "jp": "おやすみ なさい"
+            },
+            {
+              "en": "thank you",
+              "jp": "ありがとう"
+            },
+            {
+              "en": "thank you (polite)",
+              "jp": "ありがとうございます"
+            },
+            {
+              "en": "excuse me",
+              "jp": "すみません"
+            },
+            {
+              "en": "no",
+              "jp": "いいえ"
+            },
+            {
+              "en": "I'll go and come back",
+              "jp": "いってきます"
+            },
+            {
+              "en": "please go and come back",
+              "jp": "いってらっしゃい"
+            },
+            {
+              "en": "I'm home",
+              "jp": "ただいま"
+            },
+            {
+              "en": "welcome home",
+              "jp": "おかえりなさい"
+            },
+            {
+              "en": "thank you for the meal (before eating)",
+              "jp": "いただきます"
+            },
+            {
+              "en": "thank you for the meal (after eating)",
+              "jp": "ごちそうさまでした"
+            },
+            {
+              "en": "How do you do?",
+              "jp": "はじめました"
+            },
+            {
+              "en": "i am...",
+              "jp": "。。。です"
+            },
+            {
+              "en": "nice to meet you",
+              "jp": "よろしく おねがいます"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
