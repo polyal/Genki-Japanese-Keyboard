@@ -17,17 +17,17 @@ struct Kana {
     next: Vec<Kana>,
 }
 
-struct Phrase {
-  romanji: String,
+struct Phrase<'a> {
+  romanji: &'a String,
   kana: String,
   offset: usize,
   len: usize,
 }
 
-impl Phrase {
-  fn new(phrase: &String) -> Self {
+impl <'a> Phrase<'a> {
+  fn new(phrase: &'a String) -> Self {
     Phrase {
-      romanji: phrase.clone(),
+      romanji: phrase,
       kana: String::new(),
       offset: 0,
       len: 0
