@@ -5,16 +5,16 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 struct Head {
-    #[serde(default)]
-    roots: Vec<Kana>,
+  #[serde(default)]
+  roots: Vec<Kana>,
 }
 
 #[derive(Debug, Deserialize)]
 struct Kana {
-    key: char,
-    value: Option<String>,
-    #[serde(default)]
-    next: Vec<Kana>,
+  key: char,
+  value: Option<String>,
+  #[serde(default)]
+  next: Vec<Kana>,
 }
 
 struct Phrase<'a> {
@@ -80,9 +80,9 @@ impl <'a> Phrase<'a> {
 
 #[derive(PartialEq)]
 enum CompareResult {
-    Matched,
-    Partial,
-    False
+  Matched,
+  Partial,
+  False
 }
 
 struct RomanjiToKanaConverter {
@@ -150,15 +150,15 @@ impl RomanjiToKanaConverter {
 
 
 fn main() {
-    let mut buffer = String::new();
-    io::stdin().read_line(&mut buffer).expect("failed to read line");
-    buffer.pop(); // remove '\n'
+  let mut buffer = String::new();
+  io::stdin().read_line(&mut buffer).expect("failed to read line");
+  buffer.pop(); // remove '\n'
 
-    // read hiragana/katakana rules json
-    let json = fs::read_to_string("kana/rules.json")
-      .expect("couldnt read kana/rules.json");
+  // read hiragana/katakana rules json
+  let json = fs::read_to_string("kana/rules.json")
+    .expect("couldnt read kana/rules.json");
 
-    let mut converter = RomanjiToKanaConverter::new(json);
-    let kana = converter.convert(&buffer);
-    println!("converted '{buffer}' -> '{kana}'");
+  let mut converter = RomanjiToKanaConverter::new(json);
+  let kana = converter.convert(&buffer);
+  println!("converted '{buffer}' -> '{kana}'");
 }
