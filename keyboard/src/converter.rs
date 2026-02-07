@@ -468,6 +468,7 @@ mod tests {
       ("VE", "ヴェ"),
       ("VO", "ヴォ"),
       ("VYU", "ヴゥ"),
+      ("-", "ー"),
     ];
 
     for (romaji, expected) in test_cases {
