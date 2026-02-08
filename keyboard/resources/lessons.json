@@ -528,7 +528,7 @@
           ]
         },
         {
-          "name": "Time (じかん)",
+          "name": "Useful Expressions - Time (じかん)",
           "phrases": [
             {
               "en": "1 o'clock",
@@ -661,6 +661,286 @@
             {
               "en": "30 minutes",
               "jp": "さんじゅっぷん"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "name_en": "Shopping",
+      "name_jp": "かいもの",
+      "vocab": [
+        {
+          "name": "Words That Point",
+          "phrases": [
+            {
+              "en": "this one",
+              "jp": "これ"
+            },
+            {
+              "en": "that one",
+              "jp": "それ"
+            },
+            {
+              "en": "that one (over there)",
+              "jp": "あれ"
+            },
+            {
+              "en": "which one",
+              "jp": "どれ"
+            },
+            {
+              "en": "this...",
+              "jp": "この"
+            },
+            {
+              "en": "that...",
+              "jp": "その"
+            },
+            {
+              "en": "that... (over there)",
+              "jp": "あの"
+            },
+            {
+              "en": "which...",
+              "jp": "どの"
+            },
+            {
+              "en": "here",
+              "jp": "ここ"
+            },
+            {
+              "en": "there",
+              "jp": "そこ"
+            },
+            {
+              "en": "over there",
+              "jp": "あそこ"
+            },
+            {
+              "en": "where",
+              "jp": "どこ"
+            },
+            {
+              "en": "who",
+              "jp": "だれ"
+            }
+          ]
+        },
+        {
+          "name": "Food",
+          "phrases": [
+            {
+              "en": "delicious",
+              "jp": "おいしい"
+            },
+            {
+              "en": "fish",
+              "jp": "さかな"
+            },
+            {
+              "en": "pork cutlet",
+              "jp": "とんかつ"
+            },
+            {
+              "en": "meat",
+              "jp": "にく"
+            },
+            {
+              "en": "menu",
+              "jp": "メニュー"
+            },
+            {
+              "en": "vegetable",
+              "jp": "やさい"
+            }
+          ]
+        },
+        {
+          "name": "Things",
+          "phrases": [
+            {
+              "en": "umbrella",
+              "jp": "かさ"
+            },
+            {
+              "en": "bag",
+              "jp": "かばん"
+            },
+            {
+              "en": "shoes",
+              "jp": "くつ"
+            },
+            {
+              "en": "wallet",
+              "jp": "さいふ"
+            },
+            {
+              "en": "jeans",
+              "jp": "ジーンズ"
+            },
+            {
+              "en": "bicycle",
+              "jp": "じてんしゃ"
+            },
+            {
+              "en": "newspaper",
+              "jp": "しんぶん"
+            },
+            {
+              "en": "smartphone",
+              "jp": "スマホ"
+            },
+            {
+              "en": "T-shirt",
+              "jp": "Tシャツ"
+            },
+            {
+              "en": "watch/clock",
+              "jp": "とけい"
+            },
+            {
+              "en": "notebook",
+              "jp": "ノート"
+            },
+            {
+              "en": "pen",
+              "jp": "ペン"
+            },
+            {
+              "en": "hat",
+              "jp": "ぼうし"
+            },
+            {
+              "en": "book",
+              "jp": "ほん"
+            }
+          ]
+        },
+        {
+          "name": "Places",
+          "phrases": [
+            {
+              "en": "bank",
+              "jp": "ぎんこう"
+            },
+            {
+              "en": "convenience store",
+              "jp": "コンビニ"
+            },
+            {
+              "en": "toilet",
+              "jp": "トイレ"
+            },
+            {
+              "en": "library",
+              "jp": "としょかん"
+            },
+            {
+              "en": "post office",
+              "jp": "ゆうびんきょく"
+            }
+          ]
+        },
+        {
+          "name": "Countries",
+          "phrases": [
+            {
+              "en": "Britain",
+              "jp": "イギリス"
+            },
+            {
+              "en": "Korea",
+              "jp": "かんこく"
+            },
+            {
+              "en": "China",
+              "jp": "ちゅうごく"
+            }
+          ]
+        },
+        {
+          "name": "Majors",
+          "phrases": [
+            {
+              "en": "English",
+              "jp": "えいご"
+            },
+            {
+              "en": "economics",
+              "jp": "けいざい"
+            },
+            {
+              "en": "computer",
+              "jp": "コンピューター"
+            },
+            {
+              "en": "business",
+              "jp": "ビジネス"
+            },
+            {
+              "en": "history",
+              "jp": "れきし"
+            }
+          ]
+        },
+        {
+          "name": "Family",
+          "phrases": [
+            {
+              "en": "mother",
+              "jp": "おかあさん"
+            },
+            {
+              "en": "father",
+              "jp": "おとうさん"
+            }
+          ]
+        },
+        {
+          "name": "Money Matters",
+          "phrases": [
+            {
+              "en": "how much",
+              "jp": "いくら"
+            },
+            {
+              "en": "...yen",
+              "jp": "~えん"
+            },
+            {
+              "en": "expensive",
+              "jp": "たかい"
+            }
+          ]
+        },
+        {
+          "name": "Expressions",
+          "phrases": [
+            {
+              "en": "Welcome (to our store)",
+              "jp": "いらっしゃいませ"
+            },
+            {
+              "en": "..., please",
+              "jp": "おねがいします"
+            },
+            {
+              "en": "please give me...",
+              "jp": "ください"
+            },
+            {
+              "en": "then...",
+              "jp": "じゃあ"
+            },
+            {
+              "en": "here it is",
+              "jp": "どうぞ"
+            },
+            {
+              "en": "thank you",
+              "jp": "どうも"
             }
           ]
         }
