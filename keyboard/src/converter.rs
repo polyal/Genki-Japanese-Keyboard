@@ -84,8 +84,9 @@ pub struct RomanjiToKanaConverter {
 impl RomanjiToKanaConverter {
   pub fn new() -> Self {
   	// read hiragana/katakana rules json
-	let json = fs::read_to_string("resources/rules.json")
-	  .expect("couldnt read resources/rules.json");
+	  let json = fs::read_to_string("resources/rules.json")
+	    .expect("couldnt read resources/rules.json");
+    
     RomanjiToKanaConverter {
       head: serde_json::from_str::<Head>(&json).unwrap(),
     }

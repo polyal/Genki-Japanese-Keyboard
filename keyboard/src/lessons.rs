@@ -12,7 +12,7 @@ impl Book {
     let json = fs::read_to_string("resources/lessons.json")
       .expect("couldnt read resources/lessons.json");
     let lessons_wrapper: LessonsWrapper = serde_json::from_str::<LessonsWrapper>(&json).unwrap();
-
+    
     Book {
       lessons: lessons_wrapper.lessons,
     }
