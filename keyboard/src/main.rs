@@ -7,7 +7,7 @@ use std::io;
 
 fn main() {
   let book = Book::new();
-  for lesson in &book.lessons.lessons {
+  for lesson in &book.lessons {
     println!("lesson_{}: {}/{}", lesson.index, lesson.name_en, lesson.name_jp);
     for vocab in &lesson.vocab {
       println!("  section: {}", vocab.name);

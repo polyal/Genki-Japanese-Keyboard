@@ -3,24 +3,26 @@ use serde::Deserialize;
 
 
 pub struct Book {
-  pub lessons: Lessons,
+  pub lessons: Vec<Lesson>,
 }
 
 impl Book {
   pub fn new() -> Self {
     // read genki lesson vocab
-  let json = fs::read_to_string("resources/lessons.json")
-    .expect("couldnt read resources/lessons.json");
+    let json = fs::read_to_string("resources/lessons.json")
+      .expect("couldnt read resources/lessons.json");
+    let lessons_wrapper: LessonsWrapper = serde_json::from_str::<LessonsWrapper>(&json).unwrap();
+
     Book {
-      lessons: serde_json::from_str::<Lessons>(&json).unwrap(),
+      lessons: lessons_wrapper.lessons,
     }
   }
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Lessons {
+struct LessonsWrapper {
   #[serde(default)]
-  pub lessons: Vec<Lesson>,
+  lessons: Vec<Lesson>,
 }
 
 #[derive(Debug, Deserialize)]
