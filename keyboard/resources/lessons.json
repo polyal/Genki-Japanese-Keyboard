@@ -322,7 +322,8 @@
           "phrases": [
             {
               "en": "Japan",
-              "jp": "にほん"
+              "jp": "にほん",
+              "kanji": "日本"
             },
             {
               "en": "America",
@@ -1330,6 +1331,33 @@
             {
               "en": "yes",
               "jp": "ええ"
+            }
+          ]
+        },
+        {
+          "name": "Japanese Houses (日本の家)",
+          "phrases": [
+            {
+              "en": "straw mat",
+              "jp": "たたみ",
+              "kanji": "畳"
+            },
+            {
+              "en": "sliding door",
+              "jp": "ふすま"
+            },
+            {
+              "en": "sliding door",
+              "jp": "しょうじ"
+            },
+            {
+              "en": "front room",
+              "jp": "ばんかん"
+            },
+            {
+              "en": "bathroom",
+              "jp": "おふろ",
+              "kanji": "お風呂"
             }
           ]
         }
