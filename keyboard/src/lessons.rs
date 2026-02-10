@@ -45,4 +45,5 @@ pub struct Vocab {
 pub struct Phrase {
   pub en: String,
   pub jp: String,
+  pub kanji: Option<String>,
 }

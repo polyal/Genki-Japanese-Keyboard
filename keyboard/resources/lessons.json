@@ -1018,6 +1018,322 @@
           ]
         }
       ]
+    },
+    {
+      "index": 3,
+      "name_en": "Making a Date",
+      "name_jp": "デートの約束",
+      "vocab": [
+        {
+          "name": "Entertainment and Sports",
+          "phrases": [
+            {
+              "en": "movie",
+              "jp": "えいが",
+              "kanji": "映画"
+            },
+            {
+              "en": "music",
+              "jp": "おんがく",
+              "kanji": "音楽"
+            },
+            {
+              "en": "magazine",
+              "jp": "ざっし",
+              "kanji": "雑誌"
+            },
+            {
+              "en": "sports",
+              "jp": "スポーツ"
+            },
+            {
+              "en": "date (romantic)",
+              "jp": "デート"
+            },
+            {
+              "en": "tennis",
+              "jp": "テニス"
+            },
+            {
+              "en": "TV",
+              "jp": "テレビ"
+            }
+          ]
+        },
+        {
+          "name": "Food and Drinks",
+          "phrases": [
+            {
+              "en": "ice cream",
+              "jp": "アイスクリーム"
+            },
+            {
+              "en": "hamburger",
+              "jp": "ハンバーハー"
+            },
+            {
+              "en": "sake",
+              "jp": "おさけ",
+              "kanji": "お酒"
+            },
+            {
+              "en": "green tea",
+              "jp": "おちゃ",
+              "kanji": "お茶"
+            },
+            {
+              "en": "coffee",
+              "jp": "コーヒー"
+            },
+            {
+              "en": "water",
+              "jp": "みず",
+              "kanji": "水"
+            },
+            {
+              "en": "breakfast",
+              "jp": "あさごはん",
+              "kanji": "朝ご飯"
+            },
+            {
+              "en": "lunch",
+              "jp": "ひるごはん",
+              "kanji": "昼ご飯"
+            },
+            {
+              "en": "dinner",
+              "jp": "ばんごはん",
+              "kanji": "晩ご飯"
+            }
+          ]
+        },
+        {
+          "name": "Places",
+          "phrases": [
+            {
+              "en": "home; house",
+              "jp": "いえ",
+              "kanji": "家"
+            },
+            {
+              "en": "home; house; my place",
+              "jp": "うち"
+            },
+            {
+              "en": "school",
+              "jp": "がっこう",
+              "kanji": "学校"
+            },
+            {
+              "en": "cafe",
+              "jp": "カフェ"
+            }
+          ]
+        },
+        {
+          "name": "Time",
+          "phrases": [
+            {
+              "en": "tomorrow",
+              "jp": "あした",
+              "kanji": "明日"
+            },
+            {
+              "en": "today",
+              "jp": "きょう",
+              "kanji": "今日"
+            },
+            {
+              "en": "morning",
+              "jp": "あさ",
+              "kanji": "朝"
+            },
+            {
+              "en": "tonight",
+              "jp": "こんばん",
+              "kanji": "今夜"
+            },
+            {
+              "en": "every day",
+              "jp": "まいにち",
+              "kanji": "毎日"
+            },
+            {
+              "en": "every night",
+              "jp": "まいばん",
+              "kanji": "毎晩"
+            },
+            {
+              "en": "weekend",
+              "jp": "しゅうまつ",
+              "kanji": "週末"
+            },
+            {
+              "en": "saturday",
+              "jp": "どようび",
+              "kanji": "土曜日"
+            },
+            {
+              "en": "sunday",
+              "jp": "にちようび",
+              "kanji": "日曜日"
+            },
+            {
+              "en": "when",
+              "jp": "いつ"
+            },
+            {
+              "en": "at about...",
+              "jp": "~ごろ"
+            }
+          ]
+        },
+        {
+          "name": "U-verbs",
+          "phrases": [
+            {
+              "en": "to go (destination に/へ)",
+              "jp": "いく",
+              "kanji": "行く"
+            },
+            {
+              "en": "to go back; to return (destination に/へ)",
+              "jp": "かえる",
+              "kanji": "帰る"
+            },
+            {
+              "en": "to listen; to hear (~を)",
+              "jp": "きく",
+              "kanji": "聞く"
+            },
+            {
+              "en": "to drink (~を)",
+              "jp": "のむ",
+              "kanji": "飲む"
+            },
+            {
+              "en": "to speak; to talk (language を/で)",
+              "jp": "はなす",
+              "kanji": "話す"
+            },
+            {
+              "en": "to read (~を)",
+              "jp": "よむ",
+              "kanji": "読む"
+            }
+          ]
+        },
+        {
+          "name": "Ru-verbs",
+          "phrases": [
+            {
+              "en": "to get up",
+              "jp": "おきる",
+              "kanji": "起きる"
+            },
+            {
+              "en": "to eat (~を)",
+              "jp": "たべる",
+              "kanji": "食べる"
+            },
+            {
+              "en": "to sleep; to go to sleep",
+              "jp": "ねる",
+              "kanji": "寝る"
+            },
+            {
+              "en": "to sleep; to look; to watch (~を)",
+              "jp": "みる",
+              "kanji": "見る"
+            }
+          ]
+        },
+        {
+          "name": "Irregular-verbs",
+          "phrases": [
+            {
+              "en": "to come (destination に/へ)",
+              "jp": "くる",
+              "kanji": "来る"
+            },
+            {
+              "en": "to do (~を)",
+              "jp": "する"
+            },
+            {
+              "en": "to study (~を)",
+              "jp": "べんきょうする",
+              "kanji": "勉強する"
+            }
+          ]
+        },
+        {
+          "name": "Adjectives",
+          "phrases": [
+            {
+              "en": "good",
+              "jp": "いい"
+            },
+            {
+              "en": "early",
+              "jp": "はやい",
+              "kanji": "早い"
+            }
+          ]
+        },
+        {
+          "name": "Adverbs",
+          "phrases": [
+            {
+              "en": "not much",
+              "jp": "あまり"
+            },
+            {
+              "en": "not at all",
+              "jp": "ぜんぜん",
+              "kanji": "全然"
+            },
+            {
+              "en": "usually",
+              "jp": "たいてい"
+            },
+            {
+              "en": "a little",
+              "jp": "ちょっと"
+            },
+            {
+              "en": "sometimes",
+              "jp": "ときどき",
+              "kanji": "時々"
+            },
+            {
+              "en": "often; much",
+              "jp": "よく"
+            }
+          ]
+        },
+        {
+          "name": "Expressions",
+          "phrases": [
+            {
+              "en": "thats right; let me see",
+              "jp": "そうですね"
+            },
+            {
+              "en": "but",
+              "jp": "でも"
+            },
+            {
+              "en": "how about...; how is...",
+              "jp": "どうですか"
+            },
+            {
+              "en": "yes",
+              "jp": "ええ"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
