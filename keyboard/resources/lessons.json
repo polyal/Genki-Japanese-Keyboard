@@ -943,6 +943,79 @@
               "jp": "どうも"
             }
           ]
+        },
+        {
+          "name": "Useful Expressions - In The Classroom (きょうしつ)",
+          "phrases": [
+            {
+              "en": "blackboard",
+              "jp": "こくばん"
+            },
+            {
+              "en": "light",
+              "jp": "でんき"
+            },
+            {
+              "en": "curtain",
+              "jp": "カーテン"
+            },
+            {
+              "en": "door",
+              "jp": "ドア"
+            },
+            {
+              "en": "desk",
+              "jp": "つくえ"
+            },
+            {
+              "en": "dictionary",
+              "jp": "じしょ"
+            },
+            {
+              "en": "pencil",
+              "jp": "えんぴつ"
+            },
+            {
+              "en": "eraser",
+              "jp": "けしゴム"
+            },
+            {
+              "en": "window",
+              "jp": "まど"
+            },
+            {
+              "en": "chair",
+              "jp": "いす"
+            },
+            {
+              "en": "do you understand",
+              "jp": "わかりましたか"
+            },
+            {
+              "en": "I understand",
+              "jp": "わかりました"
+            },
+            {
+              "en": "I don't understand",
+              "jp": "わかりません"
+            },
+            {
+              "en": "please say it slowly",
+              "jp": "ゆっくりいってください"
+            },
+            {
+              "en": "please say it again",
+              "jp": "もういちどいってください"
+            },
+            {
+              "en": "please wait for a while",
+              "jp": "ちょっとまってください"
+            },
+            {
+              "en": "please listen / please ask",
+              "jp": "きいてください"
+            }
+          ]
         }
       ]
     }
