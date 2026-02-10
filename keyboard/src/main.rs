@@ -6,6 +6,7 @@ use lessons::Book;
 use std::io;
 use rand::Rng;
 
+
 fn main() {
   let mut buffer = String::new();
   println!("!! Genki-Japanese-Keyboard !!");
