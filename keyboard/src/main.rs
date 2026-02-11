@@ -5,6 +5,7 @@ use converter::RomanjiToKanaConverter;
 use lessons::Book;
 use std::io;
 use rand::Rng;
+use std::collections::HashSet;
 
 
 fn main() {
@@ -89,14 +90,21 @@ fn main() {
 
       // test section
       let section = &lesson.vocab[section_idx];
+      let mut asked: HashSet<usize> = HashSet::new();
       loop {
-        let phrase_idx: usize = rand::thread_rng().gen_range(0..section.phrases.len());
+        if asked.len() == section.phrases.len() {
+          asked.clear();
+        }
+        let mut phrase_idx: usize = rand::thread_rng().gen_range(0..section.phrases.len());
+        while !asked.insert(phrase_idx) {
+          phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
+        }
         let phrase = &section.phrases[phrase_idx];
 
         let translate_direction: usize = rand::thread_rng().gen_range(0..=1);
         if translate_direction == 0 {
           if let Some(kanji) = &phrase.kanji {
-            println!("\n  [{}/{}]translate '{}'/'{}' to english", phrase_idx, section.phrases.len(), phrase.jp, kanji);
+            println!("\n  [{}/{}]translate '{}' - '{}' to english", phrase_idx, section.phrases.len(), phrase.jp, kanji);
           }
           else {
             println!("\n  [{}/{}]translate '{}' to english", phrase_idx, section.phrases.len(), phrase.jp);
@@ -126,7 +134,7 @@ fn main() {
 
           println!("  your    answer: '{}'", kana);
           if let Some(kanji) = &phrase.kanji {
-            println!("  correct answer: '{}'/'{}'", phrase.jp, kanji);
+            println!("  correct answer: '{}' - '{}'", phrase.jp, kanji);
           }
           else {
             println!("  correct answer: '{}'", phrase.jp);
