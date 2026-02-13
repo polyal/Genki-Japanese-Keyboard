@@ -141,7 +141,7 @@ impl Reviewer {
       io::stdin().read_line(&mut buffer).expect("failed to read line");
       buffer.pop(); // remove '\n'
 
-      if buffer == ":q" {
+      if buffer == ":b" {
         return false;
       }
 
@@ -153,7 +153,7 @@ impl Reviewer {
       io::stdin().read_line(&mut buffer).expect("failed to read line");
       buffer.pop(); // remove '\n'
 
-      if buffer == ":q" {
+      if buffer == ":b" {
         return false;
       }
 

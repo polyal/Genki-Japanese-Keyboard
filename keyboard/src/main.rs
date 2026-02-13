@@ -44,7 +44,7 @@ fn main() {
             match buffer.parse::<usize>() {
               Ok(n) => section_idx = n,
               Err(_e) => {
-                if buffer == ":q" {
+                if buffer == ":b" {
                   break;
                 }
                 else {
