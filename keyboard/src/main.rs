@@ -2,10 +2,8 @@ mod converter;
 mod lessons;
 
 use converter::RomanjiToKanaConverter;
-use lessons::Book;
+use lessons::Reviewer;
 use std::io;
-use rand::Rng;
-use std::collections::HashSet;
 
 
 fn main() {
@@ -17,20 +15,7 @@ fn main() {
   io::stdin().read_line(&mut buffer).expect("failed to read line");
   buffer.pop(); // remove '\n'
   if buffer == "0" {
-    let book = Book::new();
-    for lesson in &book.lessons {
-      println!("Lesson_{}: {} - {}", lesson.index, lesson.name_en, lesson.name_jp);
-      for vocab in &lesson.vocab {
-        println!("  section: {}", vocab.name);
-        for phrase in &vocab.phrases {
-          let mut word = phrase.en.clone() + " - " + &phrase.jp + " - ";
-          if let Some(kanji) = &phrase.kanji {
-            word += kanji;
-          }
-          println!("    {word}");
-        }
-      }
-    }
+    println!("Enter something to convert: ");
 
     buffer.clear();
     io::stdin().read_line(&mut buffer).expect("failed to read line");
@@ -40,107 +25,46 @@ fn main() {
     println!("converted '{buffer}' -> '{kana}'");
   }
   else {
-    let book = Book::new();
+    let reviewer = Reviewer::new();
     while buffer != "exit" {
       buffer.clear();
       // pick lesson
-      let mut lesson_idx: usize = book.lessons.len();
-      while lesson_idx >= book.lessons.len(){
-        println!("\nPick a lesson: ");
-        let mut idx: usize = 0;
-        for lesson in &book.lessons { 
-          println!("  [{idx}] {} - {}", lesson.name_en, lesson.name_jp);
-          idx += 1;
+      let mut lesson_idx = usize::MAX;
+      loop {
+        if let Some(lesson) = &reviewer.get_lesson(lesson_idx) {
+          let mut section_idx: usize;
+          loop {
+            // test section
+            println!("\nPick a section: ");
+            reviewer.print_sections(&lesson);   
+
+            buffer.clear();
+            io::stdin().read_line(&mut buffer).expect("failed to read line");
+            buffer.pop(); // remove '\n'
+            match buffer.parse::<usize>() {
+              Ok(n) => section_idx = n,
+              Err(_e) => break,
+            }
+            if let Some(section) = &reviewer.get_section(lesson, section_idx) {
+              reviewer.review_section(section);
+            }
+            else {
+              reviewer.review_lesson(lesson);
+            }
+          }
         }
+
+        // lesson selection
+        println!("\nPick a lesson: ");
+        reviewer.print_lessons();
+
+        buffer.clear();
         io::stdin().read_line(&mut buffer).expect("failed to read line");
         buffer.pop(); // remove '\n'
         match buffer.parse::<usize>() {
           Ok(n) => lesson_idx = n,
           Err(_e) => break,
         }
-        buffer.clear();
-      }
-
-      if lesson_idx >= book.lessons.len() {
-        continue;
-      }
-      
-      // pick section
-      let lesson = &book.lessons[lesson_idx];
-      let mut section_idx: usize = lesson.vocab.len();
-      while section_idx >= lesson.vocab.len(){
-        println!("\nPick a section: ");
-        let mut idx: usize = 0;
-        for section in &lesson.vocab { 
-          println!("  [{idx}] {}", section.name);
-          idx += 1;
-        }
-        io::stdin().read_line(&mut buffer).expect("failed to read line");
-        buffer.pop(); // remove '\n'
-        match buffer.parse::<usize>() {
-          Ok(n) => section_idx = n,
-          Err(_e) => break,
-        }
-        buffer.clear();
-      }
-
-      if section_idx >= lesson.vocab.len() {
-        continue;
-      }
-
-      // test section
-      let section = &lesson.vocab[section_idx];
-      let mut asked: HashSet<usize> = HashSet::new();
-      loop {
-        if asked.len() == section.phrases.len() {
-          asked.clear();
-        }
-        let mut phrase_idx: usize = rand::thread_rng().gen_range(0..section.phrases.len());
-        while !asked.insert(phrase_idx) {
-          phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
-        }
-        let phrase = &section.phrases[phrase_idx];
-
-        let translate_direction: usize = rand::thread_rng().gen_range(0..=1);
-        if translate_direction == 0 {
-          if let Some(kanji) = &phrase.kanji {
-            println!("\n  [{}/{}]translate '{}' - '{}' to english", phrase_idx, section.phrases.len(), phrase.jp, kanji);
-          }
-          else {
-            println!("\n  [{}/{}]translate '{}' to english", phrase_idx, section.phrases.len(), phrase.jp);
-          }
-
-          io::stdin().read_line(&mut buffer).expect("failed to read line");
-          buffer.pop(); // remove '\n'
-
-          if buffer == "exit" {
-            break;
-          }
-
-          println!("  your    answer: '{}'", buffer);        
-          println!("  correct answer: '{}'", phrase.en);        
-        }
-        else {
-          println!("\n  [{}/{}]translate '{}' to japanese", phrase_idx, section.phrases.len(), phrase.en);
-          io::stdin().read_line(&mut buffer).expect("failed to read line");
-          buffer.pop(); // remove '\n'
-
-          if buffer == "exit" {
-            break;
-          }
-
-          let mut converter = RomanjiToKanaConverter::new();
-          let kana = converter.convert(&buffer);
-
-          println!("  your    answer: '{}'", kana);
-          if let Some(kanji) = &phrase.kanji {
-            println!("  correct answer: '{}' - '{}'", phrase.jp, kanji);
-          }
-          else {
-            println!("  correct answer: '{}'", phrase.jp);
-          }   
-        }
-        buffer.clear();
       }
     }
   }
