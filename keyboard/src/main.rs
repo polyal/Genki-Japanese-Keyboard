@@ -26,7 +26,7 @@ fn main() {
   }
   else {
     let reviewer = Reviewer::new();
-    while buffer != "exit" {
+    while buffer != ":q" {
       buffer.clear();
       // pick lesson
       let mut lesson_idx = usize::MAX;
@@ -43,7 +43,14 @@ fn main() {
             buffer.pop(); // remove '\n'
             match buffer.parse::<usize>() {
               Ok(n) => section_idx = n,
-              Err(_e) => break,
+              Err(_e) => {
+                if buffer == ":q" {
+                  break;
+                }
+                else {
+                  continue;
+                }
+              },
             }
             if let Some(section) = &reviewer.get_section(lesson, section_idx) {
               reviewer.review_section(section);
