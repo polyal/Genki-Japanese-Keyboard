@@ -26,53 +26,6 @@ fn main() {
   }
   else {
     let reviewer = Reviewer::new();
-    while buffer != ":q" {
-      buffer.clear();
-      // pick lesson
-      let mut lesson_idx = usize::MAX;
-      loop {
-        if let Some(lesson) = &reviewer.get_lesson(lesson_idx) {
-          let mut section_idx: usize;
-          loop {
-            // test section
-            println!("\nPick a section: ");
-            reviewer.print_sections(&lesson);   
-
-            buffer.clear();
-            io::stdin().read_line(&mut buffer).expect("failed to read line");
-            buffer.pop(); // remove '\n'
-            match buffer.parse::<usize>() {
-              Ok(n) => section_idx = n,
-              Err(_e) => {
-                if buffer == ":b" {
-                  break;
-                }
-                else {
-                  continue;
-                }
-              },
-            }
-            if let Some(section) = &reviewer.get_section(lesson, section_idx) {
-              reviewer.review_section(section);
-            }
-            else {
-              reviewer.review_lesson(lesson);
-            }
-          }
-        }
-
-        // lesson selection
-        println!("\nPick a lesson: ");
-        reviewer.print_lessons();
-
-        buffer.clear();
-        io::stdin().read_line(&mut buffer).expect("failed to read line");
-        buffer.pop(); // remove '\n'
-        match buffer.parse::<usize>() {
-          Ok(n) => lesson_idx = n,
-          Err(_e) => break,
-        }
-      }
-    }
+    reviewer.start();
   }
 }
