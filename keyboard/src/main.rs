@@ -62,7 +62,7 @@ fn main() {
       }
 
       if lesson_idx >= book.lessons.len() {
-        break;
+        continue;
       }
       
       // pick section
@@ -85,7 +85,7 @@ fn main() {
       }
 
       if section_idx >= lesson.vocab.len() {
-        break;
+        continue;
       }
 
       // test section
