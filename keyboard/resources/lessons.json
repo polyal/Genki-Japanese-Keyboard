@@ -4,7 +4,7 @@
       "index": 0,
       "name_en": "Greetings and Numbers",
       "name_jp": "あいさつ と すうじ",
-      "vocab": [
+      "sections": [
         {
           "name": "Greetings (あいさつ)",
           "phrases": [
@@ -217,7 +217,7 @@
       "index": 1,
       "name_en": "New Friends",
       "name_jp": "あたらちいともだち",
-      "vocab": [
+      "sections": [
         {
           "name": "School",
           "phrases": [
@@ -676,7 +676,7 @@
       "index": 2,
       "name_en": "Shopping",
       "name_jp": "かいもの",
-      "vocab": [
+      "sections": [
         {
           "name": "Words That Point",
           "phrases": [
@@ -1029,7 +1029,7 @@
       "index": 3,
       "name_en": "Making a Date",
       "name_jp": "デートの約束",
-      "vocab": [
+      "sections": [
         {
           "name": "Entertainment and Sports",
           "phrases": [

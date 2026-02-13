@@ -36,11 +36,11 @@ pub struct Lesson {
   name_en: String,
   name_jp: String,
   #[serde(default)]
-  vocab: Vec<Vocab>,
+  sections: Vec<Section>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Vocab {
+pub struct Section {
   name: String,
   #[serde(default)]
   phrases: Vec<Phrase>,
@@ -72,8 +72,8 @@ impl Reviewer {
 
   pub fn print_sections(&self, lesson: &Lesson) {
     let mut index: usize = 0;
-    for vocab in &lesson.vocab { 
-      println!("  [{index}] {}", vocab.name);
+    for section in &lesson.sections { 
+      println!("  [{index}] {}", section.name);
       index += 1;
     }
   }
@@ -85,17 +85,17 @@ impl Reviewer {
     return Some(&self.book.lessons[index]);
   }
 
-  pub fn get_section<'a>(&self, lesson: &'a Lesson, index: usize) -> Option<&'a Vocab> {
-    if index >= lesson.vocab.len() {
+  pub fn get_section<'a>(&self, lesson: &'a Lesson, index: usize) -> Option<&'a Section> {
+    if index >= lesson.sections.len() {
       return None;
     }
-    return Some(&lesson.vocab[index]);
+    return Some(&lesson.sections[index]);
   }
 
   pub fn review_lesson(&self, lesson: &Lesson) {
     loop {
-      let section_idx = rand::thread_rng().gen_range(0..lesson.vocab.len());
-      let section = &lesson.vocab[section_idx];
+      let section_idx = rand::thread_rng().gen_range(0..lesson.sections.len());
+      let section = &lesson.sections[section_idx];
       let phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
       let phrase = &section.phrases[phrase_idx];
       if !self.review_phrase(&phrase) {
@@ -104,7 +104,7 @@ impl Reviewer {
     }
   }
 
-  pub fn review_section(&self, section: &Vocab)
+  pub fn review_section(&self, section: &Section)
   {
     let mut asked: HashSet<usize> = HashSet::new();
     loop {
