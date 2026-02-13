@@ -3,11 +3,8 @@ use serde::Deserialize;
 use std::io;
 use rand::Rng;
 use std::collections::HashSet;
-use std::sync::LazyLock;
 
 use crate::RomanjiToKanaConverter;
-
-static mut CONVERTER: LazyLock<RomanjiToKanaConverter> = LazyLock::new(|| RomanjiToKanaConverter::new());
 
 
 struct Book {
@@ -58,12 +55,14 @@ struct Phrase {
 
 pub struct Reviewer {
   book: Book,
+  converter: RomanjiToKanaConverter,
 }
 
 impl Reviewer {
   pub fn new() -> Self {
     Reviewer {
       book: Book::new(),
+      converter: RomanjiToKanaConverter::new(),
     }
   }
 
@@ -209,12 +208,8 @@ impl Reviewer {
         return false;
       }
 
-      let converter_ptr = std::ptr::addr_of_mut!(CONVERTER);
-      unsafe {
-        let kana = (*converter_ptr).convert(&buffer);
-        println!("  your    answer: '{}'", kana);
-      }
-      
+      let kana = self.converter.convert(&buffer);
+      println!("  your    answer: '{}'", kana);   
       if let Some(kanji) = &phrase.kanji {
         println!("  correct answer: '{}' - '{}'", phrase.jp, kanji);
       }

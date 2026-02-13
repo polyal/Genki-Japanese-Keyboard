@@ -119,7 +119,7 @@ impl RomanjiToKanaConverter {
     return matched;
   }
 
-  pub fn convert(&mut self, romanji: &String) -> String {
+  pub fn convert(&self, romanji: &String) -> String {
     let mut phrase = Phrase::new(&romanji);
     while !phrase.done() {
       if self.convert_phrase(&mut phrase) {
@@ -141,7 +141,7 @@ mod tests {
 
   #[test]
   fn test_converter() {
-    let mut converter = RomanjiToKanaConverter::new();
+    let converter = RomanjiToKanaConverter::new();
     let test_cases = vec![
       ("a", "あ"),
       ("i", "い"),
