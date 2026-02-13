@@ -7,6 +7,9 @@ use std::collections::HashSet;
 use crate::RomanjiToKanaConverter;
 
 
+const COMMAND_QUIT: &str = ":q";
+const COMMAND_BACK: &str = ":b";
+
 struct Book {
   lessons: Vec<Lesson>,
 }
@@ -68,7 +71,7 @@ impl Reviewer {
 
   pub fn start(&self) {
     let mut buffer = String::new();
-    while buffer != ":q" {
+    while buffer != COMMAND_QUIT {
       buffer.clear();
       // pick lesson
       let mut lesson_idx = usize::MAX;
@@ -86,7 +89,7 @@ impl Reviewer {
             match buffer.parse::<usize>() {
               Ok(n) => section_idx = n,
               Err(_e) => {
-                if buffer == ":b" {
+                if buffer == COMMAND_BACK {
                   break;
                 }
                 else {
@@ -192,7 +195,7 @@ impl Reviewer {
       io::stdin().read_line(&mut buffer).expect("failed to read line");
       buffer.pop(); // remove '\n'
 
-      if buffer == ":b" {
+      if buffer == COMMAND_BACK {
         return false;
       }
 
@@ -204,7 +207,7 @@ impl Reviewer {
       io::stdin().read_line(&mut buffer).expect("failed to read line");
       buffer.pop(); // remove '\n'
 
-      if buffer == ":b" {
+      if buffer == COMMAND_BACK {
         return false;
       }
 
