@@ -1,7 +1,9 @@
 mod kana_converter;
+mod kanji_converter;
 mod lessons;
 
 use kana_converter::RomanjiToKanaConverter;
+use kanji_converter::HiragaToKanjiConverter;
 use lessons::Reviewer;
 use std::io;
 
@@ -24,9 +26,15 @@ fn main() {
       if buffer == ":q" {
         break;
       }
-      let converter = RomanjiToKanaConverter::new();
-      let kana = converter.convert(&buffer);
+      let kana_converter = RomanjiToKanaConverter::new();
+      let kana = kana_converter.convert(&buffer);
       println!("converted '{buffer}' -> '{kana}'");
+
+      let kanji_converter = HiragaToKanjiConverter::new();
+      let kanji = kanji_converter.convert(&kana);
+      for kanji_char in kanji {
+        println!("converted '{kana}' -> '{kanji_char}'");
+      }
     }
   }
   else {

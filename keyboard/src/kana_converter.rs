@@ -48,7 +48,7 @@ impl <'a> Phrase<'a> {
   }
 
   fn done(&self) -> bool {
-    return self.offset >= self.romanji.len();
+    return self.offset >= self.romanji.chars().count();
   }
 
   fn next(&mut self) {
