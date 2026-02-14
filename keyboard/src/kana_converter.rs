@@ -456,9 +456,9 @@ mod tests {
       (".", "。"),
     ];
 
-    for (romaji, expected) in test_cases {
-      let result = converter.convert(&romaji.to_string());
-      assert_eq!(result, expected, "Failed for romaji: {}", romaji);
+    for (romanji, expected) in test_cases {
+      let result = converter.convert(&romanji.to_string());
+      assert_eq!(result, expected, "Failed for romanji: {}", romanji);
     }
   }
 }
