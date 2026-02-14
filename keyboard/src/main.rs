@@ -1,7 +1,7 @@
-mod converter;
+mod kana_converter;
 mod lessons;
 
-use converter::RomanjiToKanaConverter;
+use kana_converter::RomanjiToKanaConverter;
 use lessons::Reviewer;
 use std::io;
 
