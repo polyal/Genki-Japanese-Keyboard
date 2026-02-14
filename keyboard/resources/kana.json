@@ -678,15 +678,15 @@
           "next": [
             {
               "key": "a",
-              "value": "びゃ"
+              "value": "ぴゃ"
             },
             {
               "key": "u",
-              "value": "びゅ"
+              "value": "ぴゅ"
             },
             {
               "key": "o",
-              "value": "びょ"
+              "value": "ぴょ"
             }
           ]
         },
@@ -718,15 +718,15 @@
               "next": [
                 {
                   "key": "a",
-                  "value": "っびゃ"
+                  "value": "っぴゃ"
                 },
                 {
                   "key": "u",
-                  "value": "っびゅ"
+                  "value": "っぴゅ"
                 },
                 {
                   "key": "o",
-                  "value": "っびょ"
+                  "value": "っぴょ"
                 }
               ]
             }
