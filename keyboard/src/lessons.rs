@@ -105,12 +105,7 @@ impl Reviewer {
                         // test section
                         println!("\nPick a section: ");
                         Self::print_sections(&lesson);
-
-                        buffer.clear();
-                        io::stdin()
-                            .read_line(&mut buffer)
-                            .expect("failed to read line");
-                        buffer.pop(); // remove '\n'
+                        Self::get_user_input(&mut buffer);
                         match buffer.parse::<usize>() {
                             Ok(n) => section_idx = n,
                             Err(_e) => {
@@ -121,6 +116,7 @@ impl Reviewer {
                                 }
                             }
                         }
+
                         if let Some(section) = Book::get_section(lesson, section_idx) {
                             self.review_section(section);
                         } else {
@@ -132,18 +128,19 @@ impl Reviewer {
                 // lesson selection
                 println!("\nPick a lesson: ");
                 Self::print_lessons(lessons);
-
-                buffer.clear();
-                io::stdin()
-                    .read_line(&mut buffer)
-                    .expect("failed to read line");
-                buffer.pop(); // remove '\n'
+                Self::get_user_input(&mut buffer);
                 match buffer.parse::<usize>() {
                     Ok(n) => lesson_idx = n,
                     Err(_e) => break,
                 }
             }
         }
+    }
+
+    fn get_user_input(buffer: &mut String) {
+        buffer.clear();
+        io::stdin().read_line(buffer).expect("failed to read line");
+        buffer.pop(); // remove '\n'
     }
 
     fn print_lessons(lessons: &Vec<Lesson>) {
@@ -205,11 +202,7 @@ impl Reviewer {
                 println!("translate '{}' to english", phrase.jp);
             }
 
-            io::stdin()
-                .read_line(&mut buffer)
-                .expect("failed to read line");
-            buffer.pop(); // remove '\n'
-
+            Self::get_user_input(&mut buffer);
             if buffer == COMMAND_BACK {
                 return false;
             }
@@ -218,11 +211,7 @@ impl Reviewer {
             println!("  correct answer: '{}'", phrase.en);
         } else {
             println!("translate '{}' to japanese", phrase.en);
-            io::stdin()
-                .read_line(&mut buffer)
-                .expect("failed to read line");
-            buffer.pop(); // remove '\n'
-
+            Self::get_user_input(&mut buffer);
             if buffer == COMMAND_BACK {
                 return false;
             }
