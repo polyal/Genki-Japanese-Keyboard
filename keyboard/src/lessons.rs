@@ -25,6 +25,28 @@ impl Book {
             lessons: lessons_wrapper.lessons,
         }
     }
+
+    fn get_lessons(&self) -> &Vec<Lesson> {
+        return &self.lessons;
+    }
+
+    fn get_lesson(lessons: &Vec<Lesson>, index: usize) -> Option<&Lesson> {
+        if index >= lessons.len() {
+            return None;
+        }
+        return Some(&lessons[index]);
+    }
+
+    fn get_sections(lesson: &Lesson) -> &Vec<Section> {
+        return &lesson.sections;
+    }
+
+    fn get_section<'a>(lesson: &'a Lesson, index: usize) -> Option<&'a Section> {
+        if index >= lesson.sections.len() {
+            return None;
+        }
+        return Some(&lesson.sections[index]);
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -71,17 +93,18 @@ impl Reviewer {
 
     pub fn start(&self) {
         let mut buffer = String::new();
+        let lessons = self.book.get_lessons();
         while buffer != COMMAND_QUIT {
             buffer.clear();
             // pick lesson
             let mut lesson_idx = usize::MAX;
             loop {
-                if let Some(lesson) = &self.get_lesson(lesson_idx) {
+                if let Some(lesson) = Book::get_lesson(lessons, lesson_idx) {
                     let mut section_idx: usize;
                     loop {
                         // test section
                         println!("\nPick a section: ");
-                        self.print_sections(&lesson);
+                        Self::print_sections(&lesson);
 
                         buffer.clear();
                         io::stdin()
@@ -98,7 +121,7 @@ impl Reviewer {
                                 }
                             }
                         }
-                        if let Some(section) = &self.get_section(lesson, section_idx) {
+                        if let Some(section) = Book::get_section(lesson, section_idx) {
                             self.review_section(section);
                         } else {
                             self.review_lesson(lesson);
@@ -108,7 +131,7 @@ impl Reviewer {
 
                 // lesson selection
                 println!("\nPick a lesson: ");
-                self.print_lessons();
+                Self::print_lessons(lessons);
 
                 buffer.clear();
                 io::stdin()
@@ -123,8 +146,8 @@ impl Reviewer {
         }
     }
 
-    fn print_lessons(&self) {
-        for lesson in &self.book.lessons {
+    fn print_lessons(lessons: &Vec<Lesson>) {
+        for lesson in lessons {
             println!(
                 "  [{}] {} - {}",
                 lesson.index, lesson.name_en, lesson.name_jp
@@ -132,26 +155,13 @@ impl Reviewer {
         }
     }
 
-    fn print_sections(&self, lesson: &Lesson) {
+    fn print_sections(lesson: &Lesson) {
+        let sections = Book::get_sections(lesson);
         let mut index: usize = 0;
-        for section in &lesson.sections {
+        for section in sections {
             println!("  [{index}] {}", section.name);
             index += 1;
         }
-    }
-
-    fn get_lesson(&self, index: usize) -> Option<&Lesson> {
-        if index >= self.book.lessons.len() {
-            return None;
-        }
-        return Some(&self.book.lessons[index]);
-    }
-
-    fn get_section<'a>(&self, lesson: &'a Lesson, index: usize) -> Option<&'a Section> {
-        if index >= lesson.sections.len() {
-            return None;
-        }
-        return Some(&lesson.sections[index]);
     }
 
     fn review_lesson(&self, lesson: &Lesson) {
