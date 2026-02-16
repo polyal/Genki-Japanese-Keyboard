@@ -2,8 +2,8 @@ use rand::Rng;
 use std::collections::HashSet;
 use std::io;
 
-use crate::HiragaToKanjiConverter;
-use crate::RomanjiToKanaConverter;
+use crate::kana_converter::RomanjiToKanaConverter;
+use crate::kanji_converter::HiragaToKanjiConverter;
 use crate::lessons::Book;
 use crate::lessons::Lesson;
 use crate::lessons::Phrase;
