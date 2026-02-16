@@ -1,20 +1,12 @@
-use rand::Rng;
 use serde::Deserialize;
-use std::collections::HashSet;
 use std::fs;
-use std::io;
 
-use crate::RomanjiToKanaConverter;
-
-const COMMAND_QUIT: &str = ":q";
-const COMMAND_BACK: &str = ":b";
-
-struct Book {
+pub struct Book {
     lessons: Vec<Lesson>,
 }
 
 impl Book {
-    fn new() -> Self {
+    pub fn new() -> Self {
         // read genki lesson vocab
         let json = fs::read_to_string("resources/lessons.json")
             .expect("couldnt read resources/lessons.json");
@@ -26,22 +18,22 @@ impl Book {
         }
     }
 
-    fn get_lessons(&self) -> &Vec<Lesson> {
+    pub fn get_lessons(&self) -> &Vec<Lesson> {
         return &self.lessons;
     }
 
-    fn get_lesson(lessons: &Vec<Lesson>, index: usize) -> Option<&Lesson> {
+    pub fn get_lesson(lessons: &Vec<Lesson>, index: usize) -> Option<&Lesson> {
         if index >= lessons.len() {
             return None;
         }
         return Some(&lessons[index]);
     }
 
-    fn get_sections(lesson: &Lesson) -> &Vec<Section> {
+    pub fn get_sections(lesson: &Lesson) -> &Vec<Section> {
         return &lesson.sections;
     }
 
-    fn get_section<'a>(lesson: &'a Lesson, index: usize) -> Option<&'a Section> {
+    pub fn get_section<'a>(lesson: &'a Lesson, index: usize) -> Option<&'a Section> {
         if index >= lesson.sections.len() {
             return None;
         }
@@ -56,174 +48,24 @@ struct LessonsWrapper {
 }
 
 #[derive(Debug, Deserialize)]
-struct Lesson {
-    index: usize,
-    name_en: String,
-    name_jp: String,
+pub struct Lesson {
+    pub index: usize,
+    pub name_en: String,
+    pub name_jp: String,
     #[serde(default)]
-    sections: Vec<Section>,
+    pub sections: Vec<Section>,
 }
 
 #[derive(Debug, Deserialize)]
-struct Section {
-    name: String,
+pub struct Section {
+    pub name: String,
     #[serde(default)]
-    phrases: Vec<Phrase>,
+    pub phrases: Vec<Phrase>,
 }
 
 #[derive(Debug, Deserialize)]
-struct Phrase {
-    en: String,
-    jp: String,
-    kanji: Option<String>,
-}
-
-pub struct Reviewer {
-    book: Book,
-    converter: RomanjiToKanaConverter,
-}
-
-impl Reviewer {
-    pub fn new() -> Self {
-        Reviewer {
-            book: Book::new(),
-            converter: RomanjiToKanaConverter::new(),
-        }
-    }
-
-    pub fn start(&self) {
-        let mut buffer = String::new();
-        let lessons = self.book.get_lessons();
-        while buffer != COMMAND_QUIT {
-            buffer.clear();
-            // pick lesson
-            let mut lesson_idx = usize::MAX;
-            loop {
-                if let Some(lesson) = Book::get_lesson(lessons, lesson_idx) {
-                    let mut section_idx: usize;
-                    loop {
-                        // test section
-                        println!("\nPick a section: ");
-                        Self::print_sections(&lesson);
-                        Self::get_user_input(&mut buffer);
-                        match buffer.parse::<usize>() {
-                            Ok(n) => section_idx = n,
-                            Err(_e) => {
-                                if buffer == COMMAND_BACK {
-                                    break;
-                                } else {
-                                    continue;
-                                }
-                            }
-                        }
-
-                        if let Some(section) = Book::get_section(lesson, section_idx) {
-                            self.review_section(section);
-                        } else {
-                            self.review_lesson(lesson);
-                        }
-                    }
-                }
-
-                // lesson selection
-                println!("\nPick a lesson: ");
-                Self::print_lessons(lessons);
-                Self::get_user_input(&mut buffer);
-                match buffer.parse::<usize>() {
-                    Ok(n) => lesson_idx = n,
-                    Err(_e) => break,
-                }
-            }
-        }
-    }
-
-    fn get_user_input(buffer: &mut String) {
-        buffer.clear();
-        io::stdin().read_line(buffer).expect("failed to read line");
-        buffer.pop(); // remove '\n'
-    }
-
-    fn print_lessons(lessons: &Vec<Lesson>) {
-        for lesson in lessons {
-            println!(
-                "  [{}] {} - {}",
-                lesson.index, lesson.name_en, lesson.name_jp
-            );
-        }
-    }
-
-    fn print_sections(lesson: &Lesson) {
-        let sections = Book::get_sections(lesson);
-        let mut index: usize = 0;
-        for section in sections {
-            println!("  [{index}] {}", section.name);
-            index += 1;
-        }
-    }
-
-    fn review_lesson(&self, lesson: &Lesson) {
-        loop {
-            let section_idx = rand::thread_rng().gen_range(0..lesson.sections.len());
-            let section = &lesson.sections[section_idx];
-            let phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
-            let phrase = &section.phrases[phrase_idx];
-            if !self.review_phrase(&phrase) {
-                return;
-            }
-        }
-    }
-
-    fn review_section(&self, section: &Section) {
-        let mut asked: HashSet<usize> = HashSet::new();
-        loop {
-            if asked.len() == section.phrases.len() {
-                asked.clear();
-            }
-            let mut phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
-            while !asked.insert(phrase_idx) {
-                phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
-            }
-
-            print!("\n  [{}/{}] ", phrase_idx, section.phrases.len(),);
-            let phrase = &section.phrases[phrase_idx];
-            if !self.review_phrase(&phrase) {
-                break;
-            }
-        }
-    }
-
-    fn review_phrase(&self, phrase: &Phrase) -> bool {
-        let mut buffer = String::new();
-        let translate_direction = rand::thread_rng().gen_range(0..=1);
-        if translate_direction == 0 {
-            if let Some(kanji) = &phrase.kanji {
-                println!("translate '{}' - '{}' to english", phrase.jp, kanji);
-            } else {
-                println!("translate '{}' to english", phrase.jp);
-            }
-
-            Self::get_user_input(&mut buffer);
-            if buffer == COMMAND_BACK {
-                return false;
-            }
-
-            println!("  your    answer: '{}'", buffer);
-            println!("  correct answer: '{}'", phrase.en);
-        } else {
-            println!("translate '{}' to japanese", phrase.en);
-            Self::get_user_input(&mut buffer);
-            if buffer == COMMAND_BACK {
-                return false;
-            }
-
-            let kana = self.converter.convert(&buffer);
-            println!("  your    answer: '{}'", kana);
-            if let Some(kanji) = &phrase.kanji {
-                println!("  correct answer: '{}' - '{}'", phrase.jp, kanji);
-            } else {
-                println!("  correct answer: '{}'", phrase.jp);
-            }
-        }
-        return true;
-    }
+pub struct Phrase {
+    pub en: String,
+    pub jp: String,
+    pub kanji: Option<String>,
 }
