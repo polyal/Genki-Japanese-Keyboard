@@ -4,10 +4,7 @@ use std::io;
 
 use crate::kana_converter::RomanjiToKanaConverter;
 use crate::kanji_converter::HiragaToKanjiConverter;
-use crate::lessons::Book;
-use crate::lessons::Lesson;
-use crate::lessons::Phrase;
-use crate::lessons::Section;
+use crate::lessons::{Book, Lesson, Phrase, Section};
 
 const COMMAND_QUIT: &str = ":q";
 const COMMAND_BACK: &str = ":b";
