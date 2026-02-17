@@ -71,6 +71,14 @@ where
                     KeyCode::Char('q') => {
                         break;
                     }
+                    _ => {
+                        app.current_screen = CurrentScreen::LessonSelect;
+                    }
+                },
+                CurrentScreen::LessonSelect => match key.code {
+                    KeyCode::Char('q') => {
+                        break;
+                    }
                     _ => {}
                 },
                 _ => {}

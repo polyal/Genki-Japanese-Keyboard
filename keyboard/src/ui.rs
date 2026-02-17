@@ -10,6 +10,20 @@ use ratatui::{
 use crate::app::{App, CurrentScreen};
 
 pub fn ui(frame: &mut Frame, app: &App) {
+    match app.current_screen {
+        CurrentScreen::Welcome => {
+            render_welcome(frame, app);
+        }
+        CurrentScreen::LessonSelect => {
+            render_lesson_select(frame, app);
+        }
+        CurrentScreen::Review => {
+            render_review(frame, app);
+        }
+    }
+}
+
+fn render_welcome(frame: &mut Frame, app: &App) {
     let title = Line::from(" Genki Japanese Keyboard ".blue().bold());
     let instructions = Line::from(vec![" Welcome ".green().bold()]);
     let block = Block::bordered()
@@ -19,7 +33,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
 
     let start = Paragraph::new(Text::styled(
         r"      |\      _,,,---,,_
-		    ZZZzz /,`.-'`'    -.  ;-;;,_
+    ZZZzz /,`.-'`'    -.  ;-;;,_
           |,4-  ) )-,_. ,\ (  `'-'
     '---''(_/--'  `-'\_)",
         Style::default().fg(Color::Green),
@@ -29,3 +43,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
 
     frame.render_widget(start, frame.area());
 }
+
+fn render_lesson_select(frame: &mut Frame, app: &App) {}
+
+fn render_review(frame: &mut Frame, app: &App) {}
