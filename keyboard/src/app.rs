@@ -36,6 +36,13 @@ pub struct App {
     kana_converter: RomanjiToKanaConverter,
     kanji_converter: HiragaToKanjiConverter,
     pub context: Context,
+
+    romanji: String,
+    kana: String,
+    kanji: String,
+
+    pub kana_offset: usize,
+    pub kana_len: usize,
 }
 
 impl App {
@@ -45,6 +52,29 @@ impl App {
             kana_converter: RomanjiToKanaConverter::new(),
             kanji_converter: HiragaToKanjiConverter::new(),
             context: Context::new(),
+            romanji: String::new(),
+            kana: String::new(),
+            kanji: String::new(),
+            kana_offset: 0,
+            kana_len: 1,
         }
+    }
+
+    pub fn push_char(&mut self, value: char) {
+        self.romanji.push(value);
+        self.kana = self.kana_converter.convert(&self.romanji);
+    }
+
+    pub fn pop_char(&mut self) {
+        self.romanji.pop();
+        self.kana = self.kana_converter.convert(&self.romanji);
+    }
+
+    pub fn get_romanji(&self) -> String {
+        return self.romanji.clone();
+    }
+
+    pub fn get_kana(&self) -> String {
+        return self.kana.clone();
     }
 }

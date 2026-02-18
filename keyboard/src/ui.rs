@@ -116,4 +116,34 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
     frame.render_stateful_widget(section_list, selection_chunks[1], &mut section_state);
 }
 
-fn render_review(frame: &mut Frame, app: &App) {}
+fn render_review(frame: &mut Frame, app: &App) {
+    let [review_chunk, japanese_chunk, romanji_chunk] = Layout::vertical([
+        Constraint::Percentage(30),
+        Constraint::Percentage(30),
+        Constraint::Percentage(40),
+    ])
+    .areas(frame.area());
+
+    let [question_chunk, answer_selectior_chunk] =
+        Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .areas(review_chunk);
+    frame.render_widget(Block::bordered().title(" question "), question_chunk);
+    frame.render_widget(Block::bordered().title(" answer "), answer_selectior_chunk);
+
+    let [kana_chunk, kanji_selectior_chunk, kanji_chunk] = Layout::horizontal([
+        Constraint::Percentage(45),
+        Constraint::Percentage(10),
+        Constraint::Percentage(45),
+    ])
+    .areas(japanese_chunk);
+
+    let kana_text = Paragraph::new(app.get_kana()).block(Block::bordered().title(" kana "));
+    frame.render_widget(kana_text, kana_chunk);
+
+    frame.render_widget(Block::bordered().title(" kanji "), kanji_selectior_chunk);
+    frame.render_widget(Block::bordered().title(" complete "), kanji_chunk);
+
+    let romanji_text =
+        Paragraph::new(app.get_romanji()).block(Block::bordered().title(" romanji "));
+    frame.render_widget(romanji_text, romanji_chunk);
+}

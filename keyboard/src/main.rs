@@ -107,6 +107,9 @@ where
                         KeyCode::Char('q') => {
                             break;
                         }
+                        KeyCode::Enter => {
+                            app.context.current_screen = CurrentScreen::Review;
+                        }
                         KeyCode::Down => {
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson)
@@ -134,7 +137,18 @@ where
                     },
                     _ => {}
                 },
-                _ => {}
+                CurrentScreen::Review => match key.code {
+                    KeyCode::Esc => {
+                        break;
+                    }
+                    KeyCode::Char(value) => {
+                        app.push_char(value);
+                    }
+                    KeyCode::Backspace => {
+                        app.pop_char();
+                    }
+                    _ => {}
+                },
             }
         }
     }
