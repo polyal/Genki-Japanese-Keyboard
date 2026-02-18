@@ -87,21 +87,19 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
 
     // draw section selection
     let mut section_items = Vec::<ListItem>::new();
-    let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
-    for section in &lesson.sections {
-        section_items.push(ListItem::new(Line::from(Span::styled(
-            format!(" [{}] {} ", section_items.len(), section.name),
-            Style::default().fg(Color::Yellow),
-        ))));
-    }
-
     let mut section_state = ListState::default();
-    section_state.select(Some(app.context.section));
-
     let mut section_border_thinkness = border::PLAIN;
     match app.context.current_selection {
         CurrentSelection::Section => {
             section_border_thinkness = border::THICK;
+            let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
+            for section in &lesson.sections {
+                section_items.push(ListItem::new(Line::from(Span::styled(
+                    format!(" [{}] {} ", section_items.len(), section.name),
+                    Style::default().fg(Color::Yellow),
+                ))));
+            }
+            section_state.select(Some(app.context.section));
         }
         _ => {}
     }
