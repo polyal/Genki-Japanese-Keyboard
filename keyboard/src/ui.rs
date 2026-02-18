@@ -118,9 +118,9 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
 
 fn render_review(frame: &mut Frame, app: &App) {
     let [review_chunk, japanese_chunk, romanji_chunk] = Layout::vertical([
+        Constraint::Percentage(35),
+        Constraint::Percentage(35),
         Constraint::Percentage(30),
-        Constraint::Percentage(30),
-        Constraint::Percentage(40),
     ])
     .areas(frame.area());
 
