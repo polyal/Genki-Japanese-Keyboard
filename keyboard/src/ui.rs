@@ -137,13 +137,16 @@ fn render_review(frame: &mut Frame, app: &App) {
     ])
     .areas(japanese_chunk);
 
-    let kana_text = Paragraph::new(app.get_kana()).block(Block::bordered().title(" kana "));
+    let kana_text = Paragraph::new(app.get_kana())
+        .block(Block::bordered().title(" kana "))
+        .wrap(Wrap { trim: true });
     frame.render_widget(kana_text, kana_chunk);
 
     frame.render_widget(Block::bordered().title(" kanji "), kanji_selectior_chunk);
     frame.render_widget(Block::bordered().title(" complete "), kanji_chunk);
 
-    let romanji_text =
-        Paragraph::new(app.get_romanji()).block(Block::bordered().title(" romanji "));
+    let romanji_text = Paragraph::new(app.get_romanji())
+        .block(Block::bordered().title(" romanji "))
+        .wrap(Wrap { trim: true });
     frame.render_widget(romanji_text, romanji_chunk);
 }
