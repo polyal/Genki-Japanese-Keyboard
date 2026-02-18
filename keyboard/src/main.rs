@@ -19,7 +19,9 @@ use ratatui::{
 
 use app::App;
 use app::CurrentScreen;
+use app::CurrentSelection;
 use cli::Reviewer;
+use lessons::Book;
 use ui::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -66,19 +68,70 @@ where
                 // Skip events that are not KeyEventKind::Press
                 break;
             }
-            match app.current_screen {
+            match app.context.current_screen {
                 CurrentScreen::Welcome => match key.code {
                     KeyCode::Char('q') => {
                         break;
                     }
                     _ => {
-                        app.current_screen = CurrentScreen::LessonSelect;
+                        app.context.current_screen = CurrentScreen::LessonSelect;
                     }
                 },
-                CurrentScreen::LessonSelect => match key.code {
-                    KeyCode::Char('q') => {
-                        break;
-                    }
+                CurrentScreen::LessonSelect => match app.context.current_selection {
+                    CurrentSelection::Lesson => match key.code {
+                        KeyCode::Char('q') => {
+                            break;
+                        }
+                        KeyCode::Down => {
+                            app.context.section = 0;
+                            if app.context.lesson + 1 >= app.book.get_lessons().len() {
+                                app.context.lesson = 0;
+                            } else {
+                                app.context.lesson += 1;
+                            }
+                        }
+                        KeyCode::Up => {
+                            app.context.section = 0;
+                            if app.context.lesson == 0 {
+                                app.context.lesson = app.book.get_lessons().len() - 1;
+                            } else {
+                                app.context.lesson -= 1;
+                            }
+                        }
+                        KeyCode::Right => {
+                            app.context.current_selection = CurrentSelection::Section;
+                        }
+                        _ => {}
+                    },
+                    CurrentSelection::Section => match key.code {
+                        KeyCode::Char('q') => {
+                            break;
+                        }
+                        KeyCode::Down => {
+                            let lesson =
+                                Book::get_lesson(app.book.get_lessons(), app.context.lesson)
+                                    .unwrap();
+                            if app.context.section + 1 >= lesson.sections.len() {
+                                app.context.section = 0;
+                            } else {
+                                app.context.section += 1;
+                            }
+                        }
+                        KeyCode::Up => {
+                            let lesson =
+                                Book::get_lesson(app.book.get_lessons(), app.context.lesson)
+                                    .unwrap();
+                            if app.context.section == 0 {
+                                app.context.section = lesson.sections.len() - 1;
+                            } else {
+                                app.context.section -= 1;
+                            }
+                        }
+                        KeyCode::Left => {
+                            app.context.current_selection = CurrentSelection::Lesson;
+                        }
+                        _ => {}
+                    },
                     _ => {}
                 },
                 _ => {}

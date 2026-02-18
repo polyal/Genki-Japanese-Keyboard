@@ -8,11 +8,34 @@ pub enum CurrentScreen {
     Review,
 }
 
+pub enum CurrentSelection {
+    Lesson,
+    Section,
+}
+
+pub struct Context {
+    pub current_screen: CurrentScreen,
+    pub current_selection: CurrentSelection,
+    pub lesson: usize,
+    pub section: usize,
+}
+
+impl Context {
+    fn new() -> Self {
+        Context {
+            current_screen: CurrentScreen::Welcome,
+            current_selection: CurrentSelection::Lesson,
+            lesson: 0,
+            section: 0,
+        }
+    }
+}
+
 pub struct App {
-    book: Book,
+    pub book: Book,
     kana_converter: RomanjiToKanaConverter,
     kanji_converter: HiragaToKanjiConverter,
-    pub current_screen: CurrentScreen,
+    pub context: Context,
 }
 
 impl App {
@@ -21,7 +44,7 @@ impl App {
             book: Book::new(),
             kana_converter: RomanjiToKanaConverter::new(),
             kanji_converter: HiragaToKanjiConverter::new(),
-            current_screen: CurrentScreen::Welcome,
+            context: Context::new(),
         }
     }
 }
