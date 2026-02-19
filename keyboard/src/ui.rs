@@ -137,7 +137,36 @@ fn render_review(frame: &mut Frame, app: &App) {
     ])
     .areas(japanese_chunk);
 
-    let kana_text = Paragraph::new(app.get_kana())
+    let kana = app.get_kana();
+    let mut left = String::new();
+    let mut middle = String::new();
+    let mut right = String::new();
+    if kana.chars().count() > 0 {
+        assert!(app.kana_offset + app.kana_len <= kana.chars().count());
+        middle = kana
+            .chars()
+            .take(app.kana_offset + app.kana_len)
+            .skip(app.kana_offset)
+            .collect();
+        if app.kana_offset > 0 {
+            left = kana.chars().take(app.kana_offset).collect();
+        }
+        if app.kana_offset + app.kana_len < kana.chars().count() {
+            right = kana
+                .chars()
+                .take(kana.chars().count())
+                .skip(app.kana_offset + app.kana_len)
+                .collect();
+        }
+    }
+
+    let kana_formatted = Text::from(vec![Line::from(vec![
+        Span::raw(left),
+        Span::styled(middle, Style::default().add_modifier(Modifier::REVERSED)),
+        Span::raw(right),
+    ])]);
+
+    let kana_text = Paragraph::new(kana_formatted)
         .block(Block::bordered().title(" kana "))
         .wrap(Wrap { trim: true });
     frame.render_widget(kana_text, kana_chunk);
