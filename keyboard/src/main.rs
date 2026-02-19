@@ -11,7 +11,10 @@ use ratatui::{
     Terminal,
     backend::{Backend, CrosstermBackend},
     crossterm::{
-        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+        event::{
+            self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind,
+            KeyModifiers, ModifierKeyCode,
+        },
         execute,
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
@@ -141,11 +144,54 @@ where
                     KeyCode::Esc => {
                         break;
                     }
+                    KeyCode::Right => {
+                        if key.modifiers.contains(KeyModifiers::SHIFT) {
+                            if app.kana_offset + app.kana_len < app.get_kana().chars().count() {
+                                app.kana_len += 1;
+                            }
+                        } else {
+                            if app.kana_offset + app.kana_len < app.get_kana().chars().count() {
+                                app.kana_offset += 1;
+                            }
+                            app.kana_len = 1;
+                        }
+                    }
+                    KeyCode::Left => {
+                        if key.modifiers.contains(KeyModifiers::SHIFT) {
+                            if app.kana_len > 1 {
+                                app.kana_len -= 1;
+                            }
+                        } else {
+                            if app.kana_offset > 0 {
+                                app.kana_offset -= 1;
+                            }
+                            app.kana_len = 1;
+                        }
+                    }
                     KeyCode::Char(value) => {
                         app.push_char(value);
+                        // when last charachter dissapears do to kana conversion
+                        if app.kana_offset + app.kana_len > app.get_kana().chars().count() {
+                            app.kana_offset -=
+                                app.kana_offset + app.kana_len - app.get_kana().chars().count();
+                        }
                     }
                     KeyCode::Backspace => {
                         app.pop_char();
+                        // undo highlighted all chars if removing highlighted char
+                        if app.get_kana().chars().count() > 0
+                            && app.kana_len > 1
+                            && app.kana_offset + app.kana_len > app.get_kana().chars().count()
+                        {
+                            app.kana_len -= 1;
+                        }
+                        // move cursor back if cursor is at end of string
+                        if app.get_kana().chars().count() > 0
+                            && app.kana_offset + app.kana_len > app.get_kana().chars().count()
+                        {
+                            app.kana_offset -=
+                                app.kana_offset + app.kana_len - app.get_kana().chars().count();
+                        }
                     }
                     _ => {}
                 },
