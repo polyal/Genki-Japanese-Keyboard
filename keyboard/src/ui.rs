@@ -137,12 +137,14 @@ fn render_review(frame: &mut Frame, app: &App) {
     ])
     .areas(japanese_chunk);
 
+    // kana box with highlighting
     let kana = app.get_kana();
     let mut left = String::new();
     let mut middle = String::new();
     let mut right = String::new();
     if kana.chars().count() > 0 {
         assert!(app.kana_offset + app.kana_len <= kana.chars().count());
+        assert!(app.kana_len >= 1);
         middle = kana
             .chars()
             .take(app.kana_offset + app.kana_len)
@@ -160,9 +162,10 @@ fn render_review(frame: &mut Frame, app: &App) {
         }
     }
 
+    // highlight selected kana
     let kana_formatted = Text::from(vec![Line::from(vec![
         Span::raw(left),
-        Span::styled(middle, Style::default().add_modifier(Modifier::REVERSED)),
+        Span::styled(&middle, Style::default().add_modifier(Modifier::REVERSED)),
         Span::raw(right),
     ])]);
 
@@ -171,9 +174,32 @@ fn render_review(frame: &mut Frame, app: &App) {
         .wrap(Wrap { trim: true });
     frame.render_widget(kana_text, kana_chunk);
 
-    frame.render_widget(Block::bordered().title(" kanji "), kanji_selectior_chunk);
+    // kanji selection
+    let kanji = app.kanji_converter.convert(&middle);
+    let mut kanji_items = Vec::<ListItem>::new();
+    for kanji_char in &kanji {
+        kanji_items.push(ListItem::new(
+            Line::from(Span::styled(
+                format!(" {} ", kanji_char),
+                Style::default().fg(Color::Yellow),
+            ))
+            .centered(),
+        ));
+    }
+
+    let mut kanji_state = ListState::default();
+    if kanji.len() > 0 {
+        kanji_state.select(Some(0)); // TODO: kanji list navigation
+    }
+
+    let kanji_list = List::new(kanji_items)
+        .block(Block::bordered().title(" kanji "))
+        .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+
+    frame.render_stateful_widget(kanji_list, kanji_selectior_chunk, &mut kanji_state);
     frame.render_widget(Block::bordered().title(" complete "), kanji_chunk);
 
+    // romanji text box
     let romanji_text = Paragraph::new(app.get_romanji())
         .block(Block::bordered().title(" romanji "))
         .wrap(Wrap { trim: true });

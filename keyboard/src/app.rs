@@ -34,7 +34,7 @@ impl Context {
 pub struct App {
     pub book: Book,
     kana_converter: RomanjiToKanaConverter,
-    kanji_converter: HiragaToKanjiConverter,
+    pub kanji_converter: HiragaToKanjiConverter,
     pub context: Context,
 
     romanji: String,
