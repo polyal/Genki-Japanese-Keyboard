@@ -124,13 +124,13 @@ fn render_review(frame: &mut Frame, app: &App) {
     ])
     .areas(frame.area());
 
-    let [question_chunk, answer_selectior_chunk] =
+    let [question_chunk, answer_selector_chunk] =
         Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
             .areas(review_chunk);
     frame.render_widget(Block::bordered().title(" question "), question_chunk);
-    frame.render_widget(Block::bordered().title(" answer "), answer_selectior_chunk);
+    frame.render_widget(Block::bordered().title(" answer "), answer_selector_chunk);
 
-    let [kana_chunk, kanji_selectior_chunk, kanji_chunk] = Layout::horizontal([
+    let [kana_chunk, kanji_selector_chunk, kanji_chunk] = Layout::horizontal([
         Constraint::Percentage(45),
         Constraint::Percentage(10),
         Constraint::Percentage(45),
@@ -196,8 +196,13 @@ fn render_review(frame: &mut Frame, app: &App) {
         .block(Block::bordered().title(" kanji "))
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
 
-    frame.render_stateful_widget(kanji_list, kanji_selectior_chunk, &mut kanji_state);
-    frame.render_widget(Block::bordered().title(" complete "), kanji_chunk);
+    frame.render_stateful_widget(kanji_list, kanji_selector_chunk, &mut kanji_state);
+
+    // kanji text box
+    let complete_text = Paragraph::new(app.get_kanji())
+        .block(Block::bordered().title(" complete "))
+        .wrap(Wrap { trim: true });
+    frame.render_widget(complete_text, kanji_chunk);
 
     // romanji text box
     let romanji_text = Paragraph::new(app.get_romanji())

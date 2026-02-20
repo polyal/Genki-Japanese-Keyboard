@@ -144,7 +144,9 @@ where
                         break;
                     }
                     KeyCode::Tab => {
-                        break;
+                        if app.get_kana().chars().count() > 0 {
+                            app.push_kanji_offset((app.kana_offset, app.kana_len, 0)); // TODO: kanji selection
+                        }
                     }
                     KeyCode::Right => {
                         if key.modifiers.contains(KeyModifiers::SHIFT) {
@@ -199,6 +201,7 @@ where
                 },
             }
         }
+        app.update_kanji();
     }
     return Ok(true);
 }
