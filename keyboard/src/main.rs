@@ -138,10 +138,12 @@ where
                         }
                         _ => {}
                     },
-                    _ => {}
                 },
                 CurrentScreen::Review => match key.code {
                     KeyCode::Esc => {
+                        break;
+                    }
+                    KeyCode::Tab => {
                         break;
                     }
                     KeyCode::Right => {
