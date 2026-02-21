@@ -33,8 +33,8 @@ impl Context {
 
 pub struct App {
     pub book: Book,
-    pub kana_converter: RomanjiToKanaConverter,
-    pub kanji_converter: HiragaToKanjiConverter,
+    kana_converter: RomanjiToKanaConverter,
+    kanji_converter: HiragaToKanjiConverter,
     pub context: Context,
 
     romanji: String,
@@ -133,6 +133,10 @@ impl App {
                 }
             }
         }
+    }
+
+    pub fn convert_to_kanji(&self, hiragana: &String) -> Vec<char> {
+        return self.kanji_converter.convert(&hiragana);
     }
 
     pub fn get_romanji(&self) -> String {

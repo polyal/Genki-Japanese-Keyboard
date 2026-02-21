@@ -183,7 +183,7 @@ fn render_review(frame: &mut Frame, app: &App) {
     frame.render_widget(kana_text, kana_chunk);
 
     // kanji selection
-    let kanji = app.kanji_converter.convert(&middle);
+    let kanji = app.convert_to_kanji(&middle);
     let mut kanji_items = Vec::<ListItem>::new();
     for kanji_char in &kanji {
         kanji_items.push(ListItem::new(
