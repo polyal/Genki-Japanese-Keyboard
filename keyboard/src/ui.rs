@@ -81,8 +81,7 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
                 .border_set(lesson_border_thinkness),
         )
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-        .highlight_symbol(">>");
-
+        .highlight_symbol("‣");
     frame.render_stateful_widget(lesson_list, selection_chunks[0], &mut lesson_state);
 
     // draw section selection
@@ -111,7 +110,7 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
                 .border_set(section_border_thinkness),
         )
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-        .highlight_symbol(">>");
+        .highlight_symbol("‣");
 
     frame.render_stateful_widget(section_list, selection_chunks[1], &mut section_state);
 }
@@ -127,7 +126,16 @@ fn render_review(frame: &mut Frame, app: &App) {
     let [question_chunk, answer_selector_chunk] =
         Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
             .areas(review_chunk);
-    frame.render_widget(Block::bordered().title(" question "), question_chunk);
+
+    let lessons = app.book.get_lessons();
+    assert!(app.context.lesson < lessons.len());
+    let lesson = &lessons[app.context.lesson];
+    assert!(app.context.section < lesson.sections.len());
+    let section = &lesson.sections[app.context.section];
+    let question_text = Paragraph::new(format!(" Translate from Japanese"))
+        .block(Block::bordered().title(format!(" Lesson {} - {} ", lesson.index, section.name)))
+        .wrap(Wrap { trim: true });
+    frame.render_widget(question_text, question_chunk);
     frame.render_widget(Block::bordered().title(" answer "), answer_selector_chunk);
 
     let [kana_chunk, kanji_selector_chunk, kanji_chunk] = Layout::horizontal([
