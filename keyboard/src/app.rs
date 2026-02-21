@@ -76,59 +76,60 @@ impl App {
         let start = offset.0;
         let end = offset.0 + offset.1;
         let kanji_list_offset = offset.2;
-        assert!(start <= self.kana.chars().count() && end <= self.kana.chars().count());
-        let kana_substr: String = self.kanji.chars().take(end).skip(start).collect();
+        assert!(start < self.kana.chars().count() && end <= self.kana.chars().count());
+        let kana_substr: String = self.kana.chars().take(end).skip(start).collect();
         let kanji_list = self.kanji_converter.convert(&kana_substr);
         if kanji_list_offset < kanji_list.len() {
-            let kanji_char = String::from(kanji_list[kanji_list_offset]);
-            let start_byte_index = self
-                .kana
-                .char_indices()
-                .nth(start)
-                .map(|(i, _)| i)
-                .unwrap_or(self.kana.len());
-            let end_byte_index = self
-                .kana
-                .char_indices()
-                .nth(end)
-                .map(|(i, _)| i)
-                .unwrap_or(self.kana.len());
+            // remove colliding offsets
+            self.kanji_offsets.retain(|kanji_offset| {
+                let start = offset.0;
+                let end = offset.0 + offset.1;
+                return !(start >= kanji_offset.0 && start < kanji_offset.0 + kanji_offset.1)
+                    && !(end > kanji_offset.0 && end <= kanji_offset.0 + kanji_offset.1);
+            });
             self.kanji_offsets.push(offset);
         }
     }
 
     pub fn update_kanji(&mut self) {
         self.kanji = self.kana.clone();
+        // remove offsets that no longer exist because of a backspace
         self.kanji_offsets.retain(|kanji_offset| {
             let start = kanji_offset.0;
             let end = kanji_offset.0 + kanji_offset.1;
-            return (start <= self.kana.chars().count() && end <= self.kana.chars().count());
+            return start <= self.kana.chars().count() && end <= self.kana.chars().count();
         });
         if self.kanji.chars().count() > 0 {
+            // sort to keep adjusted offset valid
+            self.kanji_offsets.sort();
+            let mut offset_adjust: usize = 0;
             // update kanji text
             for kanji_offset in &self.kanji_offsets {
+                assert!(kanji_offset.1 >= 1);
                 let start = kanji_offset.0;
                 let end = kanji_offset.0 + kanji_offset.1;
                 let kanji_list_offset = kanji_offset.2;
                 assert!(start <= self.kana.chars().count() && end <= self.kana.chars().count());
-                let kana_substr: String = self.kanji.chars().take(end).skip(start).collect();
+                let kana_substr: String = self.kana.chars().take(end).skip(start).collect();
                 let kanji_list = self.kanji_converter.convert(&kana_substr);
                 if kanji_list_offset < kanji_list.len() {
                     let kanji_char = String::from(kanji_list[kanji_list_offset]);
                     let start_byte_index = self
-                        .kana
+                        .kanji
                         .char_indices()
-                        .nth(start)
+                        .nth(start - offset_adjust)
                         .map(|(i, _)| i)
-                        .unwrap_or(self.kana.len());
+                        .unwrap_or(self.kanji.len());
                     let end_byte_index = self
-                        .kana
+                        .kanji
                         .char_indices()
-                        .nth(end)
+                        .nth(end - offset_adjust)
                         .map(|(i, _)| i)
-                        .unwrap_or(self.kana.len());
+                        .unwrap_or(self.kanji.len());
                     self.kanji
                         .replace_range(start_byte_index..end_byte_index, &kanji_char);
+                    // adjust for shorter len kanji than hiragana after swap
+                    offset_adjust += kanji_offset.1 - 1;
                 }
             }
         }
