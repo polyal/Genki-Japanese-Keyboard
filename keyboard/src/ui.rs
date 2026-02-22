@@ -8,7 +8,7 @@ use ratatui::{
 };
 
 use crate::Book;
-use crate::app::{App, CurrentScreen, CurrentSelection};
+use crate::app::{App, CurrentScreen, CurrentSelection, TranslationDirection};
 
 pub fn ui(frame: &mut Frame, app: &App) {
     match app.context.current_screen {
@@ -132,11 +132,33 @@ fn render_review(frame: &mut Frame, app: &App) {
     let lesson = &lessons[app.context.lesson];
     assert!(app.context.section < lesson.sections.len());
     let section = &lesson.sections[app.context.section];
-    let question_text = Paragraph::new(format!(" Translate from Japanese"))
+
+    let mut question_title = String::new();
+    let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
+    let section = Book::get_section(lesson, app.context.section).unwrap();
+    let phrase = &section.phrases[app.context.phrase];
+    match app.context.translation_direction {
+        TranslationDirection::English => {
+            if let Some(kanji) = &phrase.kanji {
+                question_title = format!(" Translate from Japanese\n'{}' - '{}'", phrase.jp, kanji);
+            } else {
+                question_title = format!(" Translate from Japanese\n'{}'", phrase.jp);
+            }
+        }
+        TranslationDirection::Japanese => {
+            question_title = format!(" Translate from English\n'{}'", phrase.en);
+        }
+    }
+    let question_text = Paragraph::new(question_title)
         .block(Block::bordered().title(format!(" Lesson {} - {} ", lesson.index, section.name)))
         .wrap(Wrap { trim: true });
     frame.render_widget(question_text, question_chunk);
-    frame.render_widget(Block::bordered().title(" answer "), answer_selector_chunk);
+
+    if app.context.show_answer {}
+    let answer_text = Paragraph::new(format!(" --show answer here-- "))
+        .block(Block::bordered().title(format!(" answer ")))
+        .wrap(Wrap { trim: true });
+    frame.render_widget(answer_text, answer_selector_chunk);
 
     let [kana_chunk, kanji_selector_chunk, kanji_chunk] = Layout::horizontal([
         Constraint::Percentage(45),

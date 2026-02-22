@@ -13,11 +13,19 @@ pub enum CurrentSelection {
     Section,
 }
 
+pub enum TranslationDirection {
+    English,
+    Japanese,
+}
+
 pub struct Context {
     pub current_screen: CurrentScreen,
     pub current_selection: CurrentSelection,
     pub lesson: usize,
     pub section: usize,
+    pub phrase: usize,
+    pub translation_direction: TranslationDirection,
+    pub show_answer: bool,
 }
 
 impl Context {
@@ -27,6 +35,9 @@ impl Context {
             current_selection: CurrentSelection::Lesson,
             lesson: 0,
             section: 0,
+            phrase: 0,
+            translation_direction: TranslationDirection::English,
+            show_answer: false,
         }
     }
 }
@@ -99,6 +110,7 @@ impl App {
             let end = kanji_offset.0 + kanji_offset.1;
             return start <= self.kana.chars().count() && end <= self.kana.chars().count();
         });
+        // generate kanji from kana and offsets
         if self.kanji.chars().count() > 0 {
             // sort to keep adjusted offset valid
             self.kanji_offsets.sort();
