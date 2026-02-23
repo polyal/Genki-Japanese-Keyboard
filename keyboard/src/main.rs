@@ -113,9 +113,9 @@ where
                             app.context.current_screen = CurrentScreen::Review;
                             let translation_direction = rand::thread_rng().gen_range(0..=1);
                             if translation_direction == 0 {
-                                app.context.translation_direction = TranslationDirection::Japanese;
+                                app.context.translation_direction = TranslationDirection::ToJP;
                             } else {
-                                app.context.translation_direction = TranslationDirection::English;
+                                app.context.translation_direction = TranslationDirection::ToEN;
                             }
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson)
@@ -158,12 +158,23 @@ where
                         app.context.prev_translation_direction =
                             Some(app.context.translation_direction);
                         app.context.prev_phrase = Some(app.context.phrase);
-                        app.context.prev_answer = Some(app.kanji.clone());
+                        if let Some(prev_translation_direction) =
+                            app.context.prev_translation_direction
+                        {
+                            match prev_translation_direction {
+                                TranslationDirection::ToEN => {
+                                    app.context.prev_answer = Some(app.romanji.clone());
+                                }
+                                TranslationDirection::ToJP => {
+                                    app.context.prev_answer = Some(app.kanji.clone());
+                                }
+                            }
+                        }
                         let translation_direction = rand::thread_rng().gen_range(0..=1);
                         if translation_direction == 0 {
-                            app.context.translation_direction = TranslationDirection::Japanese;
+                            app.context.translation_direction = TranslationDirection::ToJP;
                         } else {
-                            app.context.translation_direction = TranslationDirection::English;
+                            app.context.translation_direction = TranslationDirection::ToEN;
                         }
                         let lesson =
                             Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();

@@ -15,8 +15,8 @@ pub enum CurrentSelection {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TranslationDirection {
-    English,
-    Japanese,
+    ToEN,
+    ToJP,
 }
 
 pub struct Context {
@@ -40,7 +40,7 @@ impl Context {
             section: 0,
             phrase: 0,
             prev_phrase: None,
-            translation_direction: TranslationDirection::English,
+            translation_direction: TranslationDirection::ToEN,
             prev_translation_direction: None,
             prev_answer: None,
         }

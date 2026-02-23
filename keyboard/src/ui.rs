@@ -138,14 +138,14 @@ fn render_review(frame: &mut Frame, app: &App) {
     let section = Book::get_section(lesson, app.context.section).unwrap();
     let phrase = &section.phrases[app.context.phrase];
     match app.context.translation_direction {
-        TranslationDirection::English => {
+        TranslationDirection::ToEN => {
             if let Some(kanji) = &phrase.kanji {
                 question_title = format!(" Translate from Japanese\n'{}' - '{}'", phrase.jp, kanji);
             } else {
                 question_title = format!(" Translate from Japanese\n'{}'", phrase.jp);
             }
         }
-        TranslationDirection::Japanese => {
+        TranslationDirection::ToJP => {
             question_title = format!(" Translate from English\n'{}'", phrase.en);
         }
     }
@@ -164,14 +164,14 @@ fn render_review(frame: &mut Frame, app: &App) {
         let section = Book::get_section(lesson, app.context.section).unwrap();
         let phrase = &section.phrases[prev_phrase];
         match prev_translation_direction {
-            TranslationDirection::English => {
+            TranslationDirection::ToEN => {
                 answer_title = format!(
                     "correct answer: '{}'\nyour answer:    '{}'",
                     phrase.en,
                     prev_answer.clone()
                 );
             }
-            TranslationDirection::Japanese => {
+            TranslationDirection::ToJP => {
                 if let Some(kanji) = &phrase.kanji {
                     answer_title = format!(
                         "correct answer: '{}' - '{}'\nyour answer:    '{}'",
