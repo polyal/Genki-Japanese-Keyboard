@@ -13,6 +13,7 @@ pub enum CurrentSelection {
     Section,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TranslationDirection {
     English,
     Japanese,
@@ -24,8 +25,10 @@ pub struct Context {
     pub lesson: usize,
     pub section: usize,
     pub phrase: usize,
+    pub prev_phrase: Option<usize>,
     pub translation_direction: TranslationDirection,
-    pub show_answer: bool,
+    pub prev_translation_direction: Option<TranslationDirection>,
+    pub prev_answer: Option<String>,
 }
 
 impl Context {
@@ -36,8 +39,10 @@ impl Context {
             lesson: 0,
             section: 0,
             phrase: 0,
+            prev_phrase: None,
             translation_direction: TranslationDirection::English,
-            show_answer: false,
+            prev_translation_direction: None,
+            prev_answer: None,
         }
     }
 }
@@ -48,9 +53,9 @@ pub struct App {
     kanji_converter: HiragaToKanjiConverter,
     pub context: Context,
 
-    romanji: String,
-    kana: String,
-    kanji: String,
+    pub romanji: String,
+    pub kana: String,
+    pub kanji: String,
 
     pub kana_offset: usize,
     pub kana_len: usize,

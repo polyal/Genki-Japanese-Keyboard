@@ -155,13 +155,23 @@ where
                         break;
                     }
                     KeyCode::Enter => {
+                        app.context.prev_translation_direction =
+                            Some(app.context.translation_direction);
+                        app.context.prev_phrase = Some(app.context.phrase);
+                        app.context.prev_answer = Some(app.kanji.clone());
                         let translation_direction = rand::thread_rng().gen_range(0..=1);
                         if translation_direction == 0 {
                             app.context.translation_direction = TranslationDirection::Japanese;
                         } else {
                             app.context.translation_direction = TranslationDirection::English;
                         }
-                        app.context.show_answer = true;
+                        let lesson =
+                            Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
+                        let section = Book::get_section(lesson, app.context.section).unwrap();
+                        app.context.phrase = rand::thread_rng().gen_range(0..section.phrases.len());
+                        app.romanji.clear();
+                        app.kana.clear();
+                        app.kanji.clear();
                     }
                     KeyCode::Tab => {
                         if app.get_kana().chars().count() > 0 {

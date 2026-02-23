@@ -154,8 +154,42 @@ fn render_review(frame: &mut Frame, app: &App) {
         .wrap(Wrap { trim: true });
     frame.render_widget(question_text, question_chunk);
 
-    if app.context.show_answer {}
-    let answer_text = Paragraph::new(format!(" --show answer here-- "))
+    let mut answer_title = String::new();
+    if let Some(prev_phrase) = app.context.prev_phrase {
+        assert!(app.context.prev_translation_direction != None);
+        assert!(app.context.prev_answer != None);
+        let prev_translation_direction = app.context.prev_translation_direction.unwrap();
+        let prev_answer = app.context.prev_answer.as_ref().unwrap();
+        let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
+        let section = Book::get_section(lesson, app.context.section).unwrap();
+        let phrase = &section.phrases[prev_phrase];
+        match prev_translation_direction {
+            TranslationDirection::English => {
+                answer_title = format!(
+                    "correct answer: '{}'\nyour answer:    '{}'",
+                    phrase.en,
+                    prev_answer.clone()
+                );
+            }
+            TranslationDirection::Japanese => {
+                if let Some(kanji) = &phrase.kanji {
+                    answer_title = format!(
+                        "correct answer: '{}' - '{}'\nyour answer:    '{}'",
+                        phrase.jp,
+                        kanji,
+                        prev_answer.clone()
+                    );
+                } else {
+                    answer_title = format!(
+                        "correct answer: '{}'\nyour answer:    '{}'",
+                        phrase.jp,
+                        prev_answer.clone()
+                    );
+                }
+            }
+        }
+    }
+    let answer_text = Paragraph::new(answer_title)
         .block(Block::bordered().title(format!(" answer ")))
         .wrap(Wrap { trim: true });
     frame.render_widget(answer_text, answer_selector_chunk);
