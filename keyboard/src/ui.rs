@@ -98,7 +98,7 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
                     Style::default().fg(Color::Yellow),
                 ))));
             }
-            section_state.select(Some(app.context.section));
+            section_state.select(app.context.section);
         }
         _ => {}
     }
@@ -130,12 +130,12 @@ fn render_review(frame: &mut Frame, app: &App) {
     let lessons = app.book.get_lessons();
     assert!(app.context.lesson < lessons.len());
     let lesson = &lessons[app.context.lesson];
-    assert!(app.context.section < lesson.sections.len());
-    let section = &lesson.sections[app.context.section];
+    assert!(app.context.section.unwrap() < lesson.sections.len());
+    let section = &lesson.sections[app.context.section.unwrap()];
 
     let mut question_title = String::new();
     let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
-    let section = Book::get_section(lesson, app.context.section).unwrap();
+    let section = Book::get_section(lesson, app.context.section.unwrap()).unwrap();
     let phrase = &section.phrases[app.context.phrase];
     match app.context.translation_direction {
         TranslationDirection::ToEN => {
@@ -161,7 +161,7 @@ fn render_review(frame: &mut Frame, app: &App) {
         let prev_translation_direction = app.context.prev_translation_direction.unwrap();
         let prev_answer = app.context.prev_answer.as_ref().unwrap();
         let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
-        let section = Book::get_section(lesson, app.context.section).unwrap();
+        let section = Book::get_section(lesson, app.context.prev_section.unwrap()).unwrap();
         let phrase = &section.phrases[prev_phrase];
         match prev_translation_direction {
             TranslationDirection::ToEN => {

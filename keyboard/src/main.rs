@@ -84,8 +84,26 @@ where
                         KeyCode::Char('q') => {
                             break;
                         }
+                        KeyCode::Enter => {
+                            app.context.current_screen = CurrentScreen::Review;
+                            let translation_direction = rand::thread_rng().gen_range(0..=1);
+                            if translation_direction == 0 {
+                                app.context.translation_direction = TranslationDirection::ToJP;
+                            } else {
+                                app.context.translation_direction = TranslationDirection::ToEN;
+                            }
+                            let lesson =
+                                Book::get_lesson(app.book.get_lessons(), app.context.lesson)
+                                    .unwrap();
+                            app.context.section =
+                                Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
+                            let section =
+                                Book::get_section(lesson, app.context.section.unwrap()).unwrap();
+                            app.context.phrase =
+                                rand::thread_rng().gen_range(0..section.phrases.len());
+                            app.context.randomize_section = true;
+                        }
                         KeyCode::Down => {
-                            app.context.section = 0;
                             if app.context.lesson + 1 >= app.book.get_lessons().len() {
                                 app.context.lesson = 0;
                             } else {
@@ -93,7 +111,6 @@ where
                             }
                         }
                         KeyCode::Up => {
-                            app.context.section = 0;
                             if app.context.lesson == 0 {
                                 app.context.lesson = app.book.get_lessons().len() - 1;
                             } else {
@@ -102,6 +119,8 @@ where
                         }
                         KeyCode::Right => {
                             app.context.current_selection = CurrentSelection::Section;
+                            app.context.section = Some(0);
+                            app.context.randomize_section = false;
                         }
                         _ => {}
                     },
@@ -120,7 +139,8 @@ where
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson)
                                     .unwrap();
-                            let section = Book::get_section(lesson, app.context.section).unwrap();
+                            let section =
+                                Book::get_section(lesson, app.context.section.unwrap()).unwrap();
                             app.context.phrase =
                                 rand::thread_rng().gen_range(0..section.phrases.len());
                         }
@@ -128,24 +148,25 @@ where
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson)
                                     .unwrap();
-                            if app.context.section + 1 >= lesson.sections.len() {
-                                app.context.section = 0;
+                            if app.context.section.unwrap() + 1 >= lesson.sections.len() {
+                                app.context.section.get_or_insert(0);
                             } else {
-                                app.context.section += 1;
+                                *app.context.section.get_or_insert(0) += 1;
                             }
                         }
                         KeyCode::Up => {
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson)
                                     .unwrap();
-                            if app.context.section == 0 {
-                                app.context.section = lesson.sections.len() - 1;
+                            if app.context.section.unwrap() == 0 {
+                                app.context.section.get_or_insert(lesson.sections.len() - 1);
                             } else {
-                                app.context.section -= 1;
+                                *app.context.section.get_or_insert(0) -= 1;
                             }
                         }
                         KeyCode::Left => {
                             app.context.current_selection = CurrentSelection::Lesson;
+                            app.context.section = None;
                         }
                         _ => {}
                     },
@@ -155,9 +176,10 @@ where
                         break;
                     }
                     KeyCode::Enter => {
+                        app.context.prev_section = app.context.section;
+                        app.context.prev_phrase = Some(app.context.phrase);
                         app.context.prev_translation_direction =
                             Some(app.context.translation_direction);
-                        app.context.prev_phrase = Some(app.context.phrase);
                         if let Some(prev_translation_direction) =
                             app.context.prev_translation_direction
                         {
@@ -178,7 +200,12 @@ where
                         }
                         let lesson =
                             Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
-                        let section = Book::get_section(lesson, app.context.section).unwrap();
+                        if app.context.randomize_section == true {
+                            app.context.section =
+                                Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
+                        }
+                        let section =
+                            Book::get_section(lesson, app.context.section.unwrap()).unwrap();
                         app.context.phrase = rand::thread_rng().gen_range(0..section.phrases.len());
                         app.romanji.clear();
                         app.kana.clear();

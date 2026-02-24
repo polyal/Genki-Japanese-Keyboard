@@ -23,12 +23,14 @@ pub struct Context {
     pub current_screen: CurrentScreen,
     pub current_selection: CurrentSelection,
     pub lesson: usize,
-    pub section: usize,
+    pub section: Option<usize>,
     pub phrase: usize,
-    pub prev_phrase: Option<usize>,
     pub translation_direction: TranslationDirection,
+    pub prev_section: Option<usize>,
+    pub prev_phrase: Option<usize>,
     pub prev_translation_direction: Option<TranslationDirection>,
     pub prev_answer: Option<String>,
+    pub randomize_section: bool,
 }
 
 impl Context {
@@ -37,12 +39,14 @@ impl Context {
             current_screen: CurrentScreen::Welcome,
             current_selection: CurrentSelection::Lesson,
             lesson: 0,
-            section: 0,
+            section: None,
             phrase: 0,
-            prev_phrase: None,
             translation_direction: TranslationDirection::ToEN,
+            prev_section: None,
+            prev_phrase: None,
             prev_translation_direction: None,
             prev_answer: None,
+            randomize_section: false,
         }
     }
 }
