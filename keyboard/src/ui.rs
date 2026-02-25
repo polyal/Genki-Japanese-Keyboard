@@ -154,7 +154,8 @@ fn render_review(frame: &mut Frame, app: &App) {
             question_title = format!(" Translate from English\n'{}'", phrase.en);
         }
     }
-    let question_text = Paragraph::new(question_title.light_yellow())
+    let question_text = Paragraph::new(question_title)
+        .light_yellow()
         .block(
             Block::bordered()
                 .title(format!(" Lesson {} - {} ", lesson.index, section.name))
@@ -175,7 +176,7 @@ fn render_review(frame: &mut Frame, app: &App) {
         match prev_translation_direction {
             TranslationDirection::ToEN => {
                 answer_title = format!(
-                    "correct answer: '{}'\nyour answer:    '{}'",
+                    " correct answer: '{}'\nyour answer:    '{}'",
                     phrase.en,
                     prev_answer.clone()
                 );
@@ -183,14 +184,14 @@ fn render_review(frame: &mut Frame, app: &App) {
             TranslationDirection::ToJP => {
                 if let Some(kanji) = &phrase.kanji {
                     answer_title = format!(
-                        "correct answer: '{}' - '{}'\nyour answer:    '{}'",
+                        " correct answer: '{}' - '{}'\nyour answer:    '{}'",
                         phrase.jp,
                         kanji,
                         prev_answer.clone()
                     );
                 } else {
                     answer_title = format!(
-                        "correct answer: '{}'\nyour answer:    '{}'",
+                        " correct answer: '{}'\nyour answer:    '{}'",
                         phrase.jp,
                         prev_answer.clone()
                     );
@@ -198,7 +199,8 @@ fn render_review(frame: &mut Frame, app: &App) {
             }
         }
     }
-    let answer_text = Paragraph::new(answer_title.light_yellow())
+    let answer_text = Paragraph::new(answer_title)
+        .light_yellow()
         .block(Block::bordered().title(format!(" answer ")).yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(answer_text, answer_selector_chunk);
