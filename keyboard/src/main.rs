@@ -177,6 +177,10 @@ where
                         app.context.current_selection = CurrentSelection::Lesson;
                         app.context.lesson = 0;
                         app.context.section = None;
+                        app.context.prev_section = None;
+                        app.context.prev_phrase = None;
+                        app.context.prev_translation_direction = None;
+                        app.context.prev_answer = None;
                         app.romanji.clear();
                         app.kana.clear();
                         app.kanji.clear();
