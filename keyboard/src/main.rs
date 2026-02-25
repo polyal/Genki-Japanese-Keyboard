@@ -94,12 +94,22 @@ where
                             }
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                    .unwrap();
+                                    .expect(&format!(
+                                        "lesson index [{}.{}) out of range",
+                                        app.context.lesson_idx,
+                                        app.book.get_lessons().len()
+                                    ));
                             app.context.section_idx =
                                 Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
-                            let section =
-                                Book::get_section(lesson, app.context.section_idx.unwrap())
-                                    .unwrap();
+                            let section = Book::get_section(
+                                lesson,
+                                app.context.section_idx.expect("section index not set"),
+                            )
+                            .expect(&format!(
+                                "section index [{}.{}) out of range",
+                                app.context.section_idx.unwrap(),
+                                lesson.sections.len()
+                            ));
                             app.context.phrase_idx =
                                 rand::thread_rng().gen_range(0..section.phrases.len());
                             app.context.randomize_section = true;
@@ -139,33 +149,53 @@ where
                             }
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                    .unwrap();
-                            let section =
-                                Book::get_section(lesson, app.context.section_idx.unwrap())
-                                    .unwrap();
+                                    .expect(&format!(
+                                        "lesson index [{}.{}) out of range",
+                                        app.context.lesson_idx,
+                                        app.book.get_lessons().len()
+                                    ));
+                            let section = Book::get_section(
+                                lesson,
+                                app.context.section_idx.expect("section index not set"),
+                            )
+                            .expect(&format!(
+                                "section index [{}.{}) out of range",
+                                app.context.section_idx.unwrap(),
+                                lesson.sections.len()
+                            ));
                             app.context.phrase_idx =
                                 rand::thread_rng().gen_range(0..section.phrases.len());
                         }
                         KeyCode::Down => {
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                    .unwrap();
-                            if app.context.section_idx.unwrap() + 1 >= lesson.sections.len() {
-                                app.context.section_idx.get_or_insert(0);
+                                    .expect(&format!(
+                                        "lesson index [{}.{}) out of range",
+                                        app.context.lesson_idx,
+                                        app.book.get_lessons().len()
+                                    ));
+                            if app.context.section_idx.expect("section index not set") + 1
+                                >= lesson.sections.len()
+                            {
+                                app.context.section_idx = Some(0);
                             } else {
-                                *app.context.section_idx.get_or_insert(0) += 1;
+                                app.context.section_idx =
+                                    Some(app.context.section_idx.unwrap() + 1);
                             }
                         }
                         KeyCode::Up => {
                             let lesson =
                                 Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                    .unwrap();
-                            if app.context.section_idx.unwrap() == 0 {
-                                app.context
-                                    .section_idx
-                                    .get_or_insert(lesson.sections.len() - 1);
+                                    .expect(&format!(
+                                        "lesson index [{}.{}) out of range",
+                                        app.context.lesson_idx,
+                                        app.book.get_lessons().len()
+                                    ));
+                            if app.context.section_idx.expect("section index not set") == 0 {
+                                app.context.section_idx = Some(lesson.sections.len() - 1);
                             } else {
-                                *app.context.section_idx.get_or_insert(0) -= 1;
+                                app.context.section_idx =
+                                    Some(app.context.section_idx.unwrap() - 1);
                             }
                         }
                         KeyCode::Left => {
@@ -216,13 +246,24 @@ where
                         }
                         let lesson =
                             Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                .unwrap();
+                                .expect(&format!(
+                                    "lesson index [{}.{}) out of range",
+                                    app.context.lesson_idx,
+                                    app.book.get_lessons().len()
+                                ));
                         if app.context.randomize_section == true {
                             app.context.section_idx =
                                 Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
                         }
-                        let section =
-                            Book::get_section(lesson, app.context.section_idx.unwrap()).unwrap();
+                        let section = Book::get_section(
+                            lesson,
+                            app.context.section_idx.expect("section index not set"),
+                        )
+                        .expect(&format!(
+                            "section index [{}.{}) out of range",
+                            app.context.section_idx.unwrap(),
+                            lesson.sections.len()
+                        ));
                         app.context.phrase_idx =
                             rand::thread_rng().gen_range(0..section.phrases.len());
                         app.romanji.clear();

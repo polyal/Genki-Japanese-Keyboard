@@ -96,7 +96,12 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
     match app.context.current_selection {
         CurrentSelection::Section => {
             section_border_thinkness = border::THICK;
-            let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).unwrap();
+            let lesson =
+                Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).expect(&format!(
+                    "lesson index [{}.{}) out of range",
+                    app.context.lesson_idx,
+                    app.book.get_lessons().len()
+                ));
             for section in &lesson.sections {
                 section_items.push(ListItem::new(Line::from(Span::styled(
                     format!(" [{}] {} ", section_items.len(), section.name),
@@ -135,12 +140,20 @@ fn render_review(frame: &mut Frame, app: &App) {
     let lessons = app.book.get_lessons();
     assert!(app.context.lesson_idx < lessons.len());
     let lesson = &lessons[app.context.lesson_idx];
-    assert!(app.context.section_idx.unwrap() < lesson.sections.len());
+    assert!(app.context.section_idx.expect("section index missing") < lesson.sections.len());
     let section = &lesson.sections[app.context.section_idx.unwrap()];
 
     let mut question_title = String::new();
-    let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).unwrap();
-    let section = Book::get_section(lesson, app.context.section_idx.unwrap()).unwrap();
+    let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).expect(&format!(
+        "lesson index [{}.{}) out of range",
+        app.context.lesson_idx,
+        app.book.get_lessons().len()
+    ));
+    let section = Book::get_section(lesson, app.context.section_idx.unwrap()).expect(&format!(
+        "section index [{}.{}) out of range",
+        app.context.section_idx.unwrap(),
+        lesson.sections.len()
+    ));
     let phrase = &section.phrases[app.context.phrase_idx];
     match app.context.translation_direction {
         TranslationDirection::ToEN => {
@@ -168,10 +181,32 @@ fn render_review(frame: &mut Frame, app: &App) {
     if let Some(prev_phrase_idx) = app.context.prev_phrase_idx {
         assert!(app.context.prev_translation_direction != None);
         assert!(app.context.prev_answer != None);
-        let prev_translation_direction = app.context.prev_translation_direction.unwrap();
-        let prev_answer = app.context.prev_answer.as_ref().unwrap();
-        let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).unwrap();
-        let section = Book::get_section(lesson, app.context.prev_section_idx.unwrap()).unwrap();
+        let prev_translation_direction = app
+            .context
+            .prev_translation_direction
+            .expect("previous translation direction not set");
+        let prev_answer = app
+            .context
+            .prev_answer
+            .as_ref()
+            .expect("previous answer not set");
+        let lesson =
+            Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).expect(&format!(
+                "lesson index [{}.{}) out of range",
+                app.context.lesson_idx,
+                app.book.get_lessons().len()
+            ));
+        let section = Book::get_section(
+            lesson,
+            app.context
+                .prev_section_idx
+                .expect("previous section index not set"),
+        )
+        .expect(&format!(
+            "previous section index [{}.{}) out of range",
+            app.context.prev_section_idx.unwrap(),
+            lesson.sections.len()
+        ));
         let phrase = &section.phrases[prev_phrase_idx];
         match prev_translation_direction {
             TranslationDirection::ToEN => {
