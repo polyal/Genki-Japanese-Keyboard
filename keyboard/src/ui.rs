@@ -245,6 +245,7 @@ fn render_review(frame: &mut Frame, app: &App) {
     ])]);
 
     let kana_text = Paragraph::new(kana_formatted)
+        .light_yellow()
         .block(Block::bordered().title(" kana ").yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(kana_text, kana_chunk);
@@ -256,7 +257,7 @@ fn render_review(frame: &mut Frame, app: &App) {
         kanji_items.push(ListItem::new(
             Line::from(Span::styled(
                 format!(" {} ", kanji_char),
-                Style::default().fg(Color::Yellow),
+                Style::default().fg(Color::LightYellow),
             ))
             .centered(),
         ));
@@ -268,7 +269,7 @@ fn render_review(frame: &mut Frame, app: &App) {
     }
 
     let kanji_list = List::new(kanji_items)
-        .white()
+        .dark_gray()
         .block(Block::bordered().title(" kanji ").yellow())
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
 
@@ -276,6 +277,7 @@ fn render_review(frame: &mut Frame, app: &App) {
 
     // kanji text box
     let complete_text = Paragraph::new(app.get_kanji())
+        .light_yellow()
         .block(Block::bordered().title(" complete ").yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(complete_text, kanji_chunk);
