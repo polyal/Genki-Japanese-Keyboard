@@ -175,23 +175,36 @@ fn render_review(frame: &mut Frame, app: &App) {
         let phrase = &section.phrases[prev_phrase];
         match prev_translation_direction {
             TranslationDirection::ToEN => {
-                answer_title = format!(
-                    " correct answer: '{}'\nyour answer:    '{}'",
-                    phrase.en,
-                    prev_answer.clone()
-                );
+                if let Some(kanji) = &phrase.kanji {
+                    answer_title = format!(
+                        " Translate from Japanese\n'{}' - '{}'\n\ncorrect answer: '{}'\nyour answer:    '{}'",
+                        phrase.jp,
+                        kanji,
+                        phrase.en,
+                        prev_answer.clone()
+                    );
+                } else {
+                    answer_title = format!(
+                        " Translate from Japanese\n'{}'\n\ncorrect answer: '{}'\nyour answer:    '{}'",
+                        phrase.jp,
+                        phrase.en,
+                        prev_answer.clone()
+                    );
+                }
             }
             TranslationDirection::ToJP => {
                 if let Some(kanji) = &phrase.kanji {
                     answer_title = format!(
-                        " correct answer: '{}' - '{}'\nyour answer:    '{}'",
+                        " Translate from English\n'{}'\n\ncorrect answer: '{}' - '{}'\nyour answer:    '{}'",
+                        phrase.en,
                         phrase.jp,
                         kanji,
                         prev_answer.clone()
                     );
                 } else {
                     answer_title = format!(
-                        " correct answer: '{}'\nyour answer:    '{}'",
+                        " Translate from English\n'{}'\n\ncorrect answer: '{}'\nyour answer:    '{}'",
+                        phrase.en,
                         phrase.jp,
                         prev_answer.clone()
                     );
