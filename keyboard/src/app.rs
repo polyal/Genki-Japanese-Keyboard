@@ -167,6 +167,8 @@ impl App {
                 .skip(self.kana_offset)
                 .collect();
             self.highlighted_kanji = self.kanji_converter.convert(&kana_substr);
+        } else {
+            self.highlighted_kanji.clear();
         }
     }
 
