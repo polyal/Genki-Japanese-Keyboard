@@ -69,7 +69,7 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
     }
 
     let mut lesson_state = ListState::default();
-    lesson_state.select(Some(app.context.lesson));
+    lesson_state.select(Some(app.context.lesson_idx));
 
     let mut lesson_border_thinkness = border::PLAIN;
     match app.context.current_selection {
@@ -96,14 +96,14 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
     match app.context.current_selection {
         CurrentSelection::Section => {
             section_border_thinkness = border::THICK;
-            let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
+            let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).unwrap();
             for section in &lesson.sections {
                 section_items.push(ListItem::new(Line::from(Span::styled(
                     format!(" [{}] {} ", section_items.len(), section.name),
                     Style::default().fg(Color::Yellow),
                 ))));
             }
-            section_state.select(app.context.section);
+            section_state.select(app.context.section_idx);
         }
         _ => {}
     }
@@ -133,15 +133,15 @@ fn render_review(frame: &mut Frame, app: &App) {
             .areas(review_chunk);
 
     let lessons = app.book.get_lessons();
-    assert!(app.context.lesson < lessons.len());
-    let lesson = &lessons[app.context.lesson];
-    assert!(app.context.section.unwrap() < lesson.sections.len());
-    let section = &lesson.sections[app.context.section.unwrap()];
+    assert!(app.context.lesson_idx < lessons.len());
+    let lesson = &lessons[app.context.lesson_idx];
+    assert!(app.context.section_idx.unwrap() < lesson.sections.len());
+    let section = &lesson.sections[app.context.section_idx.unwrap()];
 
     let mut question_title = String::new();
-    let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
-    let section = Book::get_section(lesson, app.context.section.unwrap()).unwrap();
-    let phrase = &section.phrases[app.context.phrase];
+    let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).unwrap();
+    let section = Book::get_section(lesson, app.context.section_idx.unwrap()).unwrap();
+    let phrase = &section.phrases[app.context.phrase_idx];
     match app.context.translation_direction {
         TranslationDirection::ToEN => {
             if let Some(kanji) = &phrase.kanji {
@@ -165,14 +165,14 @@ fn render_review(frame: &mut Frame, app: &App) {
     frame.render_widget(question_text, question_chunk);
 
     let mut answer_title = String::new();
-    if let Some(prev_phrase) = app.context.prev_phrase {
+    if let Some(prev_phrase_idx) = app.context.prev_phrase_idx {
         assert!(app.context.prev_translation_direction != None);
         assert!(app.context.prev_answer != None);
         let prev_translation_direction = app.context.prev_translation_direction.unwrap();
         let prev_answer = app.context.prev_answer.as_ref().unwrap();
-        let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson).unwrap();
-        let section = Book::get_section(lesson, app.context.prev_section.unwrap()).unwrap();
-        let phrase = &section.phrases[prev_phrase];
+        let lesson = Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx).unwrap();
+        let section = Book::get_section(lesson, app.context.prev_section_idx.unwrap()).unwrap();
+        let phrase = &section.phrases[prev_phrase_idx];
         match prev_translation_direction {
             TranslationDirection::ToEN => {
                 if let Some(kanji) = &phrase.kanji {
