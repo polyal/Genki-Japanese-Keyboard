@@ -160,6 +160,10 @@ impl App {
                 }
             }
 
+            assert!(
+                self.kana_offset < self.kana.chars().count()
+                    && self.kana_offset + self.kana_len <= self.kana.chars().count()
+            );
             let kana_substr: String = self
                 .kana
                 .chars()

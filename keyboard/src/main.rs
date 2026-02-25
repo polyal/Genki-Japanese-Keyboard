@@ -276,6 +276,11 @@ where
                     }
                     KeyCode::Tab => {
                         if app.get_kana().chars().count() > 0 {
+                            assert!(
+                                app.kana_offset < app.get_kana().chars().count()
+                                    && app.kana_offset + app.kana_len
+                                        <= app.get_kana().chars().count()
+                            );
                             app.push_kanji_offset((app.kana_offset, app.kana_len, 0)); // TODO: kanji selection
                         }
                     }
