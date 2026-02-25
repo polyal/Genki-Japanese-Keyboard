@@ -72,7 +72,7 @@ where
             }
             match app.context.current_screen {
                 CurrentScreen::Welcome => match key.code {
-                    KeyCode::Char('q') => {
+                    KeyCode::Esc => {
                         break;
                     }
                     _ => {
@@ -81,7 +81,7 @@ where
                 },
                 CurrentScreen::LessonSelect => match app.context.current_selection {
                     CurrentSelection::Lesson => match key.code {
-                        KeyCode::Char('q') => {
+                        KeyCode::Esc => {
                             break;
                         }
                         KeyCode::Enter => {
@@ -125,7 +125,7 @@ where
                         _ => {}
                     },
                     CurrentSelection::Section => match key.code {
-                        KeyCode::Char('q') => {
+                        KeyCode::Esc => {
                             break;
                         }
                         KeyCode::Enter => {
@@ -173,7 +173,15 @@ where
                 },
                 CurrentScreen::Review => match key.code {
                     KeyCode::Esc => {
-                        break;
+                        app.context.current_screen = CurrentScreen::LessonSelect;
+                        app.context.current_selection = CurrentSelection::Lesson;
+                        app.context.lesson = 0;
+                        app.context.section = None;
+                        app.romanji.clear();
+                        app.kana.clear();
+                        app.kanji.clear();
+                        app.kana_offset = 0;
+                        app.kana_len = 1;
                     }
                     KeyCode::Enter => {
                         app.context.prev_section = app.context.section;
