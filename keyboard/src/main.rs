@@ -218,6 +218,7 @@ where
                         app.romanji.clear();
                         app.kana.clear();
                         app.kanji.clear();
+                        app.highlighted_kanji.clear();
                         app.kana_offset = 0;
                         app.kana_len = 1;
                     }
@@ -269,6 +270,7 @@ where
                         app.romanji.clear();
                         app.kana.clear();
                         app.kanji.clear();
+                        app.highlighted_kanji.clear();
                         app.kana_offset = 0;
                         app.kana_len = 1;
                     }

@@ -64,6 +64,7 @@ pub struct App {
     pub kana: String,
     pub kanji: String,
 
+    pub highlighted_kanji: Vec<char>,
     pub kana_offset: usize,
     pub kana_len: usize,
     kanji_offsets: Vec<(usize, usize, usize)>,
@@ -79,6 +80,7 @@ impl App {
             romanji: String::new(),
             kana: String::new(),
             kanji: String::new(),
+            highlighted_kanji: Vec::new(),
             kana_offset: 0,
             kana_len: 1,
             kanji_offsets: Vec::new(),
@@ -110,6 +112,7 @@ impl App {
                 return !(start >= kanji_offset.0 && start < kanji_offset.0 + kanji_offset.1)
                     && !(end > kanji_offset.0 && end <= kanji_offset.0 + kanji_offset.1);
             });
+            self.highlighted_kanji = kanji_list;
             self.kanji_offsets.push(offset);
         }
     }
@@ -156,11 +159,15 @@ impl App {
                     offset_adjust += kanji_offset.1 - 1;
                 }
             }
-        }
-    }
 
-    pub fn convert_to_kanji(&self, hiragana: &String) -> Vec<char> {
-        return self.kanji_converter.convert(&hiragana);
+            let kana_substr: String = self
+                .kana
+                .chars()
+                .take(self.kana_offset + self.kana_len)
+                .skip(self.kana_offset)
+                .collect();
+            self.highlighted_kanji = self.kanji_converter.convert(&kana_substr);
+        }
     }
 
     pub fn get_romanji(&self) -> String {

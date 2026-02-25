@@ -299,9 +299,9 @@ fn render_review(frame: &mut Frame, app: &App) {
     frame.render_widget(kana_text, kana_chunk);
 
     // kanji selection
-    let kanji = app.convert_to_kanji(&middle);
+    let kanji = &app.highlighted_kanji;
     let mut kanji_items = Vec::<ListItem>::new();
-    for kanji_char in &kanji {
+    for kanji_char in kanji {
         kanji_items.push(ListItem::new(
             Line::from(Span::styled(
                 format!(" {} ", kanji_char),
