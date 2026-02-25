@@ -25,19 +25,24 @@ pub fn ui(frame: &mut Frame, app: &App) {
 }
 
 fn render_welcome(frame: &mut Frame, app: &App) {
-    let title = Line::from(" Genki Japanese Keyboard ".blue().bold());
-    let instructions = Line::from(vec![" Welcome ".green().bold()]);
+    let title = Line::from(" Genki Japanese Keyboard ".yellow().bold());
+    let instructions = Line::from(vec![" げんき ".yellow().bold()]);
     let block = Block::bordered()
         .title(title.centered())
         .title_bottom(instructions.centered())
         .border_set(border::THICK);
 
     let start = Paragraph::new(Text::styled(
-        r"      |\      _,,,---,,_
+        r"
+
+
+
+
+      |\      _,,,---,,_
     ZZZzz /,`.-'`'    -.  ;-;;,_
           |,4-  ) )-,_. ,\ (  `'-'
     '---''(_/--'  `-'\_)",
-        Style::default().fg(Color::Green),
+        Style::default().fg(Color::Yellow),
     ))
     .centered()
     .block(block);
@@ -77,7 +82,7 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
     let lesson_list = List::new(lesson_items)
         .block(
             Block::bordered()
-                .title(Line::from(" Lessons ".blue().bold()))
+                .title(Line::from(" Lessons ".yellow().bold()))
                 .border_set(lesson_border_thinkness),
         )
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
@@ -106,7 +111,7 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
     let section_list = List::new(section_items)
         .block(
             Block::bordered()
-                .title(Line::from(" Sections ".blue().bold()))
+                .title(Line::from(" Sections ".yellow().bold()))
                 .border_set(section_border_thinkness),
         )
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
@@ -149,8 +154,12 @@ fn render_review(frame: &mut Frame, app: &App) {
             question_title = format!(" Translate from English\n'{}'", phrase.en);
         }
     }
-    let question_text = Paragraph::new(question_title)
-        .block(Block::bordered().title(format!(" Lesson {} - {} ", lesson.index, section.name)))
+    let question_text = Paragraph::new(question_title.light_yellow())
+        .block(
+            Block::bordered()
+                .title(format!(" Lesson {} - {} ", lesson.index, section.name))
+                .yellow(),
+        )
         .wrap(Wrap { trim: true });
     frame.render_widget(question_text, question_chunk);
 
@@ -189,8 +198,8 @@ fn render_review(frame: &mut Frame, app: &App) {
             }
         }
     }
-    let answer_text = Paragraph::new(answer_title)
-        .block(Block::bordered().title(format!(" answer ")))
+    let answer_text = Paragraph::new(answer_title.light_yellow())
+        .block(Block::bordered().title(format!(" answer ")).yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(answer_text, answer_selector_chunk);
 
@@ -234,7 +243,7 @@ fn render_review(frame: &mut Frame, app: &App) {
     ])]);
 
     let kana_text = Paragraph::new(kana_formatted)
-        .block(Block::bordered().title(" kana "))
+        .block(Block::bordered().title(" kana ").yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(kana_text, kana_chunk);
 
@@ -257,14 +266,15 @@ fn render_review(frame: &mut Frame, app: &App) {
     }
 
     let kanji_list = List::new(kanji_items)
-        .block(Block::bordered().title(" kanji "))
+        .white()
+        .block(Block::bordered().title(" kanji ").yellow())
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
 
     frame.render_stateful_widget(kanji_list, kanji_selector_chunk, &mut kanji_state);
 
     // kanji text box
     let complete_text = Paragraph::new(app.get_kanji())
-        .block(Block::bordered().title(" complete "))
+        .block(Block::bordered().title(" complete ").yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(complete_text, kanji_chunk);
 
