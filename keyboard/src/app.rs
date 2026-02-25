@@ -22,14 +22,17 @@ pub enum TranslationDirection {
 pub struct Context {
     pub current_screen: CurrentScreen,
     pub current_selection: CurrentSelection,
+
     pub lesson_idx: usize,
     pub section_idx: Option<usize>,
     pub phrase_idx: usize,
     pub translation_direction: TranslationDirection,
+
     pub prev_section_idx: Option<usize>,
     pub prev_phrase_idx: Option<usize>,
     pub prev_translation_direction: Option<TranslationDirection>,
     pub prev_answer: Option<String>,
+
     pub randomize_section: bool,
 }
 
