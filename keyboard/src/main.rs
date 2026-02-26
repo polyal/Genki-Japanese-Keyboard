@@ -1,5 +1,4 @@
 mod app;
-// mod cli;
 mod kana_converter;
 mod kanji_converter;
 mod lessons;
@@ -19,7 +18,6 @@ use ratatui::{
 };
 
 use app::{App, CurrentScreen, CurrentSelection, TranslationDirection};
-// use cli::Reviewer;
 use ui::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -296,8 +294,3 @@ where
     }
     return Ok(true);
 }
-
-/*fn cli() {
-    let reviewer = Reviewer::new();
-    reviewer.start();
-}*/
