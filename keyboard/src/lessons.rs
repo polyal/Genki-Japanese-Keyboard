@@ -1,8 +1,9 @@
 use serde::Deserialize;
 use std::fs;
+use std::ops::Index;
 
 pub struct Book {
-    lessons: Vec<Lesson>,
+    pub lessons: Vec<Lesson>,
 }
 
 impl Book {
@@ -17,27 +18,14 @@ impl Book {
             lessons: lessons_wrapper.lessons,
         }
     }
+}
 
-    pub fn get_lessons(&self) -> &Vec<Lesson> {
-        return &self.lessons;
-    }
+impl Index<usize> for Book {
+    type Output = Lesson;
 
-    pub fn get_lesson(lessons: &Vec<Lesson>, index: usize) -> Option<&Lesson> {
-        if index >= lessons.len() {
-            return None;
-        }
-        return Some(&lessons[index]);
-    }
-
-    pub fn get_sections(lesson: &Lesson) -> &Vec<Section> {
-        return &lesson.sections;
-    }
-
-    pub fn get_section<'a>(lesson: &'a Lesson, index: usize) -> Option<&'a Section> {
-        if index >= lesson.sections.len() {
-            return None;
-        }
-        return Some(&lesson.sections[index]);
+    fn index(&self, i: usize) -> &Self::Output {
+        assert!(i < self.lessons.len());
+        &self.lessons[i]
     }
 }
 

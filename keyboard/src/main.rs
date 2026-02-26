@@ -92,30 +92,17 @@ where
                             } else {
                                 app.context.translation_direction = TranslationDirection::ToEN;
                             }
-                            let lesson =
-                                Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                    .expect(&format!(
-                                        "lesson index [{}.{}) out of range",
-                                        app.context.lesson_idx,
-                                        app.book.get_lessons().len()
-                                    ));
+                            assert!(app.context.lesson_idx < app.book.lessons.len());
+                            let lesson = &app.book.lessons[app.context.lesson_idx];
                             app.context.section_idx =
                                 Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
-                            let section = Book::get_section(
-                                lesson,
-                                app.context.section_idx.expect("section index not set"),
-                            )
-                            .expect(&format!(
-                                "section index [{}.{}) out of range",
-                                app.context.section_idx.unwrap(),
-                                lesson.sections.len()
-                            ));
+                            let section = &lesson.sections[app.context.section_idx.unwrap()];
                             app.context.phrase_idx =
                                 rand::thread_rng().gen_range(0..section.phrases.len());
                             app.context.randomize_section = true;
                         }
                         KeyCode::Down => {
-                            if app.context.lesson_idx + 1 >= app.book.get_lessons().len() {
+                            if app.context.lesson_idx + 1 >= app.book.lessons.len() {
                                 app.context.lesson_idx = 0;
                             } else {
                                 app.context.lesson_idx += 1;
@@ -123,7 +110,7 @@ where
                         }
                         KeyCode::Up => {
                             if app.context.lesson_idx == 0 {
-                                app.context.lesson_idx = app.book.get_lessons().len() - 1;
+                                app.context.lesson_idx = app.book.lessons.len() - 1;
                             } else {
                                 app.context.lesson_idx -= 1;
                             }
@@ -147,33 +134,19 @@ where
                             } else {
                                 app.context.translation_direction = TranslationDirection::ToEN;
                             }
-                            let lesson =
-                                Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                    .expect(&format!(
-                                        "lesson index [{}.{}) out of range",
-                                        app.context.lesson_idx,
-                                        app.book.get_lessons().len()
-                                    ));
-                            let section = Book::get_section(
-                                lesson,
-                                app.context.section_idx.expect("section index not set"),
-                            )
-                            .expect(&format!(
-                                "section index [{}.{}) out of range",
-                                app.context.section_idx.unwrap(),
-                                lesson.sections.len()
-                            ));
+                            assert!(app.context.lesson_idx < app.book.lessons.len());
+                            let lesson = &app.book.lessons[app.context.lesson_idx];
+                            assert!(
+                                app.context.section_idx.expect("section index not set")
+                                    < lesson.sections.len()
+                            );
+                            let section = &lesson.sections[app.context.section_idx.unwrap()];
                             app.context.phrase_idx =
                                 rand::thread_rng().gen_range(0..section.phrases.len());
                         }
                         KeyCode::Down => {
-                            let lesson =
-                                Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                    .expect(&format!(
-                                        "lesson index [{}.{}) out of range",
-                                        app.context.lesson_idx,
-                                        app.book.get_lessons().len()
-                                    ));
+                            assert!(app.context.lesson_idx < app.book.lessons.len());
+                            let lesson = &app.book.lessons[app.context.lesson_idx];
                             if app.context.section_idx.expect("section index not set") + 1
                                 >= lesson.sections.len()
                             {
@@ -184,13 +157,8 @@ where
                             }
                         }
                         KeyCode::Up => {
-                            let lesson =
-                                Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                    .expect(&format!(
-                                        "lesson index [{}.{}) out of range",
-                                        app.context.lesson_idx,
-                                        app.book.get_lessons().len()
-                                    ));
+                            assert!(app.context.lesson_idx < app.book.lessons.len());
+                            let lesson = &app.book.lessons[app.context.lesson_idx];
                             if app.context.section_idx.expect("section index not set") == 0 {
                                 app.context.section_idx = Some(lesson.sections.len() - 1);
                             } else {
@@ -245,26 +213,17 @@ where
                         } else {
                             app.context.translation_direction = TranslationDirection::ToEN;
                         }
-                        let lesson =
-                            Book::get_lesson(app.book.get_lessons(), app.context.lesson_idx)
-                                .expect(&format!(
-                                    "lesson index [{}.{}) out of range",
-                                    app.context.lesson_idx,
-                                    app.book.get_lessons().len()
-                                ));
+                        assert!(app.context.lesson_idx < app.book.lessons.len());
+                        let lesson = &app.book.lessons[app.context.lesson_idx];
                         if app.context.randomize_section == true {
                             app.context.section_idx =
                                 Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
                         }
-                        let section = Book::get_section(
-                            lesson,
-                            app.context.section_idx.expect("section index not set"),
-                        )
-                        .expect(&format!(
-                            "section index [{}.{}) out of range",
-                            app.context.section_idx.unwrap(),
-                            lesson.sections.len()
-                        ));
+                        assert!(
+                            app.context.section_idx.expect("section index not set")
+                                < lesson.sections.len()
+                        );
+                        let section = &lesson.sections[app.context.section_idx.unwrap()];
                         app.context.phrase_idx =
                             rand::thread_rng().gen_range(0..section.phrases.len());
                         app.romanji.clear();

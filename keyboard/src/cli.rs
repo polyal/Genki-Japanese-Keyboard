@@ -59,18 +59,19 @@ impl Reviewer {
 
     fn study(&self) {
         let mut buffer = String::new();
-        let lessons = self.book.get_lessons();
+        let lessons = &self.book.lessons;
         while buffer != COMMAND_QUIT {
             buffer.clear();
             // pick lesson
             let mut lesson_idx = usize::MAX;
             loop {
-                if let Some(lesson) = Book::get_lesson(lessons, lesson_idx) {
+                if lessons.len() <= lesson_idx {
+                    let lesson = &lessons[lesson_idx];
                     let mut section_idx: usize;
                     loop {
                         // test section
                         println!("\nPick a section: ");
-                        Self::print_sections(&lesson);
+                        Self::print_sections(lesson);
                         Self::get_user_input(&mut buffer);
                         match buffer.parse::<usize>() {
                             Ok(n) => section_idx = n,
@@ -83,8 +84,8 @@ impl Reviewer {
                             }
                         }
 
-                        if let Some(section) = Book::get_section(lesson, section_idx) {
-                            self.review_section(section);
+                        if section_idx < lesson.sections.len() {
+                            self.review_section(&lesson.sections[section_idx]);
                         } else {
                             self.review_lesson(lesson);
                         }
@@ -119,7 +120,7 @@ impl Reviewer {
     }
 
     fn print_sections(lesson: &Lesson) {
-        let sections = Book::get_sections(lesson);
+        let sections = &lesson.sections;
         let mut index: usize = 0;
         for section in sections {
             println!("  [{index}] {}", section.name);
