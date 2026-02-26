@@ -1,19 +1,18 @@
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{Block, List, ListItem, ListState, Paragraph, Wrap},
 };
 
-use crate::Book;
 use crate::app::{App, CurrentScreen, CurrentSelection, TranslationDirection};
 
 pub fn ui(frame: &mut Frame, app: &App) {
     match app.context.current_screen {
         CurrentScreen::Welcome => {
-            render_welcome(frame, app);
+            render_welcome(frame);
         }
         CurrentScreen::LessonSelect => {
             render_lesson_select(frame, app);
@@ -24,7 +23,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
     }
 }
 
-fn render_welcome(frame: &mut Frame, app: &App) {
+fn render_welcome(frame: &mut Frame) {
     let title = Line::from(" Genki Japanese Keyboard ".yellow().bold());
     let instructions = Line::from(vec![" げんき ".yellow().bold()]);
     let block = Block::bordered()
@@ -141,7 +140,7 @@ fn render_review(frame: &mut Frame, app: &App) {
     assert!(app.context.phrase_idx < section.phrases.len());
     let phrase = &section.phrases[app.context.phrase_idx];
 
-    let mut question_title = String::new();
+    let question_title: String;
     match app.context.translation_direction {
         TranslationDirection::ToEN => {
             if let Some(kanji) = &phrase.kanji {

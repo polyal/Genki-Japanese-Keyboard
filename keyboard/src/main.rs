@@ -1,5 +1,5 @@
 mod app;
-mod cli;
+// mod cli;
 mod kana_converter;
 mod kanji_converter;
 mod lessons;
@@ -12,18 +12,14 @@ use ratatui::{
     Terminal,
     backend::{Backend, CrosstermBackend},
     crossterm::{
-        event::{
-            self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind,
-            KeyModifiers, ModifierKeyCode,
-        },
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
         execute,
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
 };
 
 use app::{App, CurrentScreen, CurrentSelection, TranslationDirection};
-use cli::Reviewer;
-use lessons::Book;
+// use cli::Reviewer;
 use ui::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -301,7 +297,7 @@ where
     return Ok(true);
 }
 
-fn cli() {
+/*fn cli() {
     let reviewer = Reviewer::new();
     reviewer.start();
-}
+}*/

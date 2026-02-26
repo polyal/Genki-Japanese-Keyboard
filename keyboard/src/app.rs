@@ -1,6 +1,6 @@
 use crate::kana_converter::RomanjiToKanaConverter;
 use crate::kanji_converter::HiragaToKanjiConverter;
-use crate::lessons::{Book, Lesson, Phrase, Section};
+use crate::lessons::Book;
 
 pub enum CurrentScreen {
     Welcome,
