@@ -5,7 +5,7 @@ mod lessons;
 mod ui;
 
 use rand::Rng;
-use std::{error::Error, io};
+use std::{collections::HashSet, error::Error, io};
 
 use ratatui::{
     Terminal,
@@ -94,6 +94,12 @@ where
                             app.context.phrase_idx =
                                 rand::thread_rng().gen_range(0..section.phrases.len());
                             app.context.randomize_section = true;
+                            app.context.asked_questions.clear();
+                            app.context.asked_questions =
+                                std::iter::repeat_with(|| HashSet::<usize>::new())
+                                    .take(lesson.sections.len())
+                                    .collect();
+                            assert!(app.context.asked_questions.len() == lesson.sections.len());
                         }
                         KeyCode::Down => {
                             if app.context.lesson_idx + 1 >= app.book.lessons.len() {
@@ -137,6 +143,14 @@ where
                             let section = &lesson.sections[app.context.section_idx.unwrap()];
                             app.context.phrase_idx =
                                 rand::thread_rng().gen_range(0..section.phrases.len());
+
+                            app.context.randomize_section = false;
+                            app.context.asked_questions.clear();
+                            app.context.asked_questions =
+                                std::iter::repeat_with(|| HashSet::<usize>::new())
+                                    .take(lesson.sections.len())
+                                    .collect();
+                            assert!(app.context.asked_questions.len() == lesson.sections.len());
                         }
                         KeyCode::Down => {
                             assert!(app.context.lesson_idx < app.book.lessons.len());
@@ -177,6 +191,7 @@ where
                         app.context.prev_phrase_idx = None;
                         app.context.prev_translation_direction = None;
                         app.context.prev_answer = None;
+                        app.context.asked_questions.clear();
                         app.romanji.clear();
                         app.kana.clear();
                         app.kanji.clear();
@@ -210,16 +225,50 @@ where
                         assert!(app.context.lesson_idx < app.book.lessons.len());
                         let lesson = &app.book.lessons[app.context.lesson_idx];
                         if app.context.randomize_section == true {
-                            app.context.section_idx =
-                                Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
+                            let mut asked_sections = HashSet::<usize>::new();
+                            loop {
+                                let section_idx =
+                                    rand::thread_rng().gen_range(0..lesson.sections.len());
+                                assert!(section_idx < app.context.asked_questions.len());
+                                if app.context.asked_questions[section_idx].len()
+                                    == lesson.sections[section_idx].phrases.len()
+                                {
+                                    asked_sections.insert(section_idx);
+                                    if asked_sections.len() == lesson.sections.len() {
+                                        app.context.asked_questions.clear();
+                                        app.context.asked_questions =
+                                            std::iter::repeat_with(|| HashSet::<usize>::new())
+                                                .take(lesson.sections.len())
+                                                .collect();
+                                    }
+                                } else {
+                                    app.context.section_idx = Some(section_idx);
+                                    break;
+                                }
+                            }
                         }
                         assert!(
                             app.context.section_idx.expect("section index not set")
                                 < lesson.sections.len()
                         );
+                        assert!(
+                            app.context.section_idx.unwrap() < app.context.asked_questions.len()
+                        );
                         let section = &lesson.sections[app.context.section_idx.unwrap()];
-                        app.context.phrase_idx =
-                            rand::thread_rng().gen_range(0..section.phrases.len());
+                        loop {
+                            let phrases_asked =
+                                &mut app.context.asked_questions[app.context.section_idx.unwrap()];
+                            let phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
+                            if phrases_asked.insert(phrase_idx) == true {
+                                app.context.phrase_idx = phrase_idx;
+                                if app.context.randomize_section == false
+                                    && phrases_asked.len() == section.phrases.len()
+                                {
+                                    phrases_asked.clear();
+                                }
+                                break;
+                            }
+                        }
                         app.romanji.clear();
                         app.kana.clear();
                         app.kanji.clear();

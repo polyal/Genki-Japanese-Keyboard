@@ -2,6 +2,8 @@ use crate::kana_converter::RomanjiToKanaConverter;
 use crate::kanji_converter::HiragaToKanjiConverter;
 use crate::lessons::Book;
 
+use std::collections::HashSet;
+
 pub enum CurrentScreen {
     Welcome,
     LessonSelect,
@@ -34,6 +36,7 @@ pub struct Context {
     pub prev_answer: Option<String>,
 
     pub randomize_section: bool,
+    pub asked_questions: Vec<HashSet<usize>>,
 }
 
 impl Context {
@@ -50,6 +53,7 @@ impl Context {
             prev_translation_direction: None,
             prev_answer: None,
             randomize_section: false,
+            asked_questions: Vec::<HashSet<usize>>::new(),
         }
     }
 }
