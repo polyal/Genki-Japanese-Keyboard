@@ -109,15 +109,24 @@ impl App {
         let kana_substr: String = self.kana.chars().take(end).skip(start).collect();
         let kanji_list = self.kanji_converter.convert(&kana_substr);
         if kanji_list_offset < kanji_list.len() {
-            // remove colliding offsets
-            self.kanji_offsets.retain(|kanji_offset| {
-                let start = offset.0;
-                let end = offset.0 + offset.1;
-                return !(start >= kanji_offset.0 && start < kanji_offset.0 + kanji_offset.1)
-                    && !(end > kanji_offset.0 && end <= kanji_offset.0 + kanji_offset.1);
-            });
+            // if exact match, undo matching
+            if let Some(index) = self
+                .kanji_offsets
+                .iter()
+                .position(|&kanji_offset| kanji_offset == offset)
+            {
+                self.kanji_offsets.remove(index);
+            } else {
+                // remove colliding offsets
+                self.kanji_offsets.retain(|&kanji_offset| {
+                    let start = offset.0;
+                    let end = offset.0 + offset.1;
+                    return !(start >= kanji_offset.0 && start < kanji_offset.0 + kanji_offset.1)
+                        && !(end > kanji_offset.0 && end <= kanji_offset.0 + kanji_offset.1);
+                });
+                self.kanji_offsets.push(offset);
+            }
             self.highlighted_kanji = kanji_list;
-            self.kanji_offsets.push(offset);
         }
     }
 
