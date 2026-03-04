@@ -1367,6 +1367,342 @@
           ]
         }
       ]
+    },
+    {
+      "index": 4,
+      "name_en": "The First Date",
+      "name_jp": "初めてのデート",
+      "sections": [
+        {
+          "name": "Activities",
+          "phrases": [
+            {
+              "en": "game",
+              "jp": "ゲーム"
+            },
+            {
+              "en": "part-time job",
+              "jp": "アルバイト; バイト"
+            },
+            {
+              "en": "part-time job",
+              "jp": "アルバイト; バイト"
+            },
+            {
+              "en": "shopping",
+              "jp": "かいもの",
+              "kanji": "買い物"
+            }
+          ]
+        },
+        {
+          "name": "People and Things",
+          "phrases": [
+            {
+              "en": "dog",
+              "jp": "いぬ",
+              "kanji": "犬"
+            },
+            {
+              "en": "cat",
+              "jp": "ねこ",
+              "kanji": "猫"
+            },
+            {
+              "en": "person",
+              "jp": "ひと",
+              "kanji": "人"
+            },
+            {
+              "en": "child",
+              "jp": "こども",
+              "kanji": "子供"
+            },
+            {
+              "en": "you",
+              "jp": "あなた"
+            },
+            {
+              "en": "chair",
+              "jp": "いす"
+            },
+            {
+              "en": "desk",
+              "jp": "つくえ",
+              "kanji": "机"
+            },
+            {
+              "en": "picture; photograph",
+              "jp": "しゃしん",
+              "kanji": "写真"
+            },
+            {
+              "en": "flower",
+              "jp": "はな",
+              "kanji": "花"
+            },
+            {
+              "en": "(term) paper",
+              "jp": "レポート"
+            },
+            {
+              "en": "rice; meal",
+              "jp": "ごはん",
+              "kanji": "ご飯"
+            },
+            {
+              "en": "bread",
+              "jp": "パン"
+            }
+          ]
+        },
+        {
+          "name": "Places",
+          "phrases": [
+            {
+              "en": "temple",
+              "jp": "おてら",
+              "kanji": "お寺"
+            },
+            {
+              "en": "park",
+              "jp": "ごうえん",
+              "kanji": "公園"
+            },
+            {
+              "en": "supermarket",
+              "jp": "スーパー"
+            },
+            {
+              "en": "bus stop",
+              "jp": "バスてい",
+              "kanji": "バス停"
+            },
+            {
+              "en": "hospital",
+              "jp": "びょういん",
+              "kanji": "病院"
+            },
+            {
+              "en": "hotel",
+              "jp": "ホテル"
+            },
+            {
+              "en": "bookstore",
+              "jp": "ほんや",
+              "kanji": "本屋"
+            },
+            {
+              "en": "town; city",
+              "jp": "まち",
+              "kanji": "町"
+            },
+            {
+              "en": "restaurant",
+              "jp": "レストラン"
+            }
+          ]
+        },
+        {
+          "name": "Time",
+          "phrases": [
+            {
+              "en": "yesterday",
+              "jp": "きのう",
+              "kanji": "昨日"
+            },
+            {
+              "en": "...hours",
+              "jp": "~じかん",
+              "kanji": "~時間"
+            },
+            {
+              "en": "one hour",
+              "jp": "いちじかん",
+              "kanji": "一時間"
+            },
+            {
+              "en": "last week",
+              "jp": "せんじゅう",
+              "kanji": "先週"
+            },
+            {
+              "en": "when...; athe the time of ... (~の)",
+              "jp": "とき",
+              "kanji": "時"
+            },
+            {
+              "en": "Monday",
+              "jp": "げつようび",
+              "kanji": "月曜日"
+            },
+            {
+              "en": "Tuesday",
+              "jp": "かようび",
+              "kanji": "火曜日"
+            },
+            {
+              "en": "Wednesday",
+              "jp": "すいようび",
+              "kanji": "水曜日"
+            },
+            {
+              "en": "Thursday",
+              "jp": "もくようび",
+              "kanji": "木曜日"
+            },
+            {
+              "en": "Friday",
+              "jp": "きんようび",
+              "kanji": "金曜日"
+            }
+          ]
+        },
+        {
+          "name": "U - verbs",
+          "phrases": [
+            {
+              "en": "to meet; to see (a person) (person に)",
+              "jp": "あう",
+              "kanji": "会う"
+            },
+            {
+              "en": "there is... (place に thing が)",
+              "jp": "ある"
+            },
+            {
+              "en": "to buy (~を)",
+              "jp": "かう",
+              "kanji": "買う"
+            },
+            {
+              "en": "to write (person に thing が)",
+              "jp": "かく",
+              "kanji": "書く"
+            },
+            {
+              "en": "to take (a picture) (~を)",
+              "jp": "とる",
+              "kanji": "撮る"
+            },
+            {
+              "en": "to wait (~を)",
+              "jp": "まつ",
+              "kanji": "待つ"
+            },
+            {
+              "en": "to understand (~が)",
+              "jp": "わかる"
+            }
+          ]
+        },
+        {
+          "name": "Ru - verbs",
+          "phrases": [
+            {
+              "en": "(a person) is in...; stays at... (place に person が)",
+              "jp": "いる"
+            }
+          ]
+        },
+        {
+          "name": "Adverbs and Other Expressions",
+          "phrases": [
+            {
+              "en": "about (approximate measurement)",
+              "jp": "~ぐらい"
+            },
+            {
+              "en": "I'm sorry",
+              "jp": "ごめんなさい"
+            },
+            {
+              "en": "and then",
+              "jp": "それから"
+            },
+            {
+              "en": "so; therefore",
+              "jp": "だから"
+            },
+            {
+              "en": "many; a lot",
+              "jp": "たくさん"
+            },
+            {
+              "en": "together with (a person); and",
+              "jp": "~と"
+            },
+            {
+              "en": "why",
+              "jp": "どうして"
+            },
+            {
+              "en": "alone",
+              "jp": "ひとりで",
+              "kanji": "一人で"
+            },
+            {
+              "en": "Hello? (used on the phone)",
+              "jp": "もしもし"
+            }
+          ]
+        },
+        {
+          "name": "Location Words",
+          "phrases": [
+            {
+              "en": "right (~の)",
+              "jp": "みぎ",
+              "kanji": "右"
+            },
+            {
+              "en": "left (~の)",
+              "jp": "ひだり",
+              "kanji": "左"
+            },
+            {
+              "en": "front (~の)",
+              "jp": "まえ",
+              "kanji": "前"
+            },
+            {
+              "en": "back (~の)",
+              "jp": "うしろ",
+              "kanji": "後ろ"
+            },
+            {
+              "en": "inside (~の)",
+              "jp": "なか",
+              "kanji": "中"
+            },
+            {
+              "en": "on (~の)",
+              "jp": "うえ",
+              "kanji": "上"
+            },
+            {
+              "en": "under (~の)",
+              "jp": "した",
+              "kanji": "下"
+            },
+            {
+              "en": "near; nearby (~の)",
+              "jp": "ちかく",
+              "kanji": "近く"
+            },
+            {
+              "en": "next (~の)",
+              "jp": "となり",
+              "kanji": "隣"
+            },
+            {
+              "en": "between (A て B の)",
+              "jp": "あいだ",
+              "kanji": "間"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
