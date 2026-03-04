@@ -290,7 +290,7 @@ fn render_review(frame: &mut Frame, app: &App) {
 
     let mut kanji_state = ListState::default();
     if kanji.len() > 0 {
-        kanji_state.select(Some(0)); // TODO: kanji list navigation
+        kanji_state.select(Some(app.context.kanji_offset));
     }
 
     let kanji_list = List::new(kanji_items)

@@ -192,6 +192,7 @@ where
                         app.context.prev_translation_direction = None;
                         app.context.prev_answer = None;
                         app.context.asked_questions.clear();
+                        app.context.kanji_offset = 0;
                         app.romanji.clear();
                         app.kana.clear();
                         app.kanji.clear();
@@ -283,7 +284,11 @@ where
                                     && app.kana_offset + app.kana_len
                                         <= app.get_kana().chars().count()
                             );
-                            app.push_kanji_offset((app.kana_offset, app.kana_len, 0)); // TODO: kanji selection
+                            app.push_kanji_offset((
+                                app.kana_offset,
+                                app.kana_len,
+                                app.context.kanji_offset,
+                            ));
                         }
                     }
                     KeyCode::Right => {
@@ -297,6 +302,7 @@ where
                             }
                             app.kana_len = 1;
                         }
+                        app.context.kanji_offset = 0;
                     }
                     KeyCode::Left => {
                         if key.modifiers.contains(KeyModifiers::SHIFT) {
@@ -308,6 +314,17 @@ where
                                 app.kana_offset -= 1;
                             }
                             app.kana_len = 1;
+                        }
+                        app.context.kanji_offset = 0;
+                    }
+                    KeyCode::Up => {
+                        if app.context.kanji_offset > 0 {
+                            app.context.kanji_offset -= 1;
+                        }
+                    }
+                    KeyCode::Down => {
+                        if app.context.kanji_offset + 1 < app.highlighted_kanji.len() {
+                            app.context.kanji_offset += 1;
                         }
                     }
                     KeyCode::Char(value) => {

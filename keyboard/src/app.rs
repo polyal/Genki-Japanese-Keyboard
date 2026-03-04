@@ -35,6 +35,8 @@ pub struct Context {
     pub prev_translation_direction: Option<TranslationDirection>,
     pub prev_answer: Option<String>,
 
+    pub kanji_offset: usize,
+
     pub randomize_section: bool,
     pub asked_questions: Vec<HashSet<usize>>,
 }
@@ -52,6 +54,7 @@ impl Context {
             prev_phrase_idx: None,
             prev_translation_direction: None,
             prev_answer: None,
+            kanji_offset: 0,
             randomize_section: false,
             asked_questions: Vec::<HashSet<usize>>::new(),
         }
