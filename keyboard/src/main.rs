@@ -69,6 +69,13 @@ where
                     KeyCode::Esc => {
                         break;
                     }
+                    KeyCode::Down | KeyCode::Up => {
+                        if app.context.chat == 0 {
+                            app.context.chat = 1;
+                        } else {
+                            app.context.chat = 0;
+                        }
+                    }
                     _ => {
                         app.context.current_screen = CurrentScreen::LessonSelect;
                     }

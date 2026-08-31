@@ -25,6 +25,8 @@ pub struct Context {
     pub current_screen: CurrentScreen,
     pub current_selection: CurrentSelection,
 
+    pub chat: usize,
+
     pub lesson_idx: usize,
     pub section_idx: Option<usize>,
     pub phrase_idx: usize,
@@ -46,6 +48,7 @@ impl Context {
         Context {
             current_screen: CurrentScreen::Welcome,
             current_selection: CurrentSelection::Lesson,
+            chat: 0,
             lesson_idx: 0,
             section_idx: None,
             phrase_idx: 0,

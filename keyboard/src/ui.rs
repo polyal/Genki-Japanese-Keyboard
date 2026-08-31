@@ -12,7 +12,7 @@ use crate::app::{App, CurrentScreen, CurrentSelection, TranslationDirection};
 pub fn ui(frame: &mut Frame, app: &App) {
     match app.context.current_screen {
         CurrentScreen::Welcome => {
-            render_welcome(frame);
+            render_welcome(frame, app);
         }
         CurrentScreen::LessonSelect => {
             render_lesson_select(frame, app);
@@ -23,15 +23,22 @@ pub fn ui(frame: &mut Frame, app: &App) {
     }
 }
 
-fn render_welcome(frame: &mut Frame) {
+fn render_welcome(frame: &mut Frame, app: &App) {
     let title = Line::from(" Genki Japanese Keyboard ".yellow().bold());
-    let instructions = Line::from(vec![" げんき ".yellow().bold()]);
+    let subtitle = Line::from(vec![" げんき ".yellow().bold()]);
     let block = Block::bordered()
         .title(title.centered())
-        .title_bottom(instructions.centered())
+        .title_bottom(subtitle.centered())
         .border_set(border::THICK);
 
-    let start = Paragraph::new(Text::styled(
+    frame.render_widget(block, frame.area());
+
+    let [top, bottom] = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .areas(frame.area());
+
+    let ascii_cat = Paragraph::new(Text::styled(
         r"
 
 
@@ -43,10 +50,25 @@ fn render_welcome(frame: &mut Frame) {
     '---''(_/--'  `-'\_)",
         Style::default().fg(Color::Yellow),
     ))
-    .centered()
-    .block(block);
+    .centered();
 
-    frame.render_widget(start, frame.area());
+    frame.render_widget(ascii_cat, top);
+
+    let welcome_items = vec![
+        ListItem::new(
+            Line::from(Span::styled("Lessons", Style::default().fg(Color::Yellow))).centered(),
+        ),
+        ListItem::new(
+            Line::from(Span::styled("Chat", Style::default().fg(Color::Yellow))).centered(),
+        ),
+    ];
+
+    let mut welcome_state = ListState::default();
+    welcome_state.select(Some(app.context.chat));
+
+    let lesson_list =
+        List::new(welcome_items).highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+    frame.render_stateful_widget(lesson_list, bottom, &mut welcome_state);
 }
 
 fn render_lesson_select(frame: &mut Frame, app: &App) {
