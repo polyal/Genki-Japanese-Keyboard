@@ -242,7 +242,7 @@ fn render_review(frame: &mut Frame, app: &App) {
     }
     let answer_text = Paragraph::new(answer_title)
         .light_yellow()
-        .block(Block::bordered().title(format!(" answer ")).yellow())
+        .block(Block::bordered().title(" answer ").yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(answer_text, answer_selector_chunk);
 
