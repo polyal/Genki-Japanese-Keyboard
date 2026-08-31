@@ -96,7 +96,7 @@ where
                             app.context.randomize_section = true;
                             app.context.asked_questions.clear();
                             app.context.asked_questions =
-                                std::iter::repeat_with(|| HashSet::<usize>::new())
+                                std::iter::repeat_with(HashSet::<usize>::new)
                                     .take(lesson.sections.len())
                                     .collect();
                             assert!(app.context.asked_questions.len() == lesson.sections.len());
@@ -147,7 +147,7 @@ where
                             app.context.randomize_section = false;
                             app.context.asked_questions.clear();
                             app.context.asked_questions =
-                                std::iter::repeat_with(|| HashSet::<usize>::new())
+                                std::iter::repeat_with(HashSet::<usize>::new)
                                     .take(lesson.sections.len())
                                     .collect();
                             assert!(app.context.asked_questions.len() == lesson.sections.len());
@@ -225,7 +225,7 @@ where
                         }
                         assert!(app.context.lesson_idx < app.book.lessons.len());
                         let lesson = &app.book.lessons[app.context.lesson_idx];
-                        if app.context.randomize_section == true {
+                        if app.context.randomize_section {
                             let mut asked_sections = HashSet::<usize>::new();
                             loop {
                                 let section_idx =
@@ -238,7 +238,7 @@ where
                                     if asked_sections.len() == lesson.sections.len() {
                                         app.context.asked_questions.clear();
                                         app.context.asked_questions =
-                                            std::iter::repeat_with(|| HashSet::<usize>::new())
+                                            std::iter::repeat_with(HashSet::<usize>::new)
                                                 .take(lesson.sections.len())
                                                 .collect();
                                     }
@@ -260,9 +260,9 @@ where
                             let phrases_asked =
                                 &mut app.context.asked_questions[app.context.section_idx.unwrap()];
                             let phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
-                            if phrases_asked.insert(phrase_idx) == true {
+                            if phrases_asked.insert(phrase_idx) {
                                 app.context.phrase_idx = phrase_idx;
-                                if app.context.randomize_section == false
+                                if !app.context.randomize_section
                                     && phrases_asked.len() == section.phrases.len()
                                 {
                                     phrases_asked.clear();
