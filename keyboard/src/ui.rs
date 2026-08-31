@@ -50,10 +50,10 @@ fn render_welcome(frame: &mut Frame) {
 }
 
 fn render_lesson_select(frame: &mut Frame, app: &App) {
-    let selection_chunks = Layout::default()
+    let [lesson_chunk, section_chunk] = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(frame.area());
+        .areas(frame.area());
 
     // draw lesson selection
     let mut lesson_items = Vec::<ListItem>::new();
@@ -71,11 +71,8 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
     lesson_state.select(Some(app.context.lesson_idx));
 
     let mut lesson_border_thinkness = border::PLAIN;
-    match app.context.current_selection {
-        CurrentSelection::Lesson => {
-            lesson_border_thinkness = border::THICK;
-        }
-        _ => {}
+    if let CurrentSelection::Lesson = app.context.current_selection {
+        lesson_border_thinkness = border::THICK;
     }
 
     let lesson_list = List::new(lesson_items)
@@ -86,26 +83,23 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
         )
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
         .highlight_symbol("‣");
-    frame.render_stateful_widget(lesson_list, selection_chunks[0], &mut lesson_state);
+    frame.render_stateful_widget(lesson_list, lesson_chunk, &mut lesson_state);
 
     // draw section selection
     let mut section_items = Vec::<ListItem>::new();
     let mut section_state = ListState::default();
     let mut section_border_thinkness = border::PLAIN;
-    match app.context.current_selection {
-        CurrentSelection::Section => {
-            section_border_thinkness = border::THICK;
-            assert!(app.context.lesson_idx < app.book.lessons.len());
-            let lesson = &app.book.lessons[app.context.lesson_idx];
-            for section in &lesson.sections {
-                section_items.push(ListItem::new(Line::from(Span::styled(
-                    format!(" [{}] {} ", section_items.len(), section.name),
-                    Style::default().fg(Color::Yellow),
-                ))));
-            }
-            section_state.select(app.context.section_idx);
+    if let CurrentSelection::Section = app.context.current_selection {
+        section_border_thinkness = border::THICK;
+        assert!(app.context.lesson_idx < app.book.lessons.len());
+        let lesson = &app.book.lessons[app.context.lesson_idx];
+        for section in &lesson.sections {
+            section_items.push(ListItem::new(Line::from(Span::styled(
+                format!(" [{}] {} ", section_items.len(), section.name),
+                Style::default().fg(Color::Yellow),
+            ))));
         }
-        _ => {}
+        section_state.select(app.context.section_idx);
     }
 
     let section_list = List::new(section_items)
@@ -117,7 +111,7 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
         .highlight_symbol("‣");
 
-    frame.render_stateful_widget(section_list, selection_chunks[1], &mut section_state);
+    frame.render_stateful_widget(section_list, section_chunk, &mut section_state);
 }
 
 fn render_review(frame: &mut Frame, app: &App) {
@@ -289,7 +283,7 @@ fn render_review(frame: &mut Frame, app: &App) {
     }
 
     let mut kanji_state = ListState::default();
-    if kanji.len() > 0 {
+    if !kanji.is_empty() {
         kanji_state.select(Some(app.context.kanji_offset));
     }
 

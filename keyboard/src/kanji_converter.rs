@@ -32,18 +32,18 @@ impl<'a> Phrase<'a> {
 
     fn compare(&mut self, node: &Kanji) -> bool {
         let first = self.hiragana.chars().nth(self.offset);
-        if let Some(first) = &first {
-            if node.key == *first {
-                self.offset += 1;
-                if self.done()
-                    && let Some(value) = &node.value
-                {
-                    self.kanji = value.clone();
-                } else if self.done() {
-                    return false;
-                }
-                return true;
+        if let Some(first) = &first
+            && node.key == *first
+        {
+            self.offset += 1;
+            if self.done()
+                && let Some(value) = &node.value
+            {
+                self.kanji = value.clone();
+            } else if self.done() {
+                return false;
             }
+            return true;
         }
         return false;
     }

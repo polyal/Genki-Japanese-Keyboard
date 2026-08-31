@@ -34,14 +34,14 @@ impl<'a> Phrase<'a> {
 
     fn compare(&mut self, node: &Kana) -> bool {
         let first = self.romanji.chars().nth(self.offset + self.len);
-        if let Some(first) = &first {
-            if node.key == *first {
-                self.len += 1;
-                if let Some(value) = &node.value {
-                    self.kana.push_str(value);
-                }
-                return true;
+        if let Some(first) = &first
+            && node.key == *first
+        {
+            self.len += 1;
+            if let Some(value) = &node.value {
+                self.kana.push_str(value);
             }
+            return true;
         }
         return false;
     }
