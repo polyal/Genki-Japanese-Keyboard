@@ -14,6 +14,9 @@ pub fn ui(frame: &mut Frame, app: &App) {
         CurrentScreen::Welcome => {
             render_welcome(frame, app);
         }
+        CurrentScreen::Chat => {
+            render_lesson_chat(frame, app);
+        }
         CurrentScreen::LessonSelect => {
             render_lesson_select(frame, app);
         }
@@ -69,6 +72,22 @@ fn render_welcome(frame: &mut Frame, app: &App) {
     let lesson_list =
         List::new(welcome_items).highlight_style(Style::default().add_modifier(Modifier::REVERSED));
     frame.render_stateful_widget(lesson_list, bottom, &mut welcome_state);
+}
+
+fn render_lesson_chat(frame: &mut Frame, app: &App) {
+    let [messages_chunk, text_chunk] =
+        Layout::vertical([Constraint::Percentage(70), Constraint::Percentage(30)])
+            .areas(frame.area());
+
+    let messages = Paragraph::new("messages")
+        .block(Block::bordered())
+        .wrap(Wrap { trim: true });
+    frame.render_widget(messages, messages_chunk);
+
+    let text = Paragraph::new(app.get_kana())
+        .block(Block::bordered())
+        .wrap(Wrap { trim: true });
+    frame.render_widget(text, text_chunk);
 }
 
 fn render_lesson_select(frame: &mut Frame, app: &App) {

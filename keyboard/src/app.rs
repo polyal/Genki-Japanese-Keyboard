@@ -6,6 +6,7 @@ use std::collections::HashSet;
 
 pub enum CurrentScreen {
     Welcome,
+    Chat,
     LessonSelect,
     Review,
 }

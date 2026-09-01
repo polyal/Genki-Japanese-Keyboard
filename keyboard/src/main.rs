@@ -76,14 +76,51 @@ where
                             app.context.chat = 0;
                         }
                     }
-                    _ => {
-                        app.context.current_screen = CurrentScreen::LessonSelect;
+                    KeyCode::Enter => {
+                        if app.context.chat == 1 {
+                            app.context.current_screen = CurrentScreen::Chat;
+                        } else {
+                            app.context.current_screen = CurrentScreen::LessonSelect;
+                        }
                     }
+                    _ => {}
+                },
+                CurrentScreen::Chat => match key.code {
+                    KeyCode::Char(value) => {
+                        app.push_char(value);
+                        // when last charachter dissapears do to kana conversion
+                        if app.kana_offset + app.kana_len > app.get_kana().chars().count() {
+                            app.kana_offset -=
+                                app.kana_offset + app.kana_len - app.get_kana().chars().count();
+                        }
+                    }
+                    KeyCode::Backspace => {
+                        app.pop_char();
+                    }
+                    KeyCode::Esc => {
+                        break;
+                    }
+                    _ => {}
                 },
                 CurrentScreen::LessonSelect => match app.context.current_selection {
                     CurrentSelection::Lesson => match key.code {
                         KeyCode::Esc => {
-                            break;
+                            app.context.current_screen = CurrentScreen::Welcome;
+                            app.context.current_selection = CurrentSelection::Lesson;
+                            app.context.lesson_idx = 0;
+                            app.context.section_idx = None;
+                            app.context.prev_section_idx = None;
+                            app.context.prev_phrase_idx = None;
+                            app.context.prev_translation_direction = None;
+                            app.context.prev_answer = None;
+                            app.context.asked_questions.clear();
+                            app.context.kanji_offset = 0;
+                            app.romanji.clear();
+                            app.kana.clear();
+                            app.kanji.clear();
+                            app.highlighted_kanji.clear();
+                            app.kana_offset = 0;
+                            app.kana_len = 1;
                         }
                         KeyCode::Enter => {
                             app.context.current_screen = CurrentScreen::Review;
