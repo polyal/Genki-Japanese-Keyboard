@@ -65,6 +65,17 @@ impl Context {
     }
 }
 
+pub struct Cursor {
+    pub pos: usize,
+    pub len: usize,
+}
+
+impl Cursor {
+    fn new() -> Self {
+        Cursor { pos: 0, len: 1 }
+    }
+}
+
 pub struct App {
     pub book: Book,
     kana_converter: RomanjiToKanaConverter,
@@ -79,6 +90,8 @@ pub struct App {
     pub kana_offset: usize,
     pub kana_len: usize,
     kanji_offsets: Vec<(usize, usize, usize)>,
+
+    pub cursor: Cursor,
 }
 
 impl App {
@@ -95,17 +108,20 @@ impl App {
             kana_offset: 0,
             kana_len: 1,
             kanji_offsets: Vec::new(),
+            cursor: Cursor::new(),
         }
     }
 
     pub fn push_char(&mut self, value: char) {
         self.romanji.push(value);
         self.kana = self.kana_converter.convert(&self.romanji);
+        self.cursor.pos = self.kana.chars().count() - 1;
     }
 
     pub fn pop_char(&mut self) {
         self.romanji.pop();
         self.kana = self.kana_converter.convert(&self.romanji);
+        self.cursor.pos = self.kana.chars().count() - 1;
     }
 
     pub fn push_kanji_offset(&mut self, offset: (usize, usize, usize)) {

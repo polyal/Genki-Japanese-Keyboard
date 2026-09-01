@@ -84,10 +84,51 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         .wrap(Wrap { trim: true });
     frame.render_widget(messages, messages_chunk);
 
-    let text = Paragraph::new(app.get_kana())
+    // kana box with highlighting
+    let kana: String = app.get_kana();
+    let mut left = String::new();
+    let mut middle = String::new();
+    let mut right = String::new();
+    if kana.chars().count() > 0 {
+        assert!(app.cursor.pos + app.cursor.len <= kana.chars().count());
+        assert!(app.cursor.len >= 1);
+        middle = kana
+            .chars()
+            .take(app.cursor.pos + app.cursor.len)
+            .skip(app.cursor.pos)
+            .collect();
+        if app.cursor.pos > 0 {
+            left = kana.chars().take(app.cursor.pos).collect();
+        }
+        if app.cursor.pos + app.cursor.len < kana.chars().count() {
+            right = kana
+                .chars()
+                .take(kana.chars().count())
+                .skip(app.cursor.pos + app.cursor.len)
+                .collect();
+        }
+    }
+
+    // highlight selected kana
+    let kana_formatted = Text::from(vec![Line::from(vec![
+        Span::raw(left),
+        Span::styled(&middle, Style::default().add_modifier(Modifier::REVERSED)),
+        Span::raw(right),
+    ])]);
+
+    let text = Paragraph::new(kana_formatted)
         .block(Block::bordered())
         .wrap(Wrap { trim: true });
+
     frame.render_widget(text, text_chunk);
+
+    // dummy cursor
+    if kana.chars().count() == 0 {
+        let mut cursor = text_chunk.as_position();
+        cursor.x += 1;
+        cursor.y += 1;
+        frame.set_cursor_position(cursor);
+    }
 }
 
 fn render_lesson_select(frame: &mut Frame, app: &App) {
