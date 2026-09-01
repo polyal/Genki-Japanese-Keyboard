@@ -89,7 +89,7 @@ impl HiragaToKanjiConverter {
     }
 
     fn iterate_kanji(&self, node: &Kanji, phrase: &mut Phrase) -> bool {
-        let mut matched = phrase.compare(&node);
+        let mut matched = phrase.compare(node);
         if matched && !phrase.done() {
             for child in &node.next {
                 matched = self.iterate_kanji(child, phrase);
@@ -102,7 +102,7 @@ impl HiragaToKanjiConverter {
     }
 
     pub fn convert(&self, hiragana: &String) -> Vec<char> {
-        let mut phrase = Phrase::new(&hiragana);
+        let mut phrase = Phrase::new(hiragana);
         self.convert_phrase(&mut phrase);
         return phrase.get_kanji();
     }

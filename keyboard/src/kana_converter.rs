@@ -105,7 +105,7 @@ impl RomanjiToKanaConverter {
     }
 
     fn iterate_kana(&self, node: &Kana, phrase: &mut Phrase) -> bool {
-        let mut matched = phrase.compare(&node);
+        let mut matched = phrase.compare(node);
         if matched {
             for child in &node.next {
                 matched = self.iterate_kana(child, phrase);
@@ -118,7 +118,7 @@ impl RomanjiToKanaConverter {
     }
 
     pub fn convert(&self, romanji: &String) -> String {
-        let mut phrase = Phrase::new(&romanji);
+        let mut phrase = Phrase::new(romanji);
         while !phrase.done() {
             if self.convert_phrase(&mut phrase) {
                 phrase.next();
