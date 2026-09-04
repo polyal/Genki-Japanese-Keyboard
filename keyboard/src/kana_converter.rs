@@ -16,14 +16,14 @@ struct Kana {
 }
 
 struct Phrase<'a> {
-    romanji: &'a String,
+    romanji: &'a str,
     kana: String,
     offset: usize,
     len: usize,
 }
 
 impl<'a> Phrase<'a> {
-    fn new(phrase: &'a String) -> Self {
+    fn new(phrase: &'a str) -> Self {
         Phrase {
             romanji: phrase,
             kana: String::new(),
@@ -117,8 +117,7 @@ impl RomanjiToKanaConverter {
         return matched;
     }
 
-    // TODO: take &str instead
-    pub fn convert(&self, romanji: &String, single_char: bool) -> Option<String> {
+    pub fn convert(&self, romanji: &str, single_char: bool) -> Option<String> {
         let mut phrase = Phrase::new(romanji);
         while !phrase.done() {
             if self.convert_phrase(&mut phrase) {
@@ -460,7 +459,7 @@ mod tests {
         ];
 
         for (romanji, expected) in test_cases {
-            let result = converter.convert(&romanji.to_string(), true);
+            let result = converter.convert(romanji, true);
             assert_eq!(
                 result.unwrap_or_default(),
                 expected,

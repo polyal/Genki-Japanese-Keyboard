@@ -154,10 +154,7 @@ impl App {
         for i in start..end {
             let romanji_substr = self.romanji.substring(i, end);
             // conversion successful
-            if let Some(converted_str) = self
-                .kana_converter
-                .convert(&romanji_substr.to_string(), true)
-            {
+            if let Some(converted_str) = self.kana_converter.convert(romanji_substr, true) {
                 is_converted = true;
 
                 // remove unconverted string from end of string
