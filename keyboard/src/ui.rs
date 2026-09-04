@@ -121,14 +121,6 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         .wrap(Wrap { trim: true });
 
     frame.render_widget(text, text_chunk);
-
-    // dummy cursor
-    if kana.chars().count() == 0 {
-        let mut cursor = text_chunk.as_position();
-        cursor.x += 1;
-        cursor.y += 1;
-        frame.set_cursor_position(cursor);
-    }
 }
 
 fn render_lesson_select(frame: &mut Frame, app: &App) {

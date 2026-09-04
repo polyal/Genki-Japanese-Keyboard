@@ -117,16 +117,23 @@ impl RomanjiToKanaConverter {
         return matched;
     }
 
-    pub fn convert(&self, romanji: &String) -> String {
+    // TODO: take &str instead
+    pub fn convert(&self, romanji: &String, single_char: bool) -> Option<String> {
         let mut phrase = Phrase::new(romanji);
         while !phrase.done() {
             if self.convert_phrase(&mut phrase) {
                 phrase.next();
+                if single_char {
+                    break;
+                }
             } else {
+                if single_char {
+                    return None;
+                }
                 phrase.skip();
             }
         }
-        return phrase.get_kana();
+        return Some(phrase.get_kana());
     }
 }
 
@@ -453,8 +460,13 @@ mod tests {
         ];
 
         for (romanji, expected) in test_cases {
-            let result = converter.convert(&romanji.to_string());
-            assert_eq!(result, expected, "Failed for romanji: {}", romanji);
+            let result = converter.convert(&romanji.to_string(), true);
+            assert_eq!(
+                result.unwrap_or_default(),
+                expected,
+                "Failed for romanji: {}",
+                romanji
+            );
         }
     }
 }
