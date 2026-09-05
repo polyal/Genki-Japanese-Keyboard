@@ -90,21 +90,22 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
     let mut middle = String::new();
     let mut right = String::new();
     if kana.chars().count() > 0 {
-        assert!(app.cursor.pos + app.cursor.len <= kana.chars().count());
-        assert!(app.cursor.len >= 1);
+        let cursor = app.get_cursor_pos();
+        assert!(cursor.pos + cursor.len <= kana.chars().count());
+        assert!(cursor.len >= 1);
         middle = kana
             .chars()
-            .take(app.cursor.pos + app.cursor.len)
-            .skip(app.cursor.pos)
+            .take(cursor.pos + cursor.len)
+            .skip(cursor.pos)
             .collect();
-        if app.cursor.pos > 0 {
-            left = kana.chars().take(app.cursor.pos).collect();
+        if cursor.pos > 0 {
+            left = kana.chars().take(cursor.pos).collect();
         }
-        if app.cursor.pos + app.cursor.len < kana.chars().count() {
+        if cursor.pos + cursor.len < kana.chars().count() {
             right = kana
                 .chars()
                 .take(kana.chars().count())
-                .skip(app.cursor.pos + app.cursor.len)
+                .skip(cursor.pos + cursor.len)
                 .collect();
         }
     }

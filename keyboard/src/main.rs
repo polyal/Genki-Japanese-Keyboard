@@ -94,18 +94,14 @@ where
                     }
                     KeyCode::Right => {
                         if key.modifiers.contains(KeyModifiers::SHIFT) {
-                            if app.cursor.pos + app.cursor.len < app.get_kana().chars().count() {
-                                app.cursor.len += 1;
-                            }
+                            app.cursor_highlight_right();
                         } else {
                             app.cursor_right();
                         }
                     }
                     KeyCode::Left => {
                         if key.modifiers.contains(KeyModifiers::SHIFT) {
-                            if app.cursor.len > 1 {
-                                app.cursor.len -= 1;
-                            }
+                            app.cursor_highlight_left();
                         } else {
                             app.cursor_left();
                         }

@@ -89,6 +89,26 @@ impl OffsetMap {
     }
 }
 
+enum HilightDirection {
+    None,
+    Left,
+    Right,
+}
+
+struct Cursor {
+    offset: Offset,
+    highlight_dir: HilightDirection,
+}
+
+impl Cursor {
+    fn new(offset: Offset, highlight_dir: HilightDirection) -> Self {
+        Cursor {
+            offset,
+            highlight_dir,
+        }
+    }
+}
+
 pub struct App {
     pub book: Book,
     kana_converter: RomanjiToKanaConverter,
@@ -106,7 +126,7 @@ pub struct App {
     pub kana_len: usize,
     kanji_offsets: Vec<(usize, usize, usize)>,
 
-    pub cursor: Offset,
+    cursor: Cursor,
 }
 
 impl App {
@@ -124,36 +144,55 @@ impl App {
             kana_offset: 0,
             kana_len: 1,
             kanji_offsets: Vec::new(),
-            cursor: Offset::new(0, 0),
+            cursor: Cursor::new(Offset::new(0, 0), HilightDirection::None),
         }
     }
 
+    pub fn get_cursor_pos(&self) -> &Offset {
+        return &self.cursor.offset;
+    }
+
     pub fn cursor_right(&mut self) {
-        if self.cursor.pos + self.cursor.len < self.kana.chars().count() {
-            self.cursor.pos += self.cursor.len;
+        if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
+            self.cursor.offset.pos += self.cursor.offset.len;
+            // update highlighting
             if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
-                self.cursor.pos >= offset.dest.pos
-                    && self.cursor.pos < offset.dest.pos + offset.dest.len
+                self.cursor.offset.pos >= offset.dest.pos
+                    && self.cursor.offset.pos < offset.dest.pos + offset.dest.len
             }) {
-                self.cursor.len = offset.dest.len;
+                self.cursor.offset.pos = offset.dest.pos;
+                self.cursor.offset.len = offset.dest.len;
             } else {
-                self.cursor.len = 1;
+                self.cursor.offset.len = 1;
             }
         }
     }
 
     pub fn cursor_left(&mut self) {
-        if self.cursor.pos > 0 {
-            self.cursor.pos -= 1;
+        if self.cursor.offset.pos > 0 {
+            self.cursor.offset.pos -= 1;
+            // update highlighting
             if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
-                self.cursor.pos >= offset.dest.pos
-                    && self.cursor.pos < offset.dest.pos + offset.dest.len
+                self.cursor.offset.pos >= offset.dest.pos
+                    && self.cursor.offset.pos < offset.dest.pos + offset.dest.len
             }) {
-                self.cursor.pos = offset.dest.pos;
-                self.cursor.len = offset.dest.len;
+                self.cursor.offset.pos = offset.dest.pos;
+                self.cursor.offset.len = offset.dest.len;
             } else {
-                self.cursor.len = 1;
+                self.cursor.offset.len = 1;
             }
+        }
+    }
+
+    pub fn cursor_highlight_right(&mut self) {
+        if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
+            self.cursor.offset.len += 1;
+        }
+    }
+
+    pub fn cursor_highlight_left(&mut self) {
+        if self.cursor.offset.len > 1 {
+            self.cursor.offset.len -= 1;
         }
     }
 
@@ -185,7 +224,7 @@ impl App {
             if let Some(converted_str) = self.kana_converter.convert(romanji_substr, true) {
                 is_converted = true;
 
-                // remove unconverted string from end of string
+                // remove unconverted string from end of output string
                 if let Some((byte_idx, _)) = self
                     .kana
                     .char_indices()
@@ -209,8 +248,8 @@ impl App {
             self.kana.push(value);
         }
 
-        self.cursor.pos = self.kana.chars().count() - cursor_len;
-        self.cursor.len = cursor_len;
+        self.cursor.offset.pos = self.kana.chars().count() - cursor_len;
+        self.cursor.offset.len = cursor_len;
     }
 
     pub fn pop_char(&mut self) {
@@ -249,11 +288,11 @@ impl App {
             if let Some(last_offset) = self.kana_offsets.last()
                 && self.romanji.chars().count() == last_offset.src.pos + last_offset.src.len
             {
-                self.cursor.len = last_offset.dest.len;
+                self.cursor.offset.len = last_offset.dest.len;
             } else {
-                self.cursor.len = 1;
+                self.cursor.offset.len = 1;
             }
-            self.cursor.pos = self.kana.chars().count() - self.cursor.len;
+            self.cursor.offset.pos = self.kana.chars().count() - self.cursor.offset.len;
         }
     }
 
