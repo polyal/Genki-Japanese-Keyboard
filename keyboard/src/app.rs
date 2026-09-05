@@ -67,26 +67,25 @@ impl Context {
     }
 }
 
-pub struct Cursor {
+pub struct Offset {
     pub pos: usize,
     pub len: usize,
 }
 
-impl Cursor {
-    fn new() -> Self {
-        Cursor { pos: 0, len: 1 }
+impl Offset {
+    fn new(pos: usize, len: usize) -> Self {
+        Offset { pos, len }
     }
 }
 
-struct ConversionOffset {
-    pos: usize,      // offset in str
-    len: usize,      // length
-    dest_len: usize, // length of converted value
+struct OffsetMap {
+    src: Offset,
+    dest: Offset,
 }
 
-impl ConversionOffset {
-    fn new(pos: usize, len: usize, dest_len: usize) -> Self {
-        ConversionOffset { pos, len, dest_len }
+impl OffsetMap {
+    fn new(src: Offset, dest: Offset) -> Self {
+        OffsetMap { src, dest }
     }
 }
 
@@ -100,14 +99,14 @@ pub struct App {
     pub kana: String,
     pub kanji: String,
 
-    kana_offsets: Vec<ConversionOffset>,
+    kana_offsets: Vec<OffsetMap>,
 
     pub highlighted_kanji: Vec<char>,
     pub kana_offset: usize,
     pub kana_len: usize,
     kanji_offsets: Vec<(usize, usize, usize)>,
 
-    pub cursor: Cursor,
+    pub cursor: Offset,
 }
 
 impl App {
@@ -125,7 +124,36 @@ impl App {
             kana_offset: 0,
             kana_len: 1,
             kanji_offsets: Vec::new(),
-            cursor: Cursor::new(),
+            cursor: Offset::new(0, 0),
+        }
+    }
+
+    pub fn cursor_right(&mut self) {
+        if self.cursor.pos + self.cursor.len < self.kana.chars().count() {
+            self.cursor.pos += self.cursor.len;
+            if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
+                self.cursor.pos >= offset.dest.pos
+                    && self.cursor.pos < offset.dest.pos + offset.dest.len
+            }) {
+                self.cursor.len = offset.dest.len;
+            } else {
+                self.cursor.len = 1;
+            }
+        }
+    }
+
+    pub fn cursor_left(&mut self) {
+        if self.cursor.pos > 0 {
+            self.cursor.pos -= 1;
+            if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
+                self.cursor.pos >= offset.dest.pos
+                    && self.cursor.pos < offset.dest.pos + offset.dest.len
+            }) {
+                self.cursor.pos = offset.dest.pos;
+                self.cursor.len = offset.dest.len;
+            } else {
+                self.cursor.len = 1;
+            }
         }
     }
 
@@ -138,7 +166,7 @@ impl App {
             // the longest kana conversion is 4 chars, so we use a moving window of 4 chars
             let gap: usize;
             if let Some(last_offset) = self.kana_offsets.last() {
-                gap = end - (last_offset.pos + last_offset.len)
+                gap = end - (last_offset.src.pos + last_offset.src.len)
             } else {
                 gap = end
             }
@@ -167,10 +195,9 @@ impl App {
                 }
 
                 // update converted string
-                self.kana_offsets.push(ConversionOffset::new(
-                    i,
-                    end - i,
-                    converted_str.chars().count(),
+                self.kana_offsets.push(OffsetMap::new(
+                    Offset::new(i, end - i),
+                    Offset::new(self.kana.chars().count(), converted_str.chars().count()),
                 ));
                 self.kana.push_str(&converted_str.to_string());
                 cursor_len = converted_str.chars().count();
@@ -189,14 +216,15 @@ impl App {
     pub fn pop_char(&mut self) {
         // check if we removed kana, if so then add back unconverted chars
         if let Some(last_offset) = self.kana_offsets.last()
-            && self.romanji.chars().count() == last_offset.pos + last_offset.len
+            && self.romanji.chars().count() == last_offset.src.pos + last_offset.src.len
         {
             // remove romanji
-            if let Some((byte_idx, _)) = self
-                .romanji
-                .char_indices()
-                .nth(self.romanji.chars().count().saturating_sub(last_offset.len))
-            {
+            if let Some((byte_idx, _)) = self.romanji.char_indices().nth(
+                self.romanji
+                    .chars()
+                    .count()
+                    .saturating_sub(last_offset.src.len),
+            ) {
                 self.romanji.truncate(byte_idx);
             }
 
@@ -205,7 +233,7 @@ impl App {
                 self.kana
                     .chars()
                     .count()
-                    .saturating_sub(last_offset.dest_len),
+                    .saturating_sub(last_offset.dest.len),
             ) {
                 self.kana.truncate(byte_idx);
             }
@@ -219,9 +247,9 @@ impl App {
         if self.kana.chars().count() != 0 {
             // cursor touching last kana char
             if let Some(last_offset) = self.kana_offsets.last()
-                && self.romanji.chars().count() == last_offset.pos + last_offset.len
+                && self.romanji.chars().count() == last_offset.src.pos + last_offset.src.len
             {
-                self.cursor.len = last_offset.dest_len;
+                self.cursor.len = last_offset.dest.len;
             } else {
                 self.cursor.len = 1;
             }

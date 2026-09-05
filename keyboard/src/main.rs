@@ -88,14 +88,27 @@ where
                 CurrentScreen::Chat => match key.code {
                     KeyCode::Char(value) => {
                         app.push_char(value);
-                        // when last charachter dissapears do to kana conversion
-                        if app.kana_offset + app.kana_len > app.get_kana().chars().count() {
-                            app.kana_offset -=
-                                app.kana_offset + app.kana_len - app.get_kana().chars().count();
-                        }
                     }
                     KeyCode::Backspace => {
                         app.pop_char();
+                    }
+                    KeyCode::Right => {
+                        if key.modifiers.contains(KeyModifiers::SHIFT) {
+                            if app.cursor.pos + app.cursor.len < app.get_kana().chars().count() {
+                                app.cursor.len += 1;
+                            }
+                        } else {
+                            app.cursor_right();
+                        }
+                    }
+                    KeyCode::Left => {
+                        if key.modifiers.contains(KeyModifiers::SHIFT) {
+                            if app.cursor.len > 1 {
+                                app.cursor.len -= 1;
+                            }
+                        } else {
+                            app.cursor_left();
+                        }
                     }
                     KeyCode::Esc => {
                         break;
