@@ -148,7 +148,7 @@ impl App {
             kana_len: 1,
             kanji_offsets: Vec::new(),
             cursor: Cursor::new(),
-            debug: String::new(),
+            debug: String::from("debug: "),
         }
     }
 
