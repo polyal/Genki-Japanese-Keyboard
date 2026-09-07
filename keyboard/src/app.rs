@@ -116,9 +116,9 @@ pub struct App {
     kanji_converter: HiragaToKanjiConverter,
     pub context: Context,
 
-    pub romanji: String,
-    pub kana: String,
-    pub kanji: String,
+    romanji: String,
+    kana: String,
+    kanji: String,
 
     kana_offsets: Vec<OffsetMap>,
 
@@ -490,15 +490,21 @@ impl App {
         }
     }
 
-    pub fn get_romanji(&self) -> String {
-        return self.romanji.clone();
+    pub fn get_romanji(&self) -> &String {
+        return &self.romanji;
     }
 
-    pub fn get_kana(&self) -> String {
-        return self.kana.clone();
+    pub fn get_kana(&self) -> &String {
+        return &self.kana;
     }
 
-    pub fn get_kanji(&self) -> String {
-        return self.kanji.clone();
+    pub fn get_kanji(&self) -> &String {
+        return &self.kanji;
+    }
+
+    pub fn reset_keyboard(&mut self) {
+        self.romanji.clear();
+        self.kana.clear();
+        self.kanji.clear();
     }
 }

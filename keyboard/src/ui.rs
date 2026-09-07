@@ -86,7 +86,7 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
     frame.render_widget(messages, messages_chunk);
 
     // kana box with highlighting
-    let kana: String = app.get_kana();
+    let kana = app.get_kana();
     let mut left = String::new();
     let mut middle = String::new();
     let mut right = String::new();
@@ -371,14 +371,14 @@ fn render_review(frame: &mut Frame, app: &App) {
     frame.render_stateful_widget(kanji_list, kanji_selector_chunk, &mut kanji_state);
 
     // kanji text box
-    let complete_text = Paragraph::new(app.get_kanji())
+    let complete_text = Paragraph::new(app.get_kanji().clone())
         .light_yellow()
         .block(Block::bordered().title(" complete ").yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(complete_text, kanji_chunk);
 
     // romanji text box
-    let romanji_text = Paragraph::new(app.get_romanji())
+    let romanji_text = Paragraph::new(app.get_romanji().clone())
         .block(Block::bordered().title(" romanji "))
         .wrap(Wrap { trim: true });
     frame.render_widget(romanji_text, romanji_chunk);

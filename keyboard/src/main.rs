@@ -124,9 +124,7 @@ where
                             app.context.prev_answer = None;
                             app.context.asked_questions.clear();
                             app.context.kanji_offset = 0;
-                            app.romanji.clear();
-                            app.kana.clear();
-                            app.kanji.clear();
+                            app.reset_keyboard();
                             app.highlighted_kanji.clear();
                             app.kana_offset = 0;
                             app.kana_len = 1;
@@ -246,9 +244,7 @@ where
                         app.context.prev_answer = None;
                         app.context.asked_questions.clear();
                         app.context.kanji_offset = 0;
-                        app.romanji.clear();
-                        app.kana.clear();
-                        app.kanji.clear();
+                        app.reset_keyboard();
                         app.highlighted_kanji.clear();
                         app.kana_offset = 0;
                         app.kana_len = 1;
@@ -263,10 +259,10 @@ where
                         {
                             match prev_translation_direction {
                                 TranslationDirection::ToEN => {
-                                    app.context.prev_answer = Some(app.romanji.clone());
+                                    app.context.prev_answer = Some(app.get_romanji().clone());
                                 }
                                 TranslationDirection::ToJP => {
-                                    app.context.prev_answer = Some(app.kanji.clone());
+                                    app.context.prev_answer = Some(app.get_romanji().clone());
                                 }
                             }
                         }
@@ -323,9 +319,7 @@ where
                                 break;
                             }
                         }
-                        app.romanji.clear();
-                        app.kana.clear();
-                        app.kanji.clear();
+                        app.reset_keyboard();
                         app.highlighted_kanji.clear();
                         app.kana_offset = 0;
                         app.kana_len = 1;
