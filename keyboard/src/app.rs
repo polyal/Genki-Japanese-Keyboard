@@ -402,6 +402,34 @@ impl App {
         }
     }
 
+    pub fn check_merge_kana(&mut self) {
+        if let Some(start_offset) = self
+            .kana_offsets
+            .iter()
+            .find(|&offset| self.cursor.offset.pos == offset.dest.pos)
+            && let Some(end_offset) = self.kana_offsets.iter().find(|&offset| {
+                self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos + offset.dest.len
+            })
+        {
+            // make sure theyre contiguous, only support merging of contiguous kana
+            if start_offset.dest.pos + start_offset.dest.len == end_offset.dest.pos {
+                let romanji_offset = Offset::new(
+                    start_offset.src.pos,
+                    end_offset.src.pos + end_offset.src.len - start_offset.src.pos,
+                );
+                let romanji_substr: &str = self
+                    .romanji
+                    .substring(romanji_offset.pos, romanji_offset.pos + romanji_offset.len);
+                if let Some(converted_str) = self.kana_converter.convert(romanji_substr, true) {
+                    self.debug = format!(
+                        "unconverted[{}, {}]: {}, conveted: {}",
+                        romanji_offset.pos, romanji_offset.len, romanji_substr, converted_str,
+                    );
+                }
+            }
+        }
+    }
+
     pub fn push_kanji_offset(&mut self, offset: (usize, usize, usize)) {
         let start = offset.0;
         let end = offset.0 + offset.1;

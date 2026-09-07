@@ -403,6 +403,7 @@ where
                 },
             }
         }
+        app.check_merge_kana();
         app.update_kanji();
     }
     return Ok(true);
