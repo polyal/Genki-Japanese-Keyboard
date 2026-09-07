@@ -67,6 +67,7 @@ impl Context {
     }
 }
 
+#[derive(PartialEq)]
 pub struct Offset {
     pub pos: usize,
     pub len: usize,
@@ -101,10 +102,10 @@ struct Cursor {
 }
 
 impl Cursor {
-    fn new(offset: Offset, highlight_dir: HilightDirection) -> Self {
+    fn new() -> Self {
         Cursor {
-            offset,
-            highlight_dir,
+            offset: Offset::new(0, 0),
+            highlight_dir: HilightDirection::None,
         }
     }
 }
@@ -127,6 +128,8 @@ pub struct App {
     kanji_offsets: Vec<(usize, usize, usize)>,
 
     cursor: Cursor,
+
+    pub debug: String,
 }
 
 impl App {
@@ -144,7 +147,8 @@ impl App {
             kana_offset: 0,
             kana_len: 1,
             kanji_offsets: Vec::new(),
-            cursor: Cursor::new(Offset::new(0, 0), HilightDirection::None),
+            cursor: Cursor::new(),
+            debug: String::new(),
         }
     }
 
@@ -156,43 +160,122 @@ impl App {
         if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
             self.cursor.offset.pos += self.cursor.offset.len;
             // update highlighting
-            if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
-                self.cursor.offset.pos >= offset.dest.pos
-                    && self.cursor.offset.pos < offset.dest.pos + offset.dest.len
-            }) {
+            if let Some(offset) = self
+                .kana_offsets
+                .iter()
+                .find(|&offset| self.cursor.offset.pos == offset.dest.pos)
+            {
                 self.cursor.offset.pos = offset.dest.pos;
                 self.cursor.offset.len = offset.dest.len;
             } else {
                 self.cursor.offset.len = 1;
             }
         }
+        self.cursor.highlight_dir = HilightDirection::None;
     }
 
     pub fn cursor_left(&mut self) {
         if self.cursor.offset.pos > 0 {
-            self.cursor.offset.pos -= 1;
             // update highlighting
-            if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
-                self.cursor.offset.pos >= offset.dest.pos
-                    && self.cursor.offset.pos < offset.dest.pos + offset.dest.len
-            }) {
+            if let Some(offset) = self
+                .kana_offsets
+                .iter()
+                .find(|&offset| self.cursor.offset.pos == offset.dest.pos + offset.dest.len)
+            {
                 self.cursor.offset.pos = offset.dest.pos;
                 self.cursor.offset.len = offset.dest.len;
             } else {
+                self.cursor.offset.pos -= 1;
                 self.cursor.offset.len = 1;
+            }
+        }
+        self.cursor.highlight_dir = HilightDirection::None;
+    }
+
+    pub fn cursor_highlight_right(&mut self) {
+        match self.cursor.highlight_dir {
+            HilightDirection::None | HilightDirection::Right => {
+                if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
+                    if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
+                        self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos
+                    }) {
+                        self.cursor.offset.len += offset.dest.len;
+                    } else {
+                        self.cursor.offset.len += 1;
+                    }
+                    self.cursor.highlight_dir = HilightDirection::Right;
+                }
+            }
+            HilightDirection::Left => {
+                if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
+                    if let Some(offset) = self
+                        .kana_offsets
+                        .iter()
+                        .find(|&offset| self.cursor.offset.pos == offset.dest.pos)
+                    {
+                        self.cursor.offset.pos += offset.dest.len;
+                        self.cursor.offset.len -= offset.dest.len;
+                        if let Some(cur_offset) = self
+                            .kana_offsets
+                            .iter()
+                            .find(|&offset| self.cursor.offset == offset.dest)
+                        {
+                            // on current position, switch highlightdirection
+                            assert!(cur_offset.dest.pos == offset.dest.pos + offset.dest.len);
+                            self.cursor.highlight_dir = HilightDirection::None;
+                        }
+                    } else {
+                        self.cursor.offset.pos += 1;
+                        self.cursor.offset.len -= 1;
+                    }
+                }
             }
         }
     }
 
-    pub fn cursor_highlight_right(&mut self) {
-        if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
-            self.cursor.offset.len += 1;
-        }
-    }
-
     pub fn cursor_highlight_left(&mut self) {
-        if self.cursor.offset.len > 1 {
-            self.cursor.offset.len -= 1;
+        match self.cursor.highlight_dir {
+            HilightDirection::Right => {
+                if self.cursor.offset.len > 0 {
+                    if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
+                        self.cursor.offset.pos + self.cursor.offset.len
+                            == offset.dest.pos + offset.dest.len
+                    }) {
+                        self.cursor.offset.len -= offset.dest.len;
+                        if let Some(cur_offset) = self
+                            .kana_offsets
+                            .iter()
+                            .find(|&offset| self.cursor.offset == offset.dest)
+                        {
+                            // on current position, switch highlightdirection
+                            assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
+                            self.cursor.highlight_dir = HilightDirection::None;
+                        }
+                    } else {
+                        self.cursor.offset.len -= 1;
+                        // highlighting a single element, might need to switch directions
+                        if self.cursor.offset.len == 1 {
+                            self.cursor.highlight_dir = HilightDirection::None;
+                        }
+                    }
+                }
+            }
+            HilightDirection::None | HilightDirection::Left => {
+                if self.cursor.offset.pos > 0 {
+                    if let Some(offset) = self
+                        .kana_offsets
+                        .iter()
+                        .find(|&offset| self.cursor.offset.pos == offset.dest.pos + offset.dest.len)
+                    {
+                        self.cursor.offset.pos = offset.dest.pos;
+                        self.cursor.offset.len += offset.dest.len;
+                    } else {
+                        self.cursor.offset.pos -= 1;
+                        self.cursor.offset.len += 1;
+                    }
+                    self.cursor.highlight_dir = HilightDirection::Left;
+                }
+            }
         }
     }
 

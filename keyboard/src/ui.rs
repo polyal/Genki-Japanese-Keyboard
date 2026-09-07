@@ -79,7 +79,8 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         Layout::vertical([Constraint::Percentage(70), Constraint::Percentage(30)])
             .areas(frame.area());
 
-    let messages = Paragraph::new("messages")
+    // add debugging info here so we ca see it on the screen
+    let messages = Paragraph::new(app.debug.clone())
         .block(Block::bordered())
         .wrap(Wrap { trim: true });
     frame.render_widget(messages, messages_chunk);
