@@ -165,22 +165,24 @@ impl App {
             // move cursor right
             self.cursor.offset.pos = offset.dest.pos;
             self.cursor.offset.len = offset.dest.len;
+        } else if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
+            // move cursor right for non kana chars
+            self.cursor.offset.pos += self.cursor.offset.len;
+            self.cursor.offset.len = 1;
         } else if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
             self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos + offset.dest.len
         }) {
             // at end, undo highlighting but keep end char group highlighted
             self.cursor.offset.pos = offset.dest.pos;
             self.cursor.offset.len = offset.dest.len;
-        } else if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
-            // move cursor right for non kana chars
-            self.cursor.offset.pos += self.cursor.offset.len;
-            self.cursor.offset.len = 1;
         } else if self.cursor.offset.pos + self.cursor.offset.len == self.kana.chars().count() {
             // at end, undo highlighting but keep end non kana char highighted
             self.cursor.offset.pos = self.kana.chars().count() - 1;
             self.cursor.offset.len = 1;
         }
         self.cursor.highlight_dir = HilightDirection::None;
+        assert!(self.cursor.offset.len > 0);
+        assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
     }
 
     pub fn cursor_left(&mut self) {
@@ -193,6 +195,9 @@ impl App {
             // move cursor left
             self.cursor.offset.pos = offset.dest.pos;
             self.cursor.offset.len = offset.dest.len;
+        } else if self.cursor.offset.pos > 0 {
+            self.cursor.offset.pos -= 1;
+            self.cursor.offset.len = 1;
         } else if let Some(offset) = self
             .kana_offsets
             .iter()
@@ -201,13 +206,13 @@ impl App {
             // at beginning, undo highlighting but keep first char group highlighted
             self.cursor.offset.pos = offset.dest.pos;
             self.cursor.offset.len = offset.dest.len;
-        } else if self.cursor.offset.pos > 0 {
-            self.cursor.offset.pos -= 1;
-            self.cursor.offset.len = 1;
         } else if self.cursor.offset.pos == 0 {
+            // at beginning, undo highlighting but keep first char highlighted
             self.cursor.offset.len = 1;
         }
         self.cursor.highlight_dir = HilightDirection::None;
+        assert!(self.cursor.offset.len > 0);
+        assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
     }
 
     pub fn cursor_highlight_right(&mut self) {
@@ -247,6 +252,8 @@ impl App {
                 }
             }
         }
+        assert!(self.cursor.offset.len > 0);
+        assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
     }
 
     pub fn cursor_highlight_left(&mut self) {
@@ -291,6 +298,8 @@ impl App {
                 }
             }
         }
+        assert!(self.cursor.offset.len > 0);
+        assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
     }
 
     pub fn push_char(&mut self, value: char) {
