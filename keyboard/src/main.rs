@@ -106,7 +106,7 @@ where
                             app.cursor_left();
                         }
                     }
-                    KeyCode::Tab => {
+                    KeyCode::Enter => {
                         app.update_merge_kana();
                     }
                     KeyCode::Esc => {

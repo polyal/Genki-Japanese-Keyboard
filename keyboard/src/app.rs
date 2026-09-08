@@ -480,7 +480,7 @@ impl App {
             if start_offset.dest.pos + start_offset.dest.len == end_offset.dest.pos {
                 let romanji_offset = Offset::new(
                     start_offset.src.pos,
-                    end_offset.src.pos + end_offset.src.len - start_offset.src.pos,
+                    start_offset.src.pos + start_offset.src.len + end_offset.src.len,
                 );
                 let romanji_substr: &str = self
                     .romanji
