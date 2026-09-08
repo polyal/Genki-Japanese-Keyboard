@@ -67,7 +67,7 @@ impl Context {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub struct Offset {
     pub pos: usize,
     pub len: usize,
@@ -79,6 +79,7 @@ impl Offset {
     }
 }
 
+#[derive(Clone, Copy)]
 struct OffsetMap {
     src: Offset,
     dest: Offset,
@@ -87,6 +88,17 @@ struct OffsetMap {
 impl OffsetMap {
     fn new(src: Offset, dest: Offset) -> Self {
         OffsetMap { src, dest }
+    }
+}
+
+struct MergeKana {
+    kana: String,
+    offset_map: OffsetMap,
+}
+
+impl MergeKana {
+    fn new(kana: String, offset_map: OffsetMap) -> Self {
+        MergeKana { kana, offset_map }
     }
 }
 
@@ -120,6 +132,8 @@ pub struct App {
     kana: String,
     kanji: String,
 
+    merge_kana: Option<MergeKana>,
+
     kana_offsets: Vec<OffsetMap>,
 
     pub highlighted_kanji: Vec<char>,
@@ -142,6 +156,7 @@ impl App {
             romanji: String::new(),
             kana: String::new(),
             kanji: String::new(),
+            merge_kana: None,
             kana_offsets: Vec::new(),
             highlighted_kanji: Vec::new(),
             kana_offset: 0,
@@ -222,12 +237,28 @@ impl App {
                     self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos
                 }) {
                     self.cursor.offset.len += offset.dest.len;
+                    if let Some(cur_offset) = self
+                        .kana_offsets
+                        .iter()
+                        .find(|&offset| self.cursor.offset == offset.dest)
+                    {
+                        // on current position, switch highlightdirection
+                        assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
+                        self.cursor.highlight_dir = HilightDirection::None;
+                    } else {
+                        self.cursor.highlight_dir = HilightDirection::Right;
+                    }
                 } else if self.cursor.offset.pos + self.cursor.offset.len
                     < self.kana.chars().count()
                 {
                     self.cursor.offset.len += 1;
+                    if self.cursor.offset.pos == self.kana.chars().count() - 1 {
+                        // cant highlight right, still neutral
+                        self.cursor.highlight_dir = HilightDirection::None;
+                    } else {
+                        self.cursor.highlight_dir = HilightDirection::Right;
+                    }
                 }
-                self.cursor.highlight_dir = HilightDirection::Right;
             }
             HilightDirection::Left => {
                 if let Some(offset) = self
@@ -245,10 +276,24 @@ impl App {
                         // on current position, switch highlightdirection
                         assert!(cur_offset.dest.pos == offset.dest.pos + offset.dest.len);
                         self.cursor.highlight_dir = HilightDirection::None;
+                    } else if self.cursor.offset.len == 1 {
+                        self.cursor.highlight_dir = HilightDirection::None;
                     }
                 } else if self.cursor.offset.len > 0 {
                     self.cursor.offset.pos += 1;
                     self.cursor.offset.len -= 1;
+                    if self
+                        .kana_offsets
+                        .iter()
+                        .any(|offset| self.cursor.offset == offset.dest)
+                    {
+                        // on current position, switch highlightdirection
+                        //assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
+                        self.cursor.highlight_dir = HilightDirection::None;
+                    } else if self.cursor.offset.len == 1 {
+                        // cant highlght right, still neutral
+                        self.cursor.highlight_dir = HilightDirection::None;
+                    }
                 }
             }
         }
@@ -272,11 +317,21 @@ impl App {
                         // on current position, switch highlightdirection
                         assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
                         self.cursor.highlight_dir = HilightDirection::None;
+                    } else if self.cursor.offset.len == 1 {
+                        self.cursor.highlight_dir = HilightDirection::None;
                     }
                 } else if self.cursor.offset.len > 0 {
                     self.cursor.offset.len -= 1;
                     // highlighting a single element, might need to switch directions
-                    if self.cursor.offset.len == 1 {
+                    if self
+                        .kana_offsets
+                        .iter()
+                        .any(|offset| self.cursor.offset == offset.dest)
+                    {
+                        // on current position, switch highlightdirection
+                        //assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
+                        self.cursor.highlight_dir = HilightDirection::None;
+                    } else if self.cursor.offset.len == 1 {
                         self.cursor.highlight_dir = HilightDirection::None;
                     }
                 }
@@ -289,11 +344,20 @@ impl App {
                 {
                     self.cursor.offset.pos = offset.dest.pos;
                     self.cursor.offset.len += offset.dest.len;
-                } else if self.cursor.offset.pos > 0 {
+                    if let Some(cur_offset) = self
+                        .kana_offsets
+                        .iter()
+                        .find(|&offset| self.cursor.offset == offset.dest)
                     {
-                        self.cursor.offset.pos -= 1;
-                        self.cursor.offset.len += 1;
+                        // on current position, switch highlightdirection
+                        assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
+                        self.cursor.highlight_dir = HilightDirection::None;
+                    } else {
+                        self.cursor.highlight_dir = HilightDirection::Left;
                     }
+                } else if self.cursor.offset.pos > 0 {
+                    self.cursor.offset.pos -= 1;
+                    self.cursor.offset.len += 1;
                     self.cursor.highlight_dir = HilightDirection::Left;
                 }
             }
@@ -403,6 +467,7 @@ impl App {
     }
 
     pub fn check_merge_kana(&mut self) {
+        self.merge_kana = None;
         if let Some(start_offset) = self
             .kana_offsets
             .iter()
@@ -420,14 +485,45 @@ impl App {
                 let romanji_substr: &str = self
                     .romanji
                     .substring(romanji_offset.pos, romanji_offset.pos + romanji_offset.len);
-                if let Some(converted_str) = self.kana_converter.convert(romanji_substr, true) {
-                    self.debug = format!(
-                        "unconverted[{}, {}]: {}, conveted: {}",
-                        romanji_offset.pos, romanji_offset.len, romanji_substr, converted_str,
-                    );
+                if let Some(merge_kana) = self.kana_converter.convert(romanji_substr, true) {
+                    self.merge_kana = Some(MergeKana::new(
+                        merge_kana,
+                        OffsetMap::new(romanji_offset, self.cursor.offset),
+                    ));
                 }
             }
         }
+    }
+
+    pub fn update_merge_kana(&mut self) {
+        if let Some(merge_kana) = &self.merge_kana {
+            // remove first part of contiguous merge offsets
+            self.kana_offsets
+                .retain(|offset| offset.dest.pos != merge_kana.offset_map.dest.pos);
+            // remove second part of contiguous merge offsets
+            self.kana_offsets.retain(|offset| {
+                offset.dest.pos + offset.dest.len
+                    != merge_kana.offset_map.dest.pos + merge_kana.offset_map.dest.len
+            });
+            self.kana_offsets.push(merge_kana.offset_map);
+            let start_byte_index = self
+                .kana
+                .char_indices()
+                .nth(merge_kana.offset_map.dest.pos)
+                .map(|(i, _)| i)
+                .unwrap_or(self.kana.len());
+            let end_byte_index = self
+                .kana
+                .char_indices()
+                .nth(merge_kana.offset_map.dest.pos + merge_kana.offset_map.dest.len)
+                .map(|(i, _)| i)
+                .unwrap_or(self.kana.len());
+            self.kana.replace_range(
+                start_byte_index..end_byte_index,
+                &merge_kana.kana.to_string(),
+            );
+        }
+        self.merge_kana = None;
     }
 
     pub fn push_kanji_offset(&mut self, offset: (usize, usize, usize)) {
@@ -528,6 +624,13 @@ impl App {
 
     pub fn get_kanji(&self) -> &String {
         return &self.kanji;
+    }
+
+    pub fn get_merge_kana(&self) -> Option<&String> {
+        if let Some(merge_kana) = &self.merge_kana {
+            return Some(&merge_kana.kana);
+        }
+        return None;
     }
 
     pub fn reset_keyboard(&mut self) {

@@ -4,7 +4,7 @@ use ratatui::{
     style::{Color, Modifier, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
-    widgets::{Block, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{Block, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 
 use crate::app::{App, CurrentScreen, CurrentSelection, TranslationDirection};
@@ -33,7 +33,6 @@ fn render_welcome(frame: &mut Frame, app: &App) {
         .title(title.centered())
         .title_bottom(subtitle.centered())
         .border_set(border::THICK);
-
     frame.render_widget(block, frame.area());
 
     let [top, bottom] = Layout::default()
@@ -54,7 +53,6 @@ fn render_welcome(frame: &mut Frame, app: &App) {
         Style::default().fg(Color::Yellow),
     ))
     .centered();
-
     frame.render_widget(ascii_cat, top);
 
     let welcome_items = vec![
@@ -121,8 +119,28 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
     let text = Paragraph::new(kana_formatted)
         .block(Block::bordered())
         .wrap(Wrap { trim: true });
-
     frame.render_widget(text, text_chunk);
+
+    // popup for merge kana option
+    if let Some(merge_kana) = app.get_merge_kana() {
+        let area = frame.area();
+        let popup_layout = Layout::horizontal([
+            Constraint::Length(frame.area().width - 6),
+            Constraint::Length(6),
+        ])
+        .split(area);
+        let popup_area = Layout::vertical([Constraint::Percentage(61), Constraint::Length(3)])
+            .split(popup_layout[1])[1];
+        frame.render_widget(Clear, popup_area);
+
+        let block = Block::bordered().yellow();
+        let paragraph = Paragraph::new(Line::from(Span::styled(
+            merge_kana,
+            Style::default().fg(Color::Yellow).reversed(),
+        )))
+        .block(block);
+        frame.render_widget(paragraph, popup_area);
+    }
 }
 
 fn render_lesson_select(frame: &mut Frame, app: &App) {

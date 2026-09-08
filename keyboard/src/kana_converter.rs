@@ -122,8 +122,10 @@ impl RomanjiToKanaConverter {
         while !phrase.done() {
             if self.convert_phrase(&mut phrase) {
                 phrase.next();
-                if single_char {
-                    break;
+                if single_char && phrase.done() {
+                    return Some(phrase.get_kana());
+                } else if single_char {
+                    return None;
                 }
             } else {
                 if single_char {
