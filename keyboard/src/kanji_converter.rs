@@ -16,13 +16,13 @@ struct Kanji {
 }
 
 struct Phrase<'a> {
-    hiragana: &'a String,
+    hiragana: &'a str,
     kanji: Vec<char>,
     offset: usize,
 }
 
 impl<'a> Phrase<'a> {
-    fn new(phrase: &'a String) -> Self {
+    fn new(phrase: &'a str) -> Self {
         Phrase {
             hiragana: phrase,
             kanji: Vec::<char>::new(),
@@ -101,7 +101,7 @@ impl HiragaToKanjiConverter {
         return matched;
     }
 
-    pub fn convert(&self, hiragana: &String) -> Vec<char> {
+    pub fn convert(&self, hiragana: &str) -> Vec<char> {
         let mut phrase = Phrase::new(hiragana);
         self.convert_phrase(&mut phrase);
         return phrase.get_kanji();

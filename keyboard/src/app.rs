@@ -102,6 +102,28 @@ impl MergeKana {
     }
 }
 
+pub struct SelectKanji {
+    pub kanji_list: Vec<char>,
+    pub offset: usize,
+}
+
+impl SelectKanji {
+    fn new(kanji_list: Vec<char>, offset: usize) -> Self {
+        SelectKanji { kanji_list, offset }
+    }
+}
+
+struct KanaToKanji {
+    kanji: SelectKanji,
+    offset_map: OffsetMap,
+}
+
+impl KanaToKanji {
+    fn new(kanji: SelectKanji, offset_map: OffsetMap) -> Self {
+        KanaToKanji { kanji, offset_map }
+    }
+}
+
 enum HilightDirection {
     None,
     Left,
@@ -133,6 +155,7 @@ pub struct App {
     kanji: String,
 
     merge_kana: Option<MergeKana>,
+    kana_to_kanji: Option<KanaToKanji>,
 
     kana_offsets: Vec<OffsetMap>,
 
@@ -157,6 +180,7 @@ impl App {
             kana: String::new(),
             kanji: String::new(),
             merge_kana: None,
+            kana_to_kanji: None,
             kana_offsets: Vec::new(),
             highlighted_kanji: Vec::new(),
             kana_offset: 0,
@@ -194,6 +218,8 @@ impl App {
             // at end, undo highlighting but keep end non kana char highighted
             self.cursor.offset.pos = self.kana.chars().count() - 1;
             self.cursor.offset.len = 1;
+        } else {
+            unreachable!();
         }
         self.cursor.highlight_dir = HilightDirection::None;
         assert!(self.cursor.offset.len > 0);
@@ -224,6 +250,8 @@ impl App {
         } else if self.cursor.offset.pos == 0 {
             // at beginning, undo highlighting but keep first char highlighted
             self.cursor.offset.len = 1;
+        } else {
+            unreachable!();
         }
         self.cursor.highlight_dir = HilightDirection::None;
         assert!(self.cursor.offset.len > 0);
@@ -420,6 +448,7 @@ impl App {
 
         self.cursor.offset.pos = self.kana.chars().count() - cursor_len;
         self.cursor.offset.len = cursor_len;
+        self.cursor.highlight_dir = HilightDirection::None;
     }
 
     pub fn pop_char(&mut self) {
@@ -464,6 +493,7 @@ impl App {
             }
             self.cursor.offset.pos = self.kana.chars().count() - self.cursor.offset.len;
         }
+        self.cursor.highlight_dir = HilightDirection::None;
     }
 
     pub fn check_merge_kana(&mut self) {
@@ -480,15 +510,17 @@ impl App {
             if start_offset.dest.pos + start_offset.dest.len == end_offset.dest.pos {
                 let romanji_offset = Offset::new(
                     start_offset.src.pos,
-                    start_offset.src.pos + start_offset.src.len + end_offset.src.len,
+                    start_offset.src.len + end_offset.src.len,
                 );
                 let romanji_substr: &str = self
                     .romanji
                     .substring(romanji_offset.pos, romanji_offset.pos + romanji_offset.len);
                 if let Some(merge_kana) = self.kana_converter.convert(romanji_substr, true) {
+                    assert!(self.kana_to_kanji.is_none());
+                    let len: usize = merge_kana.chars().count();
                     self.merge_kana = Some(MergeKana::new(
                         merge_kana,
-                        OffsetMap::new(romanji_offset, self.cursor.offset),
+                        OffsetMap::new(romanji_offset, Offset::new(start_offset.dest.pos, len)),
                     ));
                 }
             }
@@ -497,6 +529,7 @@ impl App {
 
     pub fn update_merge_kana(&mut self) {
         if let Some(merge_kana) = &self.merge_kana {
+            assert!(self.kana_to_kanji.is_none());
             // remove first part of contiguous merge offsets
             self.kana_offsets
                 .retain(|offset| offset.dest.pos != merge_kana.offset_map.dest.pos);
@@ -505,25 +538,146 @@ impl App {
                 offset.dest.pos + offset.dest.len
                     != merge_kana.offset_map.dest.pos + merge_kana.offset_map.dest.len
             });
+            // update offset positions when merged kana is shorter than original
+            assert!(self.cursor.offset.len >= merge_kana.offset_map.dest.len);
+            let offset_diff = self.cursor.offset.len - merge_kana.offset_map.dest.len;
+            if offset_diff > 0 {
+                for offset in &mut self.kana_offsets {
+                    if merge_kana.offset_map.dest.pos + merge_kana.offset_map.dest.len
+                        <= offset.dest.pos
+                    {
+                        offset.dest.pos -= offset_diff;
+                    }
+                }
+            }
             self.kana_offsets.push(merge_kana.offset_map);
+            self.kana_offsets
+                .sort_by_key(|offset_map| offset_map.src.pos);
             let start_byte_index = self
                 .kana
                 .char_indices()
-                .nth(merge_kana.offset_map.dest.pos)
+                .nth(self.cursor.offset.pos)
                 .map(|(i, _)| i)
                 .unwrap_or(self.kana.len());
             let end_byte_index = self
                 .kana
                 .char_indices()
-                .nth(merge_kana.offset_map.dest.pos + merge_kana.offset_map.dest.len)
+                .nth(self.cursor.offset.pos + self.cursor.offset.len)
                 .map(|(i, _)| i)
                 .unwrap_or(self.kana.len());
             self.kana.replace_range(
                 start_byte_index..end_byte_index,
                 &merge_kana.kana.to_string(),
             );
+            // update cursor
+            self.cursor.offset = merge_kana.offset_map.dest;
+            self.cursor.highlight_dir = HilightDirection::None;
         }
         self.merge_kana = None;
+    }
+
+    pub fn check_kana_to_kanji(&mut self) {
+        if let Some(start_offset) = self
+            .kana_offsets
+            .iter()
+            .find(|&offset| self.cursor.offset.pos == offset.dest.pos)
+            && let Some(end_offset) = self.kana_offsets.iter().find(|&offset| {
+                self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos + offset.dest.len
+            })
+        {
+            let romanji_offset = Offset::new(
+                start_offset.src.pos,
+                end_offset.src.pos + end_offset.src.len - start_offset.src.pos,
+            );
+
+            // keep existing conversion if the same
+            if let Some(existing_kana_to_kanji) = &self.kana_to_kanji
+                && existing_kana_to_kanji.offset_map.src != romanji_offset
+            {
+                self.kana_to_kanji = None;
+            }
+
+            if self.kana_to_kanji.is_none() {
+                let kana_substr: &str = self.kana.substring(
+                    self.cursor.offset.pos,
+                    self.cursor.offset.pos + self.cursor.offset.len,
+                );
+                let kanji = self.kanji_converter.convert(kana_substr);
+                if !kanji.is_empty() {
+                    assert!(self.merge_kana.is_none());
+                    self.kana_to_kanji = Some(KanaToKanji::new(
+                        SelectKanji::new(kanji, 0),
+                        OffsetMap::new(romanji_offset, Offset::new(start_offset.dest.pos, 1)),
+                    ));
+                }
+            }
+        } else {
+            self.kana_to_kanji = None;
+        }
+    }
+
+    pub fn convert_kana_to_kanji(&mut self) {
+        if let Some(kana_to_kanji) = &self.kana_to_kanji {
+            assert!(self.merge_kana.is_none());
+            // remove offsets that are replaces ny new kanji offse
+            self.kana_offsets.retain(|offset| {
+                !(offset.dest.pos >= self.cursor.offset.pos
+                    && offset.dest.pos + offset.src.len
+                        <= self.cursor.offset.pos + self.cursor.offset.len)
+            });
+            // update offset positions when merged kana is shorter than original
+            assert!(self.cursor.offset.len >= kana_to_kanji.offset_map.dest.len);
+            let offset_diff = self.cursor.offset.len - kana_to_kanji.offset_map.dest.len;
+            if offset_diff > 0 {
+                for offset in &mut self.kana_offsets {
+                    if kana_to_kanji.offset_map.dest.pos + kana_to_kanji.offset_map.dest.len
+                        <= offset.dest.pos
+                    {
+                        offset.dest.pos -= offset_diff;
+                    }
+                }
+            }
+            self.kana_offsets.push(kana_to_kanji.offset_map);
+            self.kana_offsets
+                .sort_by_key(|offset_map| offset_map.src.pos);
+            let start_byte_index = self
+                .kana
+                .char_indices()
+                .nth(self.cursor.offset.pos)
+                .map(|(i, _)| i)
+                .unwrap_or(self.kana.len());
+            let end_byte_index = self
+                .kana
+                .char_indices()
+                .nth(self.cursor.offset.pos + self.cursor.offset.len)
+                .map(|(i, _)| i)
+                .unwrap_or(self.kana.len());
+            let mut buf = [0; 4];
+            let kanji_char: &str =
+                kana_to_kanji.kanji.kanji_list[kana_to_kanji.kanji.offset].encode_utf8(&mut buf);
+            self.kana
+                .replace_range(start_byte_index..end_byte_index, kanji_char);
+            // update cursor
+            self.cursor.offset = kana_to_kanji.offset_map.dest;
+            self.cursor.highlight_dir = HilightDirection::None;
+        }
+        self.kana_to_kanji = None;
+    }
+
+    pub fn kanji_select_down(&mut self) {
+        if let Some(kana_to_kanji) = &mut self.kana_to_kanji
+            && kana_to_kanji.kanji.offset < kana_to_kanji.kanji.kanji_list.len() - 1
+        {
+            kana_to_kanji.kanji.offset += 1;
+        }
+    }
+
+    pub fn kanji_select_up(&mut self) {
+        if let Some(kana_to_kanji) = &mut self.kana_to_kanji
+            && kana_to_kanji.kanji.offset > 0
+        {
+            kana_to_kanji.kanji.offset -= 1;
+        }
     }
 
     pub fn push_kanji_offset(&mut self, offset: (usize, usize, usize)) {
@@ -629,6 +783,13 @@ impl App {
     pub fn get_merge_kana(&self) -> Option<&String> {
         if let Some(merge_kana) = &self.merge_kana {
             return Some(&merge_kana.kana);
+        }
+        return None;
+    }
+
+    pub fn get_kana_to_kanji(&self) -> Option<&SelectKanji> {
+        if let Some(kana_to_kanji) = &self.kana_to_kanji {
+            return Some(&kana_to_kanji.kanji);
         }
         return None;
     }

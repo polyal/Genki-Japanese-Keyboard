@@ -106,8 +106,15 @@ where
                             app.cursor_left();
                         }
                     }
+                    KeyCode::Up => {
+                        app.kanji_select_up();
+                    }
+                    KeyCode::Down => {
+                        app.kanji_select_down();
+                    }
                     KeyCode::Enter => {
                         app.update_merge_kana();
+                        app.convert_kana_to_kanji();
                     }
                     KeyCode::Esc => {
                         break;
@@ -407,6 +414,7 @@ where
             }
         }
         app.check_merge_kana();
+        app.check_kana_to_kanji();
         app.update_kanji();
     }
     return Ok(true);

@@ -121,7 +121,11 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         .wrap(Wrap { trim: true });
     frame.render_widget(text, text_chunk);
 
-    // popup for merge kana option
+    assert!(
+        (app.get_merge_kana().is_some() ^ app.get_kana_to_kanji().is_some())
+            || (app.get_merge_kana().is_none() && app.get_kana_to_kanji().is_none())
+    );
+    // popup for merge kana option or kana to kanji options
     if let Some(merge_kana) = app.get_merge_kana() {
         let area = frame.area();
         let popup_layout = Layout::horizontal([
@@ -134,12 +138,48 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         frame.render_widget(Clear, popup_area);
 
         let block = Block::bordered().yellow();
-        let paragraph = Paragraph::new(Line::from(Span::styled(
-            merge_kana,
-            Style::default().fg(Color::Yellow).reversed(),
-        )))
+        let paragraph = Paragraph::new(
+            Line::from(Span::styled(
+                merge_kana,
+                Style::default().fg(Color::Yellow).reversed(),
+            ))
+            .centered(),
+        )
         .block(block);
         frame.render_widget(paragraph, popup_area);
+    } else if let Some(kana_to_kanji) = app.get_kana_to_kanji() {
+        let area = frame.area();
+        let popup_layout = Layout::horizontal([
+            Constraint::Length(frame.area().width - 6),
+            Constraint::Length(6),
+        ])
+        .split(area);
+        let popup_area = Layout::vertical([
+            Constraint::Percentage(61 - kana_to_kanji.kanji_list.len() as u16 * 3),
+            Constraint::Length(kana_to_kanji.kanji_list.len() as u16 * 2),
+        ])
+        .split(popup_layout[1])[1];
+        frame.render_widget(Clear, popup_area);
+
+        // draw kanji selection
+        let mut items = Vec::<ListItem>::new();
+        for kanji in &kana_to_kanji.kanji_list {
+            items.push(ListItem::new(
+                Line::from(Span::styled(
+                    format!("{}", kanji),
+                    Style::default().fg(Color::Yellow),
+                ))
+                .centered(),
+            ));
+        }
+
+        let mut state = ListState::default();
+        state.select(Some(kana_to_kanji.offset));
+
+        let lesson_list = List::new(items)
+            .block(Block::bordered().yellow())
+            .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+        frame.render_stateful_widget(lesson_list, popup_area, &mut state);
     }
 }
 
