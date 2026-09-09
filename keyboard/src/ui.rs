@@ -133,8 +133,11 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
             Constraint::Length(6),
         ])
         .split(area);
-        let popup_area = Layout::vertical([Constraint::Percentage(61), Constraint::Length(3)])
-            .split(popup_layout[1])[1];
+        let popup_area = Layout::vertical([
+            Constraint::Length((frame.area().height as f32 * 0.65) as u16),
+            Constraint::Length(3),
+        ])
+        .split(popup_layout[1])[1];
         frame.render_widget(Clear, popup_area);
 
         let block = Block::bordered().yellow();
@@ -155,18 +158,21 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         ])
         .split(area);
         let popup_area = Layout::vertical([
-            Constraint::Percentage(61 - kana_to_kanji.kanji_list.len() as u16 * 3),
-            Constraint::Length(kana_to_kanji.kanji_list.len() as u16 * 2),
+            Constraint::Length(
+                (frame.area().height as f32 * 0.65) as u16
+                    - (kana_to_kanji.kanji_list.len() - 1) as u16,
+            ),
+            Constraint::Length(kana_to_kanji.kanji_list.len() as u16 + 2),
         ])
         .split(popup_layout[1])[1];
         frame.render_widget(Clear, popup_area);
 
         // draw kanji selection
         let mut items = Vec::<ListItem>::new();
-        for kanji in &kana_to_kanji.kanji_list {
+        for kanji_char in &kana_to_kanji.kanji_list {
             items.push(ListItem::new(
                 Line::from(Span::styled(
-                    format!("{}", kanji),
+                    kanji_char.to_string(),
                     Style::default().fg(Color::Yellow),
                 ))
                 .centered(),
@@ -176,10 +182,10 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         let mut state = ListState::default();
         state.select(Some(kana_to_kanji.offset));
 
-        let lesson_list = List::new(items)
+        let kanji_list = List::new(items)
             .block(Block::bordered().yellow())
             .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
-        frame.render_stateful_widget(lesson_list, popup_area, &mut state);
+        frame.render_stateful_widget(kanji_list, popup_area, &mut state);
     }
 }
 

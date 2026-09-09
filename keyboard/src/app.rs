@@ -516,7 +516,6 @@ impl App {
                     .romanji
                     .substring(romanji_offset.pos, romanji_offset.pos + romanji_offset.len);
                 if let Some(merge_kana) = self.kana_converter.convert(romanji_substr, true) {
-                    assert!(self.kana_to_kanji.is_none());
                     let len: usize = merge_kana.chars().count();
                     self.merge_kana = Some(MergeKana::new(
                         merge_kana,
@@ -604,7 +603,6 @@ impl App {
                 );
                 let kanji = self.kanji_converter.convert(kana_substr);
                 if !kanji.is_empty() {
-                    assert!(self.merge_kana.is_none());
                     self.kana_to_kanji = Some(KanaToKanji::new(
                         SelectKanji::new(kanji, 0),
                         OffsetMap::new(romanji_offset, Offset::new(start_offset.dest.pos, 1)),
