@@ -79,7 +79,7 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
 
     // add debugging info here so we ca see it on the screen
     let messages = Paragraph::new(app.debug.clone())
-        .block(Block::bordered())
+        .block(Block::bordered().yellow())
         .wrap(Wrap { trim: true });
     frame.render_widget(messages, messages_chunk);
 
@@ -116,8 +116,13 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         Span::raw(right),
     ])]);
 
+    let text_colour = if app.get_use_english() {
+        Color::White
+    } else {
+        Color::Yellow
+    };
     let text = Paragraph::new(kana_formatted)
-        .block(Block::bordered())
+        .block(Block::bordered().border_style(Style::default().fg(text_colour)))
         .wrap(Wrap { trim: true });
     frame.render_widget(text, text_chunk);
 
@@ -140,15 +145,14 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         .split(popup_layout[1])[1];
         frame.render_widget(Clear, popup_area);
 
-        let block = Block::bordered().yellow();
         let paragraph = Paragraph::new(
             Line::from(Span::styled(
-                merge_kana,
+                format!(" {} ", merge_kana),
                 Style::default().fg(Color::Yellow).reversed(),
             ))
             .centered(),
         )
-        .block(block);
+        .block(Block::bordered().red());
         frame.render_widget(paragraph, popup_area);
     } else if let Some(kana_to_kanji) = app.get_kana_to_kanji() {
         let area = frame.area();
@@ -183,8 +187,12 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         state.select(Some(kana_to_kanji.offset));
 
         let kanji_list = List::new(items)
-            .block(Block::bordered().yellow())
-            .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+            .block(Block::bordered().red())
+            .highlight_style(
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::REVERSED),
+            );
         frame.render_stateful_widget(kanji_list, popup_area, &mut state);
     }
 }

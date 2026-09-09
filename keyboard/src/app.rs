@@ -157,6 +157,8 @@ pub struct App {
     merge_kana: Option<MergeKana>,
     kana_to_kanji: Option<KanaToKanji>,
 
+    english: bool,
+
     kana_offsets: Vec<OffsetMap>,
 
     pub highlighted_kanji: Vec<char>,
@@ -181,6 +183,7 @@ impl App {
             kanji: String::new(),
             merge_kana: None,
             kana_to_kanji: None,
+            english: false,
             kana_offsets: Vec::new(),
             highlighted_kanji: Vec::new(),
             kana_offset: 0,
@@ -395,57 +398,58 @@ impl App {
     }
 
     pub fn push_char(&mut self, value: char) {
-        self.romanji.push(value);
-
-        let end = self.romanji.chars().count();
-        let start: usize;
-        {
-            // the longest kana conversion is 4 chars, so we use a moving window of 4 chars
-            let gap: usize;
-            if let Some(last_offset) = self.kana_offsets.last() {
-                gap = end - (last_offset.src.pos + last_offset.src.len)
-            } else {
-                gap = end
-            }
-            if gap > 4 {
-                start = end - 4;
-            } else {
-                start = end - gap;
-            }
-        }
-
         let mut cursor_len = 1;
         let mut is_converted = false;
-        for i in start..end {
-            let romanji_substr = self.romanji.substring(i, end);
-            // conversion successful
-            if let Some(converted_str) = self.kana_converter.convert(romanji_substr, true) {
-                is_converted = true;
 
-                // remove unconverted string from end of output string
-                if let Some((byte_idx, _)) = self
-                    .kana
-                    .char_indices()
-                    .nth(self.kana.chars().count().saturating_sub(end - i - 1))
-                {
-                    self.kana.truncate(byte_idx);
+        self.romanji.push(value);
+        if !self.english {
+            let end = self.romanji.chars().count();
+            let start: usize;
+            {
+                // the longest kana conversion is 4 chars, so we use a moving window of 4 chars
+                let gap: usize;
+                if let Some(last_offset) = self.kana_offsets.last() {
+                    gap = end - (last_offset.src.pos + last_offset.src.len)
+                } else {
+                    gap = end
                 }
+                if gap > 4 {
+                    start = end - 4;
+                } else {
+                    start = end - gap;
+                }
+            }
 
-                // update converted string
-                self.kana_offsets.push(OffsetMap::new(
-                    Offset::new(i, end - i),
-                    Offset::new(self.kana.chars().count(), converted_str.chars().count()),
-                ));
-                self.kana.push_str(&converted_str.to_string());
-                cursor_len = converted_str.chars().count();
-                break;
+            for i in start..end {
+                let romanji_substr = self.romanji.substring(i, end);
+                // conversion successful
+                if let Some(converted_str) = self.kana_converter.convert(romanji_substr, true) {
+                    is_converted = true;
+
+                    // remove unconverted string from end of output string
+                    if let Some((byte_idx, _)) = self
+                        .kana
+                        .char_indices()
+                        .nth(self.kana.chars().count().saturating_sub(end - i - 1))
+                    {
+                        self.kana.truncate(byte_idx);
+                    }
+
+                    // update converted string
+                    self.kana_offsets.push(OffsetMap::new(
+                        Offset::new(i, end - i),
+                        Offset::new(self.kana.chars().count(), converted_str.chars().count()),
+                    ));
+                    self.kana.push_str(&converted_str.to_string());
+                    cursor_len = converted_str.chars().count();
+                    break;
+                }
             }
         }
 
         if !is_converted {
             self.kana.push(value);
         }
-
         self.cursor.offset.pos = self.kana.chars().count() - cursor_len;
         self.cursor.offset.len = cursor_len;
         self.cursor.highlight_dir = HilightDirection::None;
@@ -678,6 +682,10 @@ impl App {
         }
     }
 
+    pub fn toggle_english(&mut self) {
+        self.english = !self.english;
+    }
+
     pub fn push_kanji_offset(&mut self, offset: (usize, usize, usize)) {
         let start = offset.0;
         let end = offset.0 + offset.1;
@@ -796,5 +804,9 @@ impl App {
         self.romanji.clear();
         self.kana.clear();
         self.kanji.clear();
+    }
+
+    pub fn get_use_english(&self) -> bool {
+        return self.english;
     }
 }

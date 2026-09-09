@@ -116,6 +116,9 @@ where
                         app.update_merge_kana();
                         app.convert_kana_to_kanji();
                     }
+                    KeyCode::Tab => {
+                        app.toggle_english();
+                    }
                     KeyCode::Esc => {
                         break;
                     }
