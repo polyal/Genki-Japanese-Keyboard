@@ -116,13 +116,21 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         Span::raw(right),
     ])]);
 
-    let text_colour = if app.get_use_english() {
-        Color::White
+    let text_colour: Color;
+    let title: String;
+    if app.get_use_english() {
+        text_colour = Color::White;
+        title = " en ".to_string();
     } else {
-        Color::Yellow
+        text_colour = Color::Yellow;
+        title = " 日本語 ".to_string();
     };
     let text = Paragraph::new(kana_formatted)
-        .block(Block::bordered().border_style(Style::default().fg(text_colour)))
+        .block(
+            Block::bordered()
+                .title(title)
+                .border_style(Style::default().fg(text_colour)),
+        )
         .wrap(Wrap { trim: true });
     frame.render_widget(text, text_chunk);
 
@@ -147,12 +155,13 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
 
         let paragraph = Paragraph::new(
             Line::from(Span::styled(
-                format!(" {} ", merge_kana),
+                merge_kana,
                 Style::default().fg(Color::Yellow).reversed(),
             ))
             .centered(),
         )
-        .block(Block::bordered().red());
+        .block(Block::bordered().border_set(border::DOUBLE).red())
+        .bold();
         frame.render_widget(paragraph, popup_area);
     } else if let Some(kana_to_kanji) = app.get_kana_to_kanji() {
         let area = frame.area();
@@ -171,28 +180,40 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
         .split(popup_layout[1])[1];
         frame.render_widget(Clear, popup_area);
 
-        // draw kanji selection
-        let mut items = Vec::<ListItem>::new();
-        for kanji_char in &kana_to_kanji.kanji_list {
-            items.push(ListItem::new(
-                Line::from(Span::styled(
-                    kanji_char.to_string(),
-                    Style::default().fg(Color::Yellow),
-                ))
-                .centered(),
-            ));
-        }
+        // use this method to only highlight backrgound directly behind text
+        let items: Vec<ListItem> = kana_to_kanji
+            .kanji_list
+            .iter()
+            .enumerate()
+            .map(|(idx, kanji_char)| {
+                if Some(kana_to_kanji.offset) == Some(idx) {
+                    // Apply the highlight background directly to the text/span
+                    ListItem::new(
+                        Line::from(Span::styled(
+                            kanji_char.to_string(),
+                            Style::default()
+                                .fg(Color::Yellow)
+                                .bold()
+                                .add_modifier(Modifier::REVERSED),
+                        ))
+                        .centered(),
+                    )
+                } else {
+                    ListItem::new(
+                        Line::from(Span::styled(
+                            kanji_char.to_string(),
+                            Style::default().fg(Color::Yellow).bold(),
+                        ))
+                        .centered(),
+                    )
+                }
+            })
+            .collect();
 
         let mut state = ListState::default();
         state.select(Some(kana_to_kanji.offset));
 
-        let kanji_list = List::new(items)
-            .block(Block::bordered().red())
-            .highlight_style(
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::REVERSED),
-            );
+        let kanji_list = List::new(items).block(Block::bordered().border_set(border::DOUBLE).red());
         frame.render_stateful_widget(kanji_list, popup_area, &mut state);
     }
 }
