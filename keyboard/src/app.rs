@@ -487,7 +487,7 @@ impl App {
         self.cursor.highlight_dir = HilightDirection::None;
     }
 
-    pub fn check_merge_kana(&mut self) {
+    pub fn check_merge_kana(&mut self) -> bool {
         self.merge_kana = None;
         if let Some(start_offset) = self
             .kana_offsets
@@ -514,7 +514,9 @@ impl App {
                     ));
                 }
             }
+            return true;
         }
+        return false;
     }
 
     pub fn update_merge_kana(&mut self) -> bool {
@@ -568,7 +570,7 @@ impl App {
         return false;
     }
 
-    pub fn check_kana_to_kanji(&mut self) {
+    pub fn check_kana_to_kanji(&mut self) -> bool {
         if let Some(start_offset) = self
             .kana_offsets
             .iter()
@@ -602,9 +604,10 @@ impl App {
                     ));
                 }
             }
-        } else {
-            self.kana_to_kanji = None;
+            return true;
         }
+        self.kana_to_kanji = None;
+        return false;
     }
 
     pub fn convert_kana_to_kanji(&mut self) -> bool {
@@ -703,6 +706,15 @@ impl App {
         return None;
     }
 
+    pub fn get_use_english(&self) -> bool {
+        return self.english;
+    }
+
+    pub fn reset_conversion_selection(&mut self) {
+        self.merge_kana = None;
+        self.kana_to_kanji = None;
+    }
+
     pub fn reset_keyboard(&mut self) {
         self.romanji.clear();
         self.kana.clear();
@@ -710,9 +722,5 @@ impl App {
         self.kana_to_kanji = None;
         self.english = false;
         self.kana_offsets.clear();
-    }
-
-    pub fn get_use_english(&self) -> bool {
-        return self.english;
     }
 }

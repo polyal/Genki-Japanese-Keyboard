@@ -58,7 +58,7 @@ where
 {
     loop {
         terminal.draw(|f| ui(f, app))?;
-
+        let mut reset_conversion = false;
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
                 // Skip events that are not KeyEventKind::Press
@@ -121,7 +121,14 @@ where
                         app.toggle_english();
                     }
                     KeyCode::Esc => {
-                        break;
+                        if !reset_conversion
+                            && (app.check_merge_kana() || app.check_kana_to_kanji())
+                        {
+                            app.reset_conversion_selection();
+                            reset_conversion = true;
+                        } else {
+                            break;
+                        }
                     }
                     _ => {}
                 },
@@ -248,16 +255,23 @@ where
                 },
                 CurrentScreen::Review => match key.code {
                     KeyCode::Esc => {
-                        app.context.current_screen = CurrentScreen::LessonSelect;
-                        app.context.current_selection = CurrentSelection::Lesson;
-                        app.context.lesson_idx = 0;
-                        app.context.section_idx = None;
-                        app.context.prev_section_idx = None;
-                        app.context.prev_phrase_idx = None;
-                        app.context.prev_translation_direction = None;
-                        app.context.prev_answer = None;
-                        app.context.asked_questions.clear();
-                        app.reset_keyboard();
+                        if !reset_conversion
+                            && (app.check_merge_kana() || app.check_kana_to_kanji())
+                        {
+                            app.reset_conversion_selection();
+                            reset_conversion = true;
+                        } else {
+                            app.context.current_screen = CurrentScreen::LessonSelect;
+                            app.context.current_selection = CurrentSelection::Lesson;
+                            app.context.lesson_idx = 0;
+                            app.context.section_idx = None;
+                            app.context.prev_section_idx = None;
+                            app.context.prev_phrase_idx = None;
+                            app.context.prev_translation_direction = None;
+                            app.context.prev_answer = None;
+                            app.context.asked_questions.clear();
+                            app.reset_keyboard();
+                        }
                     }
                     KeyCode::Enter => {
                         if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
@@ -368,9 +382,11 @@ where
                     _ => {}
                 },
             }
+            if !reset_conversion {
+                app.check_merge_kana();
+                app.check_kana_to_kanji();
+            }
         }
-        app.check_merge_kana();
-        app.check_kana_to_kanji();
     }
     return Ok(true);
 }
