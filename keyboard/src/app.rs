@@ -667,10 +667,10 @@ impl App {
     pub fn convert_kana_to_kanji(&mut self) -> bool {
         if let Some(kana_to_kanji) = &self.keyboard.kana_to_kanji {
             assert!(self.keyboard.merge_kana.is_none());
-            // remove offsets that are replaces ny new kanji offse
+            // remove offsets that are replaced by new kanji offse
             self.keyboard.kana_offsets.retain(|offset| {
                 !(offset.dest.pos >= self.keyboard.cursor.offset.pos
-                    && offset.dest.pos + offset.src.len
+                    && offset.dest.pos + offset.dest.len
                         <= self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len)
             });
             // update offset positions when merged kana is shorter than original
