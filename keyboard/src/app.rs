@@ -141,10 +141,7 @@ impl Cursor {
     }
 }
 
-pub struct App {
-    pub book: Book,
-    pub context: Context,
-
+struct Keyboard {
     kana_converter: RomanjiToKanaConverter,
     kanji_converter: HiragaToKanjiConverter,
 
@@ -159,15 +156,11 @@ pub struct App {
     english: bool,
 
     cursor: Cursor,
-
-    pub debug: String,
 }
 
-impl App {
-    pub fn new() -> Self {
-        App {
-            book: Book::new(),
-            context: Context::new(),
+impl Keyboard {
+    fn new() -> Self {
+        Keyboard {
             kana_converter: RomanjiToKanaConverter::new(),
             kanji_converter: HiragaToKanjiConverter::new(),
             romanji: String::new(),
@@ -177,225 +170,265 @@ impl App {
             kana_to_kanji: None,
             english: false,
             cursor: Cursor::new(),
+        }
+    }
+}
+
+pub struct App {
+    pub book: Book,
+    pub context: Context,
+    keyboard: Keyboard,
+
+    pub debug: String,
+}
+
+impl App {
+    pub fn new() -> Self {
+        App {
+            book: Book::new(),
+            context: Context::new(),
+            keyboard: Keyboard::new(),
             debug: String::from("debug: "),
         }
     }
 
     pub fn get_cursor_pos(&self) -> &Offset {
-        return &self.cursor.offset;
+        return &self.keyboard.cursor.offset;
     }
 
     pub fn cursor_right(&mut self) {
-        if let Some(offset) = self
-            .kana_offsets
-            .iter()
-            .find(|&offset| self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos)
-        {
+        if let Some(offset) = self.keyboard.kana_offsets.iter().find(|&offset| {
+            self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len == offset.dest.pos
+        }) {
             // move cursor right
-            self.cursor.offset.pos = offset.dest.pos;
-            self.cursor.offset.len = offset.dest.len;
-        } else if self.cursor.offset.pos + self.cursor.offset.len < self.kana.chars().count() {
+            self.keyboard.cursor.offset.pos = offset.dest.pos;
+            self.keyboard.cursor.offset.len = offset.dest.len;
+        } else if self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+            < self.keyboard.kana.chars().count()
+        {
             // move cursor right for non kana chars
-            self.cursor.offset.pos += self.cursor.offset.len;
-            self.cursor.offset.len = 1;
-        } else if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
-            self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos + offset.dest.len
+            self.keyboard.cursor.offset.pos += self.keyboard.cursor.offset.len;
+            self.keyboard.cursor.offset.len = 1;
+        } else if let Some(offset) = self.keyboard.kana_offsets.iter().find(|&offset| {
+            self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                == offset.dest.pos + offset.dest.len
         }) {
             // at end, undo highlighting but keep end char group highlighted
-            self.cursor.offset.pos = offset.dest.pos;
-            self.cursor.offset.len = offset.dest.len;
-        } else if self.cursor.offset.pos + self.cursor.offset.len == self.kana.chars().count() {
+            self.keyboard.cursor.offset.pos = offset.dest.pos;
+            self.keyboard.cursor.offset.len = offset.dest.len;
+        } else if self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+            == self.keyboard.kana.chars().count()
+        {
             // at end, undo highlighting but keep end non kana char highighted
-            self.cursor.offset.pos = self.kana.chars().count() - 1;
-            self.cursor.offset.len = 1;
+            self.keyboard.cursor.offset.pos = self.keyboard.kana.chars().count() - 1;
+            self.keyboard.cursor.offset.len = 1;
         } else {
             unreachable!();
         }
-        self.cursor.highlight_dir = HilightDirection::None;
-        assert!(self.cursor.offset.len > 0);
-        assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
+        self.keyboard.cursor.highlight_dir = HilightDirection::None;
+        assert!(self.keyboard.cursor.offset.len > 0);
+        assert!(
+            self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                <= self.keyboard.kana.chars().count()
+        );
     }
 
     pub fn cursor_left(&mut self) {
         // update highlighting
-        if let Some(offset) = self
-            .kana_offsets
-            .iter()
-            .find(|&offset| self.cursor.offset.pos == offset.dest.pos + offset.dest.len)
+        if let Some(offset) =
+            self.keyboard.kana_offsets.iter().find(|&offset| {
+                self.keyboard.cursor.offset.pos == offset.dest.pos + offset.dest.len
+            })
         {
             // move cursor left
-            self.cursor.offset.pos = offset.dest.pos;
-            self.cursor.offset.len = offset.dest.len;
-        } else if self.cursor.offset.pos > 0 {
-            self.cursor.offset.pos -= 1;
-            self.cursor.offset.len = 1;
+            self.keyboard.cursor.offset.pos = offset.dest.pos;
+            self.keyboard.cursor.offset.len = offset.dest.len;
+        } else if self.keyboard.cursor.offset.pos > 0 {
+            self.keyboard.cursor.offset.pos -= 1;
+            self.keyboard.cursor.offset.len = 1;
         } else if let Some(offset) = self
+            .keyboard
             .kana_offsets
             .iter()
-            .find(|&offset| self.cursor.offset.pos == offset.dest.pos)
+            .find(|&offset| self.keyboard.cursor.offset.pos == offset.dest.pos)
         {
             // at beginning, undo highlighting but keep first char group highlighted
-            self.cursor.offset.pos = offset.dest.pos;
-            self.cursor.offset.len = offset.dest.len;
-        } else if self.cursor.offset.pos == 0 {
+            self.keyboard.cursor.offset.pos = offset.dest.pos;
+            self.keyboard.cursor.offset.len = offset.dest.len;
+        } else if self.keyboard.cursor.offset.pos == 0 {
             // at beginning, undo highlighting but keep first char highlighted
-            self.cursor.offset.len = 1;
+            self.keyboard.cursor.offset.len = 1;
         } else {
             unreachable!();
         }
-        self.cursor.highlight_dir = HilightDirection::None;
-        assert!(self.cursor.offset.len > 0);
-        assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
+        self.keyboard.cursor.highlight_dir = HilightDirection::None;
+        assert!(self.keyboard.cursor.offset.len > 0);
+        assert!(
+            self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                <= self.keyboard.kana.chars().count()
+        );
     }
 
     pub fn cursor_highlight_right(&mut self) {
-        match self.cursor.highlight_dir {
+        match self.keyboard.cursor.highlight_dir {
             HilightDirection::None | HilightDirection::Right => {
-                if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
-                    self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos
+                if let Some(offset) = self.keyboard.kana_offsets.iter().find(|&offset| {
+                    self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                        == offset.dest.pos
                 }) {
-                    self.cursor.offset.len += offset.dest.len;
+                    self.keyboard.cursor.offset.len += offset.dest.len;
                     if let Some(cur_offset) = self
+                        .keyboard
                         .kana_offsets
                         .iter()
-                        .find(|&offset| self.cursor.offset == offset.dest)
+                        .find(|&offset| self.keyboard.cursor.offset == offset.dest)
                     {
                         // on current position, switch highlightdirection
                         assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
-                        self.cursor.highlight_dir = HilightDirection::None;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
                     } else {
-                        self.cursor.highlight_dir = HilightDirection::Right;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::Right;
                     }
-                } else if self.cursor.offset.pos + self.cursor.offset.len
-                    < self.kana.chars().count()
+                } else if self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                    < self.keyboard.kana.chars().count()
                 {
-                    self.cursor.offset.len += 1;
-                    if self.cursor.offset.pos == self.kana.chars().count() - 1 {
+                    self.keyboard.cursor.offset.len += 1;
+                    if self.keyboard.cursor.offset.pos == self.keyboard.kana.chars().count() - 1 {
                         // cant highlight right, still neutral
-                        self.cursor.highlight_dir = HilightDirection::None;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
                     } else {
-                        self.cursor.highlight_dir = HilightDirection::Right;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::Right;
                     }
                 }
             }
             HilightDirection::Left => {
                 if let Some(offset) = self
+                    .keyboard
                     .kana_offsets
                     .iter()
-                    .find(|&offset| self.cursor.offset.pos == offset.dest.pos)
+                    .find(|&offset| self.keyboard.cursor.offset.pos == offset.dest.pos)
                 {
-                    self.cursor.offset.pos += offset.dest.len;
-                    self.cursor.offset.len -= offset.dest.len;
+                    self.keyboard.cursor.offset.pos += offset.dest.len;
+                    self.keyboard.cursor.offset.len -= offset.dest.len;
                     if let Some(cur_offset) = self
+                        .keyboard
                         .kana_offsets
                         .iter()
-                        .find(|&offset| self.cursor.offset == offset.dest)
+                        .find(|&offset| self.keyboard.cursor.offset == offset.dest)
                     {
                         // on current position, switch highlightdirection
                         assert!(cur_offset.dest.pos == offset.dest.pos + offset.dest.len);
-                        self.cursor.highlight_dir = HilightDirection::None;
-                    } else if self.cursor.offset.len == 1 {
-                        self.cursor.highlight_dir = HilightDirection::None;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
+                    } else if self.keyboard.cursor.offset.len == 1 {
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
                     }
-                } else if self.cursor.offset.len > 0 {
-                    self.cursor.offset.pos += 1;
-                    self.cursor.offset.len -= 1;
+                } else if self.keyboard.cursor.offset.len > 0 {
+                    self.keyboard.cursor.offset.pos += 1;
+                    self.keyboard.cursor.offset.len -= 1;
                     if self
+                        .keyboard
                         .kana_offsets
                         .iter()
-                        .any(|offset| self.cursor.offset == offset.dest)
+                        .any(|offset| self.keyboard.cursor.offset == offset.dest)
                     {
                         // on current position, switch highlightdirection
                         //assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
-                        self.cursor.highlight_dir = HilightDirection::None;
-                    } else if self.cursor.offset.len == 1 {
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
+                    } else if self.keyboard.cursor.offset.len == 1 {
                         // cant highlght right, still neutral
-                        self.cursor.highlight_dir = HilightDirection::None;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
                     }
                 }
             }
         }
-        assert!(self.cursor.offset.len > 0);
-        assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
+        assert!(self.keyboard.cursor.offset.len > 0);
+        assert!(
+            self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                <= self.keyboard.kana.chars().count()
+        );
     }
 
     pub fn cursor_highlight_left(&mut self) {
-        match self.cursor.highlight_dir {
+        match self.keyboard.cursor.highlight_dir {
             HilightDirection::Right => {
-                if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
-                    self.cursor.offset.pos + self.cursor.offset.len
+                if let Some(offset) = self.keyboard.kana_offsets.iter().find(|&offset| {
+                    self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
                         == offset.dest.pos + offset.dest.len
                 }) {
-                    self.cursor.offset.len -= offset.dest.len;
+                    self.keyboard.cursor.offset.len -= offset.dest.len;
                     if let Some(cur_offset) = self
+                        .keyboard
                         .kana_offsets
                         .iter()
-                        .find(|&offset| self.cursor.offset == offset.dest)
+                        .find(|&offset| self.keyboard.cursor.offset == offset.dest)
                     {
                         // on current position, switch highlightdirection
                         assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
-                        self.cursor.highlight_dir = HilightDirection::None;
-                    } else if self.cursor.offset.len == 1 {
-                        self.cursor.highlight_dir = HilightDirection::None;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
+                    } else if self.keyboard.cursor.offset.len == 1 {
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
                     }
-                } else if self.cursor.offset.len > 0 {
-                    self.cursor.offset.len -= 1;
+                } else if self.keyboard.cursor.offset.len > 0 {
+                    self.keyboard.cursor.offset.len -= 1;
                     // highlighting a single element, might need to switch directions
                     if self
+                        .keyboard
                         .kana_offsets
                         .iter()
-                        .any(|offset| self.cursor.offset == offset.dest)
+                        .any(|offset| self.keyboard.cursor.offset == offset.dest)
                     {
                         // on current position, switch highlightdirection
                         //assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
-                        self.cursor.highlight_dir = HilightDirection::None;
-                    } else if self.cursor.offset.len == 1 {
-                        self.cursor.highlight_dir = HilightDirection::None;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
+                    } else if self.keyboard.cursor.offset.len == 1 {
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
                     }
                 }
             }
             HilightDirection::None | HilightDirection::Left => {
-                if let Some(offset) = self
-                    .kana_offsets
-                    .iter()
-                    .find(|&offset| self.cursor.offset.pos == offset.dest.pos + offset.dest.len)
-                {
-                    self.cursor.offset.pos = offset.dest.pos;
-                    self.cursor.offset.len += offset.dest.len;
+                if let Some(offset) = self.keyboard.kana_offsets.iter().find(|&offset| {
+                    self.keyboard.cursor.offset.pos == offset.dest.pos + offset.dest.len
+                }) {
+                    self.keyboard.cursor.offset.pos = offset.dest.pos;
+                    self.keyboard.cursor.offset.len += offset.dest.len;
                     if let Some(cur_offset) = self
+                        .keyboard
                         .kana_offsets
                         .iter()
-                        .find(|&offset| self.cursor.offset == offset.dest)
+                        .find(|&offset| self.keyboard.cursor.offset == offset.dest)
                     {
                         // on current position, switch highlightdirection
                         assert!(cur_offset.dest.pos + cur_offset.dest.len == offset.dest.pos);
-                        self.cursor.highlight_dir = HilightDirection::None;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::None;
                     } else {
-                        self.cursor.highlight_dir = HilightDirection::Left;
+                        self.keyboard.cursor.highlight_dir = HilightDirection::Left;
                     }
-                } else if self.cursor.offset.pos > 0 {
-                    self.cursor.offset.pos -= 1;
-                    self.cursor.offset.len += 1;
-                    self.cursor.highlight_dir = HilightDirection::Left;
+                } else if self.keyboard.cursor.offset.pos > 0 {
+                    self.keyboard.cursor.offset.pos -= 1;
+                    self.keyboard.cursor.offset.len += 1;
+                    self.keyboard.cursor.highlight_dir = HilightDirection::Left;
                 }
             }
         }
-        assert!(self.cursor.offset.len > 0);
-        assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
+        assert!(self.keyboard.cursor.offset.len > 0);
+        assert!(
+            self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                <= self.keyboard.kana.chars().count()
+        );
     }
 
     pub fn push_char(&mut self, value: char) {
         let mut cursor_len = 1;
         let mut is_converted = false;
 
-        self.romanji.push(value);
-        if !self.english {
-            let end = self.romanji.chars().count();
+        self.keyboard.romanji.push(value);
+        if !self.keyboard.english {
+            let end = self.keyboard.romanji.chars().count();
             let start: usize;
             {
                 // the longest kana conversion is 4 chars, so we use a moving window of 4 chars
                 let gap: usize;
-                if let Some(last_offset) = self.kana_offsets.last() {
+                if let Some(last_offset) = self.keyboard.kana_offsets.last() {
                     gap = end - (last_offset.src.pos + last_offset.src.len)
                 } else {
                     gap = end
@@ -408,26 +441,33 @@ impl App {
             }
 
             for i in start..end {
-                let romanji_substr = self.romanji.substring(i, end);
+                let romanji_substr = self.keyboard.romanji.substring(i, end);
                 // conversion successful
-                if let Some(converted_str) = self.kana_converter.convert(romanji_substr, true) {
+                if let Some(converted_str) =
+                    self.keyboard.kana_converter.convert(romanji_substr, true)
+                {
                     is_converted = true;
 
                     // remove unconverted string from end of output string
-                    if let Some((byte_idx, _)) = self
-                        .kana
-                        .char_indices()
-                        .nth(self.kana.chars().count().saturating_sub(end - i - 1))
-                    {
-                        self.kana.truncate(byte_idx);
+                    if let Some((byte_idx, _)) = self.keyboard.kana.char_indices().nth(
+                        self.keyboard
+                            .kana
+                            .chars()
+                            .count()
+                            .saturating_sub(end - i - 1),
+                    ) {
+                        self.keyboard.kana.truncate(byte_idx);
                     }
 
                     // update converted string
-                    self.kana_offsets.push(OffsetMap::new(
+                    self.keyboard.kana_offsets.push(OffsetMap::new(
                         Offset::new(i, end - i),
-                        Offset::new(self.kana.chars().count(), converted_str.chars().count()),
+                        Offset::new(
+                            self.keyboard.kana.chars().count(),
+                            converted_str.chars().count(),
+                        ),
                     ));
-                    self.kana.push_str(&converted_str.to_string());
+                    self.keyboard.kana.push_str(&converted_str.to_string());
                     cursor_len = converted_str.chars().count();
                     break;
                 }
@@ -435,66 +475,72 @@ impl App {
         }
 
         if !is_converted {
-            self.kana.push(value);
+            self.keyboard.kana.push(value);
         }
-        self.cursor.offset.pos = self.kana.chars().count() - cursor_len;
-        self.cursor.offset.len = cursor_len;
-        self.cursor.highlight_dir = HilightDirection::None;
+        self.keyboard.cursor.offset.pos = self.keyboard.kana.chars().count() - cursor_len;
+        self.keyboard.cursor.offset.len = cursor_len;
+        self.keyboard.cursor.highlight_dir = HilightDirection::None;
     }
 
     pub fn pop_char(&mut self) {
         // check if we removed kana
-        if let Some(last_offset) = self.kana_offsets.last()
-            && self.romanji.chars().count() == last_offset.src.pos + last_offset.src.len
+        if let Some(last_offset) = self.keyboard.kana_offsets.last()
+            && self.keyboard.romanji.chars().count() == last_offset.src.pos + last_offset.src.len
         {
             // remove romanji
-            if let Some((byte_idx, _)) = self.romanji.char_indices().nth(
-                self.romanji
+            if let Some((byte_idx, _)) = self.keyboard.romanji.char_indices().nth(
+                self.keyboard
+                    .romanji
                     .chars()
                     .count()
                     .saturating_sub(last_offset.src.len),
             ) {
-                self.romanji.truncate(byte_idx);
+                self.keyboard.romanji.truncate(byte_idx);
             }
 
             // remove kana
-            if let Some((byte_idx, _)) = self.kana.char_indices().nth(
-                self.kana
+            if let Some((byte_idx, _)) = self.keyboard.kana.char_indices().nth(
+                self.keyboard
+                    .kana
                     .chars()
                     .count()
                     .saturating_sub(last_offset.dest.len),
             ) {
-                self.kana.truncate(byte_idx);
+                self.keyboard.kana.truncate(byte_idx);
             }
-            self.kana_offsets.pop();
+            self.keyboard.kana_offsets.pop();
         } else {
-            self.romanji.pop();
-            self.kana.pop();
+            self.keyboard.romanji.pop();
+            self.keyboard.kana.pop();
         }
 
         // update cursor
-        if self.kana.chars().count() != 0 {
+        if self.keyboard.kana.chars().count() != 0 {
             // cursor touching last kana char
-            if let Some(last_offset) = self.kana_offsets.last()
-                && self.romanji.chars().count() == last_offset.src.pos + last_offset.src.len
+            if let Some(last_offset) = self.keyboard.kana_offsets.last()
+                && self.keyboard.romanji.chars().count()
+                    == last_offset.src.pos + last_offset.src.len
             {
-                self.cursor.offset.len = last_offset.dest.len;
+                self.keyboard.cursor.offset.len = last_offset.dest.len;
             } else {
-                self.cursor.offset.len = 1;
+                self.keyboard.cursor.offset.len = 1;
             }
-            self.cursor.offset.pos = self.kana.chars().count() - self.cursor.offset.len;
+            self.keyboard.cursor.offset.pos =
+                self.keyboard.kana.chars().count() - self.keyboard.cursor.offset.len;
         }
-        self.cursor.highlight_dir = HilightDirection::None;
+        self.keyboard.cursor.highlight_dir = HilightDirection::None;
     }
 
     pub fn check_merge_kana(&mut self) -> bool {
-        self.merge_kana = None;
+        self.keyboard.merge_kana = None;
         if let Some(start_offset) = self
+            .keyboard
             .kana_offsets
             .iter()
-            .find(|&offset| self.cursor.offset.pos == offset.dest.pos)
-            && let Some(end_offset) = self.kana_offsets.iter().find(|&offset| {
-                self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos + offset.dest.len
+            .find(|&offset| self.keyboard.cursor.offset.pos == offset.dest.pos)
+            && let Some(end_offset) = self.keyboard.kana_offsets.iter().find(|&offset| {
+                self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                    == offset.dest.pos + offset.dest.len
             })
         {
             // make sure theyre contiguous, only support merging of contiguous kana
@@ -504,11 +550,13 @@ impl App {
                     start_offset.src.len + end_offset.src.len,
                 );
                 let romanji_substr: &str = self
+                    .keyboard
                     .romanji
                     .substring(romanji_offset.pos, romanji_offset.pos + romanji_offset.len);
-                if let Some(merge_kana) = self.kana_converter.convert(romanji_substr, true) {
+                if let Some(merge_kana) = self.keyboard.kana_converter.convert(romanji_substr, true)
+                {
                     let len: usize = merge_kana.chars().count();
-                    self.merge_kana = Some(MergeKana::new(
+                    self.keyboard.merge_kana = Some(MergeKana::new(
                         merge_kana,
                         OffsetMap::new(romanji_offset, Offset::new(start_offset.dest.pos, len)),
                     ));
@@ -520,21 +568,22 @@ impl App {
     }
 
     pub fn update_merge_kana(&mut self) -> bool {
-        if let Some(merge_kana) = &self.merge_kana {
-            assert!(self.kana_to_kanji.is_none());
+        if let Some(merge_kana) = &self.keyboard.merge_kana {
+            assert!(self.keyboard.kana_to_kanji.is_none());
             // remove first part of contiguous merge offsets
-            self.kana_offsets
+            self.keyboard
+                .kana_offsets
                 .retain(|offset| offset.src.pos != merge_kana.offset_map.src.pos);
             // remove second part of contiguous merge offsets
-            self.kana_offsets.retain(|offset| {
+            self.keyboard.kana_offsets.retain(|offset| {
                 offset.src.pos + offset.src.len
                     != merge_kana.offset_map.src.pos + merge_kana.offset_map.src.len
             });
             // update offset positions when merged kana is shorter than original
-            assert!(self.cursor.offset.len >= merge_kana.offset_map.dest.len);
-            let offset_diff = self.cursor.offset.len - merge_kana.offset_map.dest.len;
+            assert!(self.keyboard.cursor.offset.len >= merge_kana.offset_map.dest.len);
+            let offset_diff = self.keyboard.cursor.offset.len - merge_kana.offset_map.dest.len;
             if offset_diff > 0 {
-                for offset in &mut self.kana_offsets {
+                for offset in &mut self.keyboard.kana_offsets {
                     if merge_kana.offset_map.dest.pos + merge_kana.offset_map.dest.len
                         <= offset.dest.pos
                     {
@@ -542,29 +591,32 @@ impl App {
                     }
                 }
             }
-            self.kana_offsets.push(merge_kana.offset_map);
-            self.kana_offsets
+            self.keyboard.kana_offsets.push(merge_kana.offset_map);
+            self.keyboard
+                .kana_offsets
                 .sort_by_key(|offset_map| offset_map.src.pos);
             let start_byte_index = self
+                .keyboard
                 .kana
                 .char_indices()
-                .nth(self.cursor.offset.pos)
+                .nth(self.keyboard.cursor.offset.pos)
                 .map(|(i, _)| i)
-                .unwrap_or(self.kana.len());
+                .unwrap_or(self.keyboard.kana.len());
             let end_byte_index = self
+                .keyboard
                 .kana
                 .char_indices()
-                .nth(self.cursor.offset.pos + self.cursor.offset.len)
+                .nth(self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len)
                 .map(|(i, _)| i)
-                .unwrap_or(self.kana.len());
-            self.kana.replace_range(
+                .unwrap_or(self.keyboard.kana.len());
+            self.keyboard.kana.replace_range(
                 start_byte_index..end_byte_index,
                 &merge_kana.kana.to_string(),
             );
             // update cursor
-            self.cursor.offset = merge_kana.offset_map.dest;
-            self.cursor.highlight_dir = HilightDirection::None;
-            self.merge_kana = None;
+            self.keyboard.cursor.offset = merge_kana.offset_map.dest;
+            self.keyboard.cursor.highlight_dir = HilightDirection::None;
+            self.keyboard.merge_kana = None;
             return true;
         }
         return false;
@@ -572,11 +624,13 @@ impl App {
 
     pub fn check_kana_to_kanji(&mut self) -> bool {
         if let Some(start_offset) = self
+            .keyboard
             .kana_offsets
             .iter()
-            .find(|&offset| self.cursor.offset.pos == offset.dest.pos)
-            && let Some(end_offset) = self.kana_offsets.iter().find(|&offset| {
-                self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos + offset.dest.len
+            .find(|&offset| self.keyboard.cursor.offset.pos == offset.dest.pos)
+            && let Some(end_offset) = self.keyboard.kana_offsets.iter().find(|&offset| {
+                self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
+                    == offset.dest.pos + offset.dest.len
             })
         {
             let romanji_offset = Offset::new(
@@ -585,20 +639,20 @@ impl App {
             );
 
             // keep existing conversion if the same
-            if let Some(existing_kana_to_kanji) = &self.kana_to_kanji
+            if let Some(existing_kana_to_kanji) = &self.keyboard.kana_to_kanji
                 && existing_kana_to_kanji.offset_map.src != romanji_offset
             {
-                self.kana_to_kanji = None;
+                self.keyboard.kana_to_kanji = None;
             }
 
-            if self.kana_to_kanji.is_none() {
-                let kana_substr: &str = self.kana.substring(
-                    self.cursor.offset.pos,
-                    self.cursor.offset.pos + self.cursor.offset.len,
+            if self.keyboard.kana_to_kanji.is_none() {
+                let kana_substr: &str = self.keyboard.kana.substring(
+                    self.keyboard.cursor.offset.pos,
+                    self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len,
                 );
-                let kanji = self.kanji_converter.convert(kana_substr);
+                let kanji = self.keyboard.kanji_converter.convert(kana_substr);
                 if !kanji.is_empty() {
-                    self.kana_to_kanji = Some(KanaToKanji::new(
+                    self.keyboard.kana_to_kanji = Some(KanaToKanji::new(
                         SelectKanji::new(kanji, 0),
                         OffsetMap::new(romanji_offset, Offset::new(start_offset.dest.pos, 1)),
                     ));
@@ -606,24 +660,24 @@ impl App {
             }
             return true;
         }
-        self.kana_to_kanji = None;
+        self.keyboard.kana_to_kanji = None;
         return false;
     }
 
     pub fn convert_kana_to_kanji(&mut self) -> bool {
-        if let Some(kana_to_kanji) = &self.kana_to_kanji {
-            assert!(self.merge_kana.is_none());
+        if let Some(kana_to_kanji) = &self.keyboard.kana_to_kanji {
+            assert!(self.keyboard.merge_kana.is_none());
             // remove offsets that are replaces ny new kanji offse
-            self.kana_offsets.retain(|offset| {
-                !(offset.dest.pos >= self.cursor.offset.pos
+            self.keyboard.kana_offsets.retain(|offset| {
+                !(offset.dest.pos >= self.keyboard.cursor.offset.pos
                     && offset.dest.pos + offset.src.len
-                        <= self.cursor.offset.pos + self.cursor.offset.len)
+                        <= self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len)
             });
             // update offset positions when merged kana is shorter than original
-            assert!(self.cursor.offset.len >= kana_to_kanji.offset_map.dest.len);
-            let offset_diff = self.cursor.offset.len - kana_to_kanji.offset_map.dest.len;
+            assert!(self.keyboard.cursor.offset.len >= kana_to_kanji.offset_map.dest.len);
+            let offset_diff = self.keyboard.cursor.offset.len - kana_to_kanji.offset_map.dest.len;
             if offset_diff > 0 {
-                for offset in &mut self.kana_offsets {
+                for offset in &mut self.keyboard.kana_offsets {
                     if kana_to_kanji.offset_map.dest.pos + kana_to_kanji.offset_map.dest.len
                         <= offset.dest.pos
                     {
@@ -631,37 +685,41 @@ impl App {
                     }
                 }
             }
-            self.kana_offsets.push(kana_to_kanji.offset_map);
-            self.kana_offsets
+            self.keyboard.kana_offsets.push(kana_to_kanji.offset_map);
+            self.keyboard
+                .kana_offsets
                 .sort_by_key(|offset_map| offset_map.src.pos);
             let start_byte_index = self
+                .keyboard
                 .kana
                 .char_indices()
-                .nth(self.cursor.offset.pos)
+                .nth(self.keyboard.cursor.offset.pos)
                 .map(|(i, _)| i)
-                .unwrap_or(self.kana.len());
+                .unwrap_or(self.keyboard.kana.len());
             let end_byte_index = self
+                .keyboard
                 .kana
                 .char_indices()
-                .nth(self.cursor.offset.pos + self.cursor.offset.len)
+                .nth(self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len)
                 .map(|(i, _)| i)
-                .unwrap_or(self.kana.len());
+                .unwrap_or(self.keyboard.kana.len());
             let mut buf = [0; 4];
             let kanji_char: &str =
                 kana_to_kanji.kanji.kanji_list[kana_to_kanji.kanji.offset].encode_utf8(&mut buf);
-            self.kana
+            self.keyboard
+                .kana
                 .replace_range(start_byte_index..end_byte_index, kanji_char);
             // update cursor
-            self.cursor.offset = kana_to_kanji.offset_map.dest;
-            self.cursor.highlight_dir = HilightDirection::None;
-            self.kana_to_kanji = None;
+            self.keyboard.cursor.offset = kana_to_kanji.offset_map.dest;
+            self.keyboard.cursor.highlight_dir = HilightDirection::None;
+            self.keyboard.kana_to_kanji = None;
             return true;
         }
         return false;
     }
 
     pub fn kanji_select_down(&mut self) {
-        if let Some(kana_to_kanji) = &mut self.kana_to_kanji
+        if let Some(kana_to_kanji) = &mut self.keyboard.kana_to_kanji
             && kana_to_kanji.kanji.offset < kana_to_kanji.kanji.kanji_list.len() - 1
         {
             kana_to_kanji.kanji.offset += 1;
@@ -669,7 +727,7 @@ impl App {
     }
 
     pub fn kanji_select_up(&mut self) {
-        if let Some(kana_to_kanji) = &mut self.kana_to_kanji
+        if let Some(kana_to_kanji) = &mut self.keyboard.kana_to_kanji
             && kana_to_kanji.kanji.offset > 0
         {
             kana_to_kanji.kanji.offset -= 1;
@@ -677,50 +735,50 @@ impl App {
     }
 
     pub fn toggle_english(&mut self) {
-        self.english = !self.english;
+        self.keyboard.english = !self.keyboard.english;
     }
 
     pub fn set_english(&mut self, val: bool) {
-        self.english = val;
+        self.keyboard.english = val;
     }
 
     pub fn get_romanji(&self) -> &String {
-        return &self.romanji;
+        return &self.keyboard.romanji;
     }
 
     pub fn get_kana(&self) -> &String {
-        return &self.kana;
+        return &self.keyboard.kana;
     }
 
     pub fn get_merge_kana(&self) -> Option<&String> {
-        if let Some(merge_kana) = &self.merge_kana {
+        if let Some(merge_kana) = &self.keyboard.merge_kana {
             return Some(&merge_kana.kana);
         }
         return None;
     }
 
     pub fn get_kana_to_kanji(&self) -> Option<&SelectKanji> {
-        if let Some(kana_to_kanji) = &self.kana_to_kanji {
+        if let Some(kana_to_kanji) = &self.keyboard.kana_to_kanji {
             return Some(&kana_to_kanji.kanji);
         }
         return None;
     }
 
     pub fn get_use_english(&self) -> bool {
-        return self.english;
+        return self.keyboard.english;
     }
 
     pub fn reset_conversion_selection(&mut self) {
-        self.merge_kana = None;
-        self.kana_to_kanji = None;
+        self.keyboard.merge_kana = None;
+        self.keyboard.kana_to_kanji = None;
     }
 
     pub fn reset_keyboard(&mut self) {
-        self.romanji.clear();
-        self.kana.clear();
-        self.merge_kana = None;
-        self.kana_to_kanji = None;
-        self.english = false;
-        self.kana_offsets.clear();
+        self.keyboard.romanji.clear();
+        self.keyboard.kana.clear();
+        self.keyboard.merge_kana = None;
+        self.keyboard.kana_to_kanji = None;
+        self.keyboard.english = false;
+        self.keyboard.kana_offsets.clear();
     }
 }
