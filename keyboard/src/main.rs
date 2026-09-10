@@ -115,6 +115,7 @@ where
                     KeyCode::Enter => {
                         app.update_merge_kana();
                         app.convert_kana_to_kanji();
+                        // TODO: send messages
                     }
                     KeyCode::Tab => {
                         app.toggle_english();
@@ -136,19 +137,17 @@ where
                             app.context.prev_translation_direction = None;
                             app.context.prev_answer = None;
                             app.context.asked_questions.clear();
-                            app.context.kanji_offset = 0;
                             app.reset_keyboard();
-                            app.highlighted_kanji.clear();
-                            app.kana_offset = 0;
-                            app.kana_len = 1;
                         }
                         KeyCode::Enter => {
                             app.context.current_screen = CurrentScreen::Review;
                             let translation_direction = rand::thread_rng().gen_range(0..=1);
                             if translation_direction == 0 {
                                 app.context.translation_direction = TranslationDirection::ToJP;
+                                app.set_english(false);
                             } else {
                                 app.context.translation_direction = TranslationDirection::ToEN;
+                                app.set_english(true);
                             }
                             assert!(app.context.lesson_idx < app.book.lessons.len());
                             let lesson = &app.book.lessons[app.context.lesson_idx];
@@ -195,8 +194,10 @@ where
                             let translation_direction = rand::thread_rng().gen_range(0..=1);
                             if translation_direction == 0 {
                                 app.context.translation_direction = TranslationDirection::ToJP;
+                                app.set_english(false);
                             } else {
                                 app.context.translation_direction = TranslationDirection::ToEN;
+                                app.set_english(true);
                             }
                             assert!(app.context.lesson_idx < app.book.lessons.len());
                             let lesson = &app.book.lessons[app.context.lesson_idx];
@@ -256,161 +257,113 @@ where
                         app.context.prev_translation_direction = None;
                         app.context.prev_answer = None;
                         app.context.asked_questions.clear();
-                        app.context.kanji_offset = 0;
                         app.reset_keyboard();
-                        app.highlighted_kanji.clear();
-                        app.kana_offset = 0;
-                        app.kana_len = 1;
                     }
                     KeyCode::Enter => {
-                        app.context.prev_section_idx = app.context.section_idx;
-                        app.context.prev_phrase_idx = Some(app.context.phrase_idx);
-                        app.context.prev_translation_direction =
-                            Some(app.context.translation_direction);
-                        if let Some(prev_translation_direction) =
-                            app.context.prev_translation_direction
-                        {
-                            match prev_translation_direction {
-                                TranslationDirection::ToEN => {
-                                    app.context.prev_answer = Some(app.get_romanji().clone());
-                                }
-                                TranslationDirection::ToJP => {
-                                    app.context.prev_answer = Some(app.get_romanji().clone());
+                        if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
+                            app.context.prev_section_idx = app.context.section_idx;
+                            app.context.prev_phrase_idx = Some(app.context.phrase_idx);
+                            app.context.prev_translation_direction =
+                                Some(app.context.translation_direction);
+                            if let Some(prev_translation_direction) =
+                                app.context.prev_translation_direction
+                            {
+                                match prev_translation_direction {
+                                    TranslationDirection::ToEN => {
+                                        app.context.prev_answer = Some(app.get_romanji().clone());
+                                    }
+                                    TranslationDirection::ToJP => {
+                                        app.context.prev_answer = Some(app.get_kana().clone());
+                                    }
                                 }
                             }
-                        }
-                        let translation_direction = rand::thread_rng().gen_range(0..=1);
-                        if translation_direction == 0 {
-                            app.context.translation_direction = TranslationDirection::ToJP;
-                        } else {
-                            app.context.translation_direction = TranslationDirection::ToEN;
-                        }
-                        assert!(app.context.lesson_idx < app.book.lessons.len());
-                        let lesson = &app.book.lessons[app.context.lesson_idx];
-                        if app.context.randomize_section {
-                            let mut asked_sections = HashSet::<usize>::new();
-                            loop {
-                                let section_idx =
-                                    rand::thread_rng().gen_range(0..lesson.sections.len());
-                                assert!(section_idx < app.context.asked_questions.len());
-                                if app.context.asked_questions[section_idx].len()
-                                    == lesson.sections[section_idx].phrases.len()
-                                {
-                                    asked_sections.insert(section_idx);
-                                    if asked_sections.len() == lesson.sections.len() {
-                                        app.context.asked_questions.clear();
-                                        app.context.asked_questions =
-                                            std::iter::repeat_with(HashSet::<usize>::new)
-                                                .take(lesson.sections.len())
-                                                .collect();
+                            let translation_direction = rand::thread_rng().gen_range(0..=1);
+                            if translation_direction == 0 {
+                                app.context.translation_direction = TranslationDirection::ToJP;
+                            } else {
+                                app.context.translation_direction = TranslationDirection::ToEN;
+                            }
+                            assert!(app.context.lesson_idx < app.book.lessons.len());
+                            let lesson = &app.book.lessons[app.context.lesson_idx];
+                            if app.context.randomize_section {
+                                let mut asked_sections = HashSet::<usize>::new();
+                                loop {
+                                    let section_idx =
+                                        rand::thread_rng().gen_range(0..lesson.sections.len());
+                                    assert!(section_idx < app.context.asked_questions.len());
+                                    if app.context.asked_questions[section_idx].len()
+                                        == lesson.sections[section_idx].phrases.len()
+                                    {
+                                        asked_sections.insert(section_idx);
+                                        if asked_sections.len() == lesson.sections.len() {
+                                            app.context.asked_questions.clear();
+                                            app.context.asked_questions =
+                                                std::iter::repeat_with(HashSet::<usize>::new)
+                                                    .take(lesson.sections.len())
+                                                    .collect();
+                                        }
+                                    } else {
+                                        app.context.section_idx = Some(section_idx);
+                                        break;
                                     }
-                                } else {
-                                    app.context.section_idx = Some(section_idx);
+                                }
+                            }
+                            assert!(
+                                app.context.section_idx.expect("section index not set")
+                                    < lesson.sections.len()
+                            );
+                            assert!(
+                                app.context.section_idx.unwrap()
+                                    < app.context.asked_questions.len()
+                            );
+                            let section = &lesson.sections[app.context.section_idx.unwrap()];
+                            loop {
+                                let phrases_asked = &mut app.context.asked_questions
+                                    [app.context.section_idx.unwrap()];
+                                let phrase_idx =
+                                    rand::thread_rng().gen_range(0..section.phrases.len());
+                                if phrases_asked.insert(phrase_idx) {
+                                    app.context.phrase_idx = phrase_idx;
+                                    if !app.context.randomize_section
+                                        && phrases_asked.len() == section.phrases.len()
+                                    {
+                                        phrases_asked.clear();
+                                    }
                                     break;
                                 }
                             }
-                        }
-                        assert!(
-                            app.context.section_idx.expect("section index not set")
-                                < lesson.sections.len()
-                        );
-                        assert!(
-                            app.context.section_idx.unwrap() < app.context.asked_questions.len()
-                        );
-                        let section = &lesson.sections[app.context.section_idx.unwrap()];
-                        loop {
-                            let phrases_asked =
-                                &mut app.context.asked_questions[app.context.section_idx.unwrap()];
-                            let phrase_idx = rand::thread_rng().gen_range(0..section.phrases.len());
-                            if phrases_asked.insert(phrase_idx) {
-                                app.context.phrase_idx = phrase_idx;
-                                if !app.context.randomize_section
-                                    && phrases_asked.len() == section.phrases.len()
-                                {
-                                    phrases_asked.clear();
-                                }
-                                break;
-                            }
-                        }
-                        app.reset_keyboard();
-                        app.highlighted_kanji.clear();
-                        app.kana_offset = 0;
-                        app.kana_len = 1;
-                    }
-                    KeyCode::Tab => {
-                        if app.get_kana().chars().count() > 0 {
-                            assert!(
-                                app.kana_offset < app.get_kana().chars().count()
-                                    && app.kana_offset + app.kana_len
-                                        <= app.get_kana().chars().count()
-                            );
-                            app.push_kanji_offset((
-                                app.kana_offset,
-                                app.kana_len,
-                                app.context.kanji_offset,
-                            ));
-                        }
-                    }
-                    KeyCode::Right => {
-                        if key.modifiers.contains(KeyModifiers::SHIFT) {
-                            if app.kana_offset + app.kana_len < app.get_kana().chars().count() {
-                                app.kana_len += 1;
-                            }
-                        } else {
-                            if app.kana_offset + app.kana_len < app.get_kana().chars().count() {
-                                app.kana_offset += 1;
-                            }
-                            app.kana_len = 1;
-                        }
-                        app.context.kanji_offset = 0;
-                    }
-                    KeyCode::Left => {
-                        if key.modifiers.contains(KeyModifiers::SHIFT) {
-                            if app.kana_len > 1 {
-                                app.kana_len -= 1;
-                            }
-                        } else {
-                            if app.kana_offset > 0 {
-                                app.kana_offset -= 1;
-                            }
-                            app.kana_len = 1;
-                        }
-                        app.context.kanji_offset = 0;
-                    }
-                    KeyCode::Up => {
-                        if app.context.kanji_offset > 0 {
-                            app.context.kanji_offset -= 1;
-                        }
-                    }
-                    KeyCode::Down => {
-                        if app.context.kanji_offset + 1 < app.highlighted_kanji.len() {
-                            app.context.kanji_offset += 1;
+                            app.reset_keyboard();
+                            app.set_english(translation_direction != 0);
                         }
                     }
                     KeyCode::Char(value) => {
                         app.push_char(value);
-                        // when last charachter dissapears do to kana conversion
-                        if app.kana_offset + app.kana_len > app.get_kana().chars().count() {
-                            app.kana_offset -=
-                                app.kana_offset + app.kana_len - app.get_kana().chars().count();
-                        }
                     }
                     KeyCode::Backspace => {
                         app.pop_char();
-                        // undo highlighted all chars if removing highlighted char
-                        if app.get_kana().chars().count() > 0
-                            && app.kana_len > 1
-                            && app.kana_offset + app.kana_len > app.get_kana().chars().count()
-                        {
-                            app.kana_len -= 1;
+                    }
+                    KeyCode::Right => {
+                        if key.modifiers.contains(KeyModifiers::SHIFT) {
+                            app.cursor_highlight_right();
+                        } else {
+                            app.cursor_right();
                         }
-                        // move cursor back if cursor is at end of string
-                        if app.get_kana().chars().count() > 0
-                            && app.kana_offset + app.kana_len > app.get_kana().chars().count()
-                        {
-                            app.kana_offset -=
-                                app.kana_offset + app.kana_len - app.get_kana().chars().count();
+                    }
+                    KeyCode::Left => {
+                        if key.modifiers.contains(KeyModifiers::SHIFT) {
+                            app.cursor_highlight_left();
+                        } else {
+                            app.cursor_left();
                         }
+                    }
+                    KeyCode::Up => {
+                        app.kanji_select_up();
+                    }
+                    KeyCode::Down => {
+                        app.kanji_select_down();
+                    }
+                    KeyCode::Tab => {
+                        app.toggle_english();
                     }
                     _ => {}
                 },
@@ -418,7 +371,6 @@ where
         }
         app.check_merge_kana();
         app.check_kana_to_kanji();
-        app.update_kanji();
     }
     return Ok(true);
 }

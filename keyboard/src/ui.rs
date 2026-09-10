@@ -1,6 +1,6 @@
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
@@ -15,7 +15,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
             render_welcome(frame, app);
         }
         CurrentScreen::Chat => {
-            render_lesson_chat(frame, app);
+            render_chat(frame, app);
         }
         CurrentScreen::LessonSelect => {
             render_lesson_select(frame, app);
@@ -72,17 +72,7 @@ fn render_welcome(frame: &mut Frame, app: &App) {
     frame.render_stateful_widget(lesson_list, bottom, &mut welcome_state);
 }
 
-fn render_lesson_chat(frame: &mut Frame, app: &App) {
-    let [messages_chunk, text_chunk] =
-        Layout::vertical([Constraint::Percentage(70), Constraint::Percentage(30)])
-            .areas(frame.area());
-
-    // add debugging info here so we ca see it on the screen
-    let messages = Paragraph::new(app.debug.clone())
-        .block(Block::bordered().yellow())
-        .wrap(Wrap { trim: true });
-    frame.render_widget(messages, messages_chunk);
-
+fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
     // kana box with highlighting
     let kana = app.get_kana();
     let mut left = String::new();
@@ -132,7 +122,7 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
                 .border_style(Style::default().fg(text_colour)),
         )
         .wrap(Wrap { trim: true });
-    frame.render_widget(text, text_chunk);
+    frame.render_widget(text, keyboard_rect);
 
     assert!(
         (app.get_merge_kana().is_some() ^ app.get_kana_to_kanji().is_some())
@@ -218,6 +208,20 @@ fn render_lesson_chat(frame: &mut Frame, app: &App) {
     }
 }
 
+fn render_chat(frame: &mut Frame, app: &App) {
+    let [message_chunk, keyboard] =
+        Layout::vertical([Constraint::Percentage(70), Constraint::Percentage(30)])
+            .areas(frame.area());
+
+    // add debugging info here so we ca see it on the screen
+    let messages = Paragraph::new(app.debug.clone())
+        .block(Block::bordered().yellow())
+        .wrap(Wrap { trim: true });
+    frame.render_widget(messages, message_chunk);
+
+    render_keyboard(frame, keyboard, app);
+}
+
 fn render_lesson_select(frame: &mut Frame, app: &App) {
     let [lesson_chunk, section_chunk] = Layout::default()
         .direction(Direction::Horizontal)
@@ -284,12 +288,9 @@ fn render_lesson_select(frame: &mut Frame, app: &App) {
 }
 
 fn render_review(frame: &mut Frame, app: &App) {
-    let [review_chunk, japanese_chunk, romanji_chunk] = Layout::vertical([
-        Constraint::Percentage(35),
-        Constraint::Percentage(35),
-        Constraint::Percentage(30),
-    ])
-    .areas(frame.area());
+    let [review_chunk, keyboard_chunk] =
+        Layout::vertical([Constraint::Percentage(70), Constraint::Percentage(30)])
+            .areas(frame.area());
 
     let [question_chunk, answer_selector_chunk] =
         Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
@@ -393,86 +394,5 @@ fn render_review(frame: &mut Frame, app: &App) {
         .wrap(Wrap { trim: true });
     frame.render_widget(answer_text, answer_selector_chunk);
 
-    let [kana_chunk, kanji_selector_chunk, kanji_chunk] = Layout::horizontal([
-        Constraint::Percentage(45),
-        Constraint::Percentage(10),
-        Constraint::Percentage(45),
-    ])
-    .areas(japanese_chunk);
-
-    // kana box with highlighting
-    let kana = app.get_kana();
-    let mut left = String::new();
-    let mut middle = String::new();
-    let mut right = String::new();
-    if kana.chars().count() > 0 {
-        assert!(app.kana_offset + app.kana_len <= kana.chars().count());
-        assert!(app.kana_len >= 1);
-        middle = kana
-            .chars()
-            .take(app.kana_offset + app.kana_len)
-            .skip(app.kana_offset)
-            .collect();
-        if app.kana_offset > 0 {
-            left = kana.chars().take(app.kana_offset).collect();
-        }
-        if app.kana_offset + app.kana_len < kana.chars().count() {
-            right = kana
-                .chars()
-                .take(kana.chars().count())
-                .skip(app.kana_offset + app.kana_len)
-                .collect();
-        }
-    }
-
-    // highlight selected kana
-    let kana_formatted = Text::from(vec![Line::from(vec![
-        Span::raw(left),
-        Span::styled(&middle, Style::default().add_modifier(Modifier::REVERSED)),
-        Span::raw(right),
-    ])]);
-
-    let kana_text = Paragraph::new(kana_formatted)
-        .light_yellow()
-        .block(Block::bordered().title(" kana ").yellow())
-        .wrap(Wrap { trim: true });
-    frame.render_widget(kana_text, kana_chunk);
-
-    // kanji selection
-    let kanji = &app.highlighted_kanji;
-    let mut kanji_items = Vec::<ListItem>::new();
-    for kanji_char in kanji {
-        kanji_items.push(ListItem::new(
-            Line::from(Span::styled(
-                format!(" {} ", kanji_char),
-                Style::default().fg(Color::LightYellow),
-            ))
-            .centered(),
-        ));
-    }
-
-    let mut kanji_state = ListState::default();
-    if !kanji.is_empty() {
-        kanji_state.select(Some(app.context.kanji_offset));
-    }
-
-    let kanji_list = List::new(kanji_items)
-        .dark_gray()
-        .block(Block::bordered().title(" kanji ").yellow())
-        .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
-
-    frame.render_stateful_widget(kanji_list, kanji_selector_chunk, &mut kanji_state);
-
-    // kanji text box
-    let complete_text = Paragraph::new(app.get_kanji().clone())
-        .light_yellow()
-        .block(Block::bordered().title(" complete ").yellow())
-        .wrap(Wrap { trim: true });
-    frame.render_widget(complete_text, kanji_chunk);
-
-    // romanji text box
-    let romanji_text = Paragraph::new(app.get_romanji().clone())
-        .block(Block::bordered().title(" romanji "))
-        .wrap(Wrap { trim: true });
-    frame.render_widget(romanji_text, romanji_chunk);
+    render_keyboard(frame, keyboard_chunk, app);
 }

@@ -18,7 +18,7 @@ pub enum CurrentSelection {
     Section,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum TranslationDirection {
     ToEN,
     ToJP,
@@ -40,8 +40,6 @@ pub struct Context {
     pub prev_translation_direction: Option<TranslationDirection>,
     pub prev_answer: Option<String>,
 
-    pub kanji_offset: usize,
-
     pub randomize_section: bool,
     pub asked_questions: Vec<HashSet<usize>>,
 }
@@ -60,7 +58,6 @@ impl Context {
             prev_phrase_idx: None,
             prev_translation_direction: None,
             prev_answer: None,
-            kanji_offset: 0,
             randomize_section: false,
             asked_questions: Vec::<HashSet<usize>>::new(),
         }
@@ -146,25 +143,20 @@ impl Cursor {
 
 pub struct App {
     pub book: Book,
+    pub context: Context,
+
     kana_converter: RomanjiToKanaConverter,
     kanji_converter: HiragaToKanjiConverter,
-    pub context: Context,
 
     romanji: String,
     kana: String,
-    kanji: String,
+
+    kana_offsets: Vec<OffsetMap>,
 
     merge_kana: Option<MergeKana>,
     kana_to_kanji: Option<KanaToKanji>,
 
     english: bool,
-
-    kana_offsets: Vec<OffsetMap>,
-
-    pub highlighted_kanji: Vec<char>,
-    pub kana_offset: usize,
-    pub kana_len: usize,
-    kanji_offsets: Vec<(usize, usize, usize)>,
 
     cursor: Cursor,
 
@@ -175,20 +167,15 @@ impl App {
     pub fn new() -> Self {
         App {
             book: Book::new(),
+            context: Context::new(),
             kana_converter: RomanjiToKanaConverter::new(),
             kanji_converter: HiragaToKanjiConverter::new(),
-            context: Context::new(),
             romanji: String::new(),
             kana: String::new(),
-            kanji: String::new(),
+            kana_offsets: Vec::new(),
             merge_kana: None,
             kana_to_kanji: None,
             english: false,
-            kana_offsets: Vec::new(),
-            highlighted_kanji: Vec::new(),
-            kana_offset: 0,
-            kana_len: 1,
-            kanji_offsets: Vec::new(),
             cursor: Cursor::new(),
             debug: String::from("debug: "),
         }
@@ -530,7 +517,7 @@ impl App {
         }
     }
 
-    pub fn update_merge_kana(&mut self) {
+    pub fn update_merge_kana(&mut self) -> bool {
         if let Some(merge_kana) = &self.merge_kana {
             assert!(self.kana_to_kanji.is_none());
             // remove first part of contiguous merge offsets
@@ -575,8 +562,10 @@ impl App {
             // update cursor
             self.cursor.offset = merge_kana.offset_map.dest;
             self.cursor.highlight_dir = HilightDirection::None;
+            self.merge_kana = None;
+            return true;
         }
-        self.merge_kana = None;
+        return false;
     }
 
     pub fn check_kana_to_kanji(&mut self) {
@@ -618,7 +607,7 @@ impl App {
         }
     }
 
-    pub fn convert_kana_to_kanji(&mut self) {
+    pub fn convert_kana_to_kanji(&mut self) -> bool {
         if let Some(kana_to_kanji) = &self.kana_to_kanji {
             assert!(self.merge_kana.is_none());
             // remove offsets that are replaces ny new kanji offse
@@ -662,8 +651,10 @@ impl App {
             // update cursor
             self.cursor.offset = kana_to_kanji.offset_map.dest;
             self.cursor.highlight_dir = HilightDirection::None;
+            self.kana_to_kanji = None;
+            return true;
         }
-        self.kana_to_kanji = None;
+        return false;
     }
 
     pub fn kanji_select_down(&mut self) {
@@ -686,92 +677,8 @@ impl App {
         self.english = !self.english;
     }
 
-    pub fn push_kanji_offset(&mut self, offset: (usize, usize, usize)) {
-        let start = offset.0;
-        let end = offset.0 + offset.1;
-        let kanji_list_offset = offset.2;
-        assert!(start < self.kana.chars().count() && end <= self.kana.chars().count());
-        let kana_substr: String = self.kana.chars().take(end).skip(start).collect();
-        let kanji_list = self.kanji_converter.convert(&kana_substr);
-        if kanji_list_offset < kanji_list.len() {
-            // if exact match, undo matching
-            if let Some(index) = self
-                .kanji_offsets
-                .iter()
-                .position(|&kanji_offset| kanji_offset == offset)
-            {
-                self.kanji_offsets.remove(index);
-            } else {
-                // remove colliding offsets
-                self.kanji_offsets.retain(|&kanji_offset| {
-                    let start = offset.0;
-                    let end = offset.0 + offset.1;
-                    return !(start >= kanji_offset.0 && start < kanji_offset.0 + kanji_offset.1)
-                        && !(end > kanji_offset.0 && end <= kanji_offset.0 + kanji_offset.1);
-                });
-                self.kanji_offsets.push(offset);
-            }
-            self.highlighted_kanji = kanji_list;
-        }
-    }
-
-    pub fn update_kanji(&mut self) {
-        self.kanji = self.kana.clone();
-        // remove offsets that no longer exist because of a backspace
-        self.kanji_offsets.retain(|kanji_offset| {
-            let start = kanji_offset.0;
-            let end = kanji_offset.0 + kanji_offset.1;
-            return start <= self.kana.chars().count() && end <= self.kana.chars().count();
-        });
-        // generate kanji from kana and offsets
-        if self.kanji.chars().count() > 0 {
-            // sort to keep adjusted offset valid
-            self.kanji_offsets.sort();
-            let mut offset_adjust: usize = 0;
-            // update kanji text
-            for kanji_offset in &self.kanji_offsets {
-                assert!(kanji_offset.1 >= 1);
-                let start = kanji_offset.0;
-                let end = kanji_offset.0 + kanji_offset.1;
-                let kanji_list_offset = kanji_offset.2;
-                assert!(start <= self.kana.chars().count() && end <= self.kana.chars().count());
-                let kana_substr: String = self.kana.chars().take(end).skip(start).collect();
-                let kanji_list = self.kanji_converter.convert(&kana_substr);
-                if kanji_list_offset < kanji_list.len() {
-                    let kanji_char = String::from(kanji_list[kanji_list_offset]);
-                    let start_byte_index = self
-                        .kanji
-                        .char_indices()
-                        .nth(start - offset_adjust)
-                        .map(|(i, _)| i)
-                        .unwrap_or(self.kanji.len());
-                    let end_byte_index = self
-                        .kanji
-                        .char_indices()
-                        .nth(end - offset_adjust)
-                        .map(|(i, _)| i)
-                        .unwrap_or(self.kanji.len());
-                    self.kanji
-                        .replace_range(start_byte_index..end_byte_index, &kanji_char);
-                    // adjust for shorter len kanji than hiragana after swap
-                    offset_adjust += kanji_offset.1 - 1;
-                }
-            }
-
-            assert!(
-                self.kana_offset < self.kana.chars().count()
-                    && self.kana_offset + self.kana_len <= self.kana.chars().count()
-            );
-            let kana_substr: String = self
-                .kana
-                .chars()
-                .take(self.kana_offset + self.kana_len)
-                .skip(self.kana_offset)
-                .collect();
-            self.highlighted_kanji = self.kanji_converter.convert(&kana_substr);
-        } else {
-            self.highlighted_kanji.clear();
-        }
+    pub fn set_english(&mut self, val: bool) {
+        self.english = val;
     }
 
     pub fn get_romanji(&self) -> &String {
@@ -780,10 +687,6 @@ impl App {
 
     pub fn get_kana(&self) -> &String {
         return &self.kana;
-    }
-
-    pub fn get_kanji(&self) -> &String {
-        return &self.kanji;
     }
 
     pub fn get_merge_kana(&self) -> Option<&String> {
@@ -803,7 +706,10 @@ impl App {
     pub fn reset_keyboard(&mut self) {
         self.romanji.clear();
         self.kana.clear();
-        self.kanji.clear();
+        self.merge_kana = None;
+        self.kana_to_kanji = None;
+        self.english = false;
+        self.kana_offsets.clear();
     }
 
     pub fn get_use_english(&self) -> bool {
