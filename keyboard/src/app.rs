@@ -456,7 +456,7 @@ impl App {
     }
 
     pub fn pop_char(&mut self) {
-        // check if we removed kana, if so then add back unconverted chars
+        // check if we removed kana
         if let Some(last_offset) = self.kana_offsets.last()
             && self.romanji.chars().count() == last_offset.src.pos + last_offset.src.len
         {
@@ -535,11 +535,11 @@ impl App {
             assert!(self.kana_to_kanji.is_none());
             // remove first part of contiguous merge offsets
             self.kana_offsets
-                .retain(|offset| offset.dest.pos != merge_kana.offset_map.dest.pos);
+                .retain(|offset| offset.src.pos != merge_kana.offset_map.src.pos);
             // remove second part of contiguous merge offsets
             self.kana_offsets.retain(|offset| {
-                offset.dest.pos + offset.dest.len
-                    != merge_kana.offset_map.dest.pos + merge_kana.offset_map.dest.len
+                offset.src.pos + offset.src.len
+                    != merge_kana.offset_map.src.pos + merge_kana.offset_map.src.len
             });
             // update offset positions when merged kana is shorter than original
             assert!(self.cursor.offset.len >= merge_kana.offset_map.dest.len);
