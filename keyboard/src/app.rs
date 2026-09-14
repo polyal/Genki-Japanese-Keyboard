@@ -531,7 +531,7 @@ impl App {
         self.keyboard.cursor.highlight_dir = HilightDirection::None;
     }
 
-    pub fn check_merge_kana(&mut self) -> bool {
+    pub fn check_merge_kana(&mut self) {
         self.keyboard.merge_kana = None;
         if let Some(start_offset) = self
             .keyboard
@@ -562,9 +562,7 @@ impl App {
                     ));
                 }
             }
-            return true;
         }
-        return false;
     }
 
     pub fn update_merge_kana(&mut self) -> bool {
@@ -622,7 +620,7 @@ impl App {
         return false;
     }
 
-    pub fn check_kana_to_kanji(&mut self) -> bool {
+    pub fn check_kana_to_kanji(&mut self) {
         if let Some(start_offset) = self
             .keyboard
             .kana_offsets
@@ -658,10 +656,9 @@ impl App {
                     ));
                 }
             }
-            return true;
+        } else {
+            self.keyboard.kana_to_kanji = None;
         }
-        self.keyboard.kana_to_kanji = None;
-        return false;
     }
 
     pub fn convert_kana_to_kanji(&mut self) -> bool {

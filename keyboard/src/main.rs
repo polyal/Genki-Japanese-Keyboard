@@ -122,7 +122,7 @@ where
                     }
                     KeyCode::Esc => {
                         if !reset_conversion
-                            && (app.check_merge_kana() || app.check_kana_to_kanji())
+                            && (app.get_merge_kana().is_some() || app.get_kana_to_kanji().is_some())
                         {
                             app.reset_conversion_selection();
                             reset_conversion = true;
@@ -256,7 +256,7 @@ where
                 CurrentScreen::Review => match key.code {
                     KeyCode::Esc => {
                         if !reset_conversion
-                            && (app.check_merge_kana() || app.check_kana_to_kanji())
+                            && (app.get_merge_kana().is_some() || app.get_kana_to_kanji().is_some())
                         {
                             app.reset_conversion_selection();
                             reset_conversion = true;
