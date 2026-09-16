@@ -1,4 +1,5 @@
 mod app;
+mod chat;
 mod kana_converter;
 mod kanji_converter;
 mod lessons;
