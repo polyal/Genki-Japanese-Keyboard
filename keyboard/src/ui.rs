@@ -1,6 +1,6 @@
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
@@ -209,9 +209,26 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
 }
 
 fn render_chat(frame: &mut Frame, app: &App) {
-    let [message_chunk, keyboard] =
+    let [top_chunk, keyboard] =
         Layout::vertical([Constraint::Percentage(70), Constraint::Percentage(30)])
             .areas(frame.area());
+
+    let [status_chunk, message_chunk] =
+        Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).areas(top_chunk);
+
+    let [online_chunk, connected_to_chunk] =
+        Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .areas(status_chunk);
+
+    let status = Paragraph::new(" online")
+        .alignment(Alignment::Left)
+        .style(Style::default().fg(Color::Green));
+    frame.render_widget(status, online_chunk);
+
+    let connected_to = Paragraph::new("connected to: 127.0.0.1:57007 ")
+        .alignment(Alignment::Right)
+        .style(Style::default().fg(Color::Red));
+    frame.render_widget(connected_to, connected_to_chunk);
 
     // add debugging info here so we ca see it on the screen
     let messages = Paragraph::new(app.debug.clone())
