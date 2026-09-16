@@ -1,10 +1,11 @@
 use substring::Substring;
 
+use crate::chat::{Message, Peer};
 use crate::kana_converter::RomanjiToKanaConverter;
 use crate::kanji_converter::HiragaToKanjiConverter;
 use crate::lessons::Book;
 
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 
 pub enum CurrentScreen {
     Welcome,
@@ -18,6 +19,11 @@ pub enum CurrentSelection {
     Section,
 }
 
+pub enum ChatSelection {
+    Chat,
+    Popup,
+}
+
 #[derive(Copy, Clone, PartialEq)]
 pub enum TranslationDirection {
     ToEN,
@@ -29,6 +35,8 @@ pub struct Context {
     pub current_selection: CurrentSelection,
 
     pub chat: usize,
+    pub chat_screen: ChatSelection,
+    pub host: usize,
 
     pub lesson_idx: usize,
     pub section_idx: Option<usize>,
@@ -50,6 +58,8 @@ impl Context {
             current_screen: CurrentScreen::Welcome,
             current_selection: CurrentSelection::Lesson,
             chat: 0,
+            chat_screen: ChatSelection::Popup,
+            host: 0,
             lesson_idx: 0,
             section_idx: None,
             phrase_idx: 0,
@@ -179,6 +189,9 @@ pub struct App {
     pub context: Context,
     keyboard: Keyboard,
 
+    peer: Peer,
+    messages: VecDeque<Message>,
+
     pub debug: String,
 }
 
@@ -188,6 +201,8 @@ impl App {
             book: Book::new(),
             context: Context::new(),
             keyboard: Keyboard::new(),
+            peer: Peer::new(),
+            messages: VecDeque::new(),
             debug: String::from("debug: "),
         }
     }
@@ -777,5 +792,33 @@ impl App {
         self.keyboard.kana_to_kanji = None;
         self.keyboard.english = false;
         self.keyboard.kana_offsets.clear();
+    }
+
+    pub fn create_server(&mut self) {
+        let _ = self.peer.host();
+    }
+
+    pub fn create_client(&mut self) {
+        let _ = self.peer.connect("127.0.0.1:57007");
+    }
+
+    pub fn push_message(&mut self) {
+        if !self.keyboard.kana.is_empty() {
+            let message = Message::new(&self.keyboard.kana);
+            let _ = self.peer.send_message(&message);
+            self.messages.push_back(message);
+        }
+    }
+
+    pub fn check_received_message(&mut self) -> bool {
+        if self.peer.peek_message() {
+            self.messages.push_back(self.peer.pop_message());
+            return true;
+        }
+        return false;
+    }
+
+    pub fn get_messages(&self) -> &VecDeque<Message> {
+        return &self.messages;
     }
 }

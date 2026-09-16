@@ -4,10 +4,10 @@ use ratatui::{
     style::{Color, Modifier, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
-    widgets::{Block, Clear, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 
-use crate::app::{App, CurrentScreen, CurrentSelection, TranslationDirection};
+use crate::app::{App, ChatSelection, CurrentScreen, CurrentSelection, TranslationDirection};
 
 pub fn ui(frame: &mut Frame, app: &App) {
     match app.context.current_screen {
@@ -230,11 +230,72 @@ fn render_chat(frame: &mut Frame, app: &App) {
         .style(Style::default().fg(Color::Red));
     frame.render_widget(connected_to, connected_to_chunk);
 
+    let mut message_items = Vec::<ListItem>::new();
+    for message in app.get_messages() {
+        message_items.push(ListItem::new(Line::from(Span::styled(
+            message.get(),
+            Style::default().fg(Color::Yellow),
+        ))));
+    }
+
+    let message_list = List::new(message_items).block(Block::bordered());
+    frame.render_widget(message_list, message_chunk);
+
     // add debugging info here so we ca see it on the screen
-    let messages = Paragraph::new(app.debug.clone())
+    /*let messages = Paragraph::new(app.debug.clone())
         .block(Block::bordered().yellow())
         .wrap(Wrap { trim: true });
-    frame.render_widget(messages, message_chunk);
+    frame.render_widget(messages, message_chunk);*/
+
+    if let ChatSelection::Popup = app.context.chat_screen {
+        let popup_block = Block::default()
+            .borders(Borders::NONE)
+            .style(Style::default().bg(Color::DarkGray));
+
+        let popup_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage((100 - 40) / 2),
+                Constraint::Percentage(40),
+                Constraint::Percentage((100 - 40) / 2),
+            ])
+            .split(frame.area());
+
+        let pop_up = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage((100 - 60) / 2),
+                Constraint::Percentage(60),
+                Constraint::Percentage((100 - 60) / 2),
+            ])
+            .split(popup_layout[1])[1]; // Return the middle chunk
+        frame.render_widget(popup_block, pop_up);
+
+        let popup_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(1)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(pop_up);
+
+        let mut key_block = Block::default().title("connect to:").borders(Borders::ALL);
+        let mut value_block = Block::default().borders(Borders::ALL);
+
+        let active_style = Style::default().bg(Color::LightYellow).fg(Color::Black);
+
+        if app.context.host == 0 {
+            key_block = key_block.style(active_style)
+        } else {
+            value_block = value_block.style(active_style)
+        }
+
+        let key_text = Paragraph::new("127.0.0.1:57007").block(key_block);
+        frame.render_widget(key_text, popup_chunks[0]);
+
+        let value_text = Paragraph::new("host")
+            .alignment(Alignment::Center)
+            .block(value_block);
+        frame.render_widget(value_text, popup_chunks[1]);
+    }
 
     render_keyboard(frame, keyboard, app);
 }

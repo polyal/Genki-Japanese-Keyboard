@@ -18,7 +18,7 @@ use ratatui::{
     },
 };
 
-use app::{App, CurrentScreen, CurrentSelection, TranslationDirection};
+use app::{App, ChatSelection, CurrentScreen, CurrentSelection, TranslationDirection};
 use ui::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -60,6 +60,10 @@ where
     loop {
         terminal.draw(|f| ui(f, app))?;
         let mut reset_conversion = false;
+        if app.check_received_message() {
+            // update messages in ui
+            continue;
+        }
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
                 // Skip events that are not KeyEventKind::Press
@@ -86,52 +90,84 @@ where
                     }
                     _ => {}
                 },
-                CurrentScreen::Chat => match key.code {
-                    KeyCode::Char(value) => {
-                        app.push_char(value);
-                    }
-                    KeyCode::Backspace => {
-                        app.pop_char();
-                    }
-                    KeyCode::Right => {
-                        if key.modifiers.contains(KeyModifiers::SHIFT) {
-                            app.cursor_highlight_right();
-                        } else {
-                            app.cursor_right();
+                CurrentScreen::Chat => match app.context.chat_screen {
+                    ChatSelection::Chat => match key.code {
+                        KeyCode::Char(value) => {
+                            app.push_char(value);
                         }
-                    }
-                    KeyCode::Left => {
-                        if key.modifiers.contains(KeyModifiers::SHIFT) {
-                            app.cursor_highlight_left();
-                        } else {
-                            app.cursor_left();
+                        KeyCode::Backspace => {
+                            app.pop_char();
                         }
-                    }
-                    KeyCode::Up => {
-                        app.kanji_select_up();
-                    }
-                    KeyCode::Down => {
-                        app.kanji_select_down();
-                    }
-                    KeyCode::Enter => {
-                        app.update_merge_kana();
-                        app.convert_kana_to_kanji();
-                        // TODO: send messages
-                    }
-                    KeyCode::Tab => {
-                        app.toggle_english();
-                    }
-                    KeyCode::Esc => {
-                        if !reset_conversion
-                            && (app.get_merge_kana().is_some() || app.get_kana_to_kanji().is_some())
-                        {
-                            app.reset_conversion_selection();
-                            reset_conversion = true;
-                        } else {
+                        KeyCode::Right => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.cursor_highlight_right();
+                            } else {
+                                app.cursor_right();
+                            }
+                        }
+                        KeyCode::Left => {
+                            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                app.cursor_highlight_left();
+                            } else {
+                                app.cursor_left();
+                            }
+                        }
+                        KeyCode::Up => {
+                            app.kanji_select_up();
+                        }
+                        KeyCode::Down => {
+                            app.kanji_select_down();
+                        }
+                        KeyCode::Enter => {
+                            if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
+                                app.push_message();
+                                app.reset_keyboard();
+                            }
+                        }
+                        KeyCode::Tab => {
+                            app.toggle_english();
+                        }
+                        KeyCode::Esc => {
+                            if !reset_conversion
+                                && (app.get_merge_kana().is_some()
+                                    || app.get_kana_to_kanji().is_some())
+                            {
+                                app.reset_conversion_selection();
+                                reset_conversion = true;
+                            } else {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    },
+                    ChatSelection::Popup => match key.code {
+                        KeyCode::Up => {
+                            if app.context.host == 0 {
+                                app.context.host += 1;
+                            } else {
+                                app.context.host -= 1;
+                            }
+                        }
+                        KeyCode::Down => {
+                            if app.context.host == 0 {
+                                app.context.host += 1;
+                            } else {
+                                app.context.host -= 1;
+                            }
+                        }
+                        KeyCode::Enter => {
+                            app.context.chat_screen = ChatSelection::Chat;
+                            if app.context.host == 0 {
+                                app.create_client();
+                            } else {
+                                app.create_server();
+                            }
+                        }
+                        KeyCode::Esc => {
                             break;
                         }
-                    }
-                    _ => {}
+                        _ => {}
+                    },
                 },
                 CurrentScreen::LessonSelect => match app.context.current_selection {
                     CurrentSelection::Lesson => match key.code {

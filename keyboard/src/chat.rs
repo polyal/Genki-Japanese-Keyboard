@@ -5,17 +5,24 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError, channel};
 use std::thread;
 
-struct Message {
+#[derive(Clone)]
+pub struct Message {
     value: String,
 }
 
-enum PeerType {
-    None,
-    Server,
-    Client,
+impl Message {
+    pub fn new(message: &str) -> Self {
+        Message {
+            value: message.to_string(),
+        }
+    }
+
+    pub fn get(&self) -> &String {
+        return &self.value;
+    }
 }
 
-struct Peer {
+pub struct Peer {
     stream: Option<std::net::TcpStream>,
     peer: Option<SocketAddr>,
 
@@ -28,7 +35,7 @@ struct Peer {
 }
 
 impl Peer {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let (sender, receiver) = channel::<Message>();
         let active = Arc::new(AtomicBool::new(false));
 
@@ -42,7 +49,7 @@ impl Peer {
         }
     }
 
-    fn host(&mut self) -> std::io::Result<()> {
+    pub fn host(&mut self) -> std::io::Result<()> {
         assert!(!self.is_online());
         let listener = TcpListener::bind("127.0.0.1:57007")?;
         listener.set_nonblocking(true)?;
@@ -79,8 +86,9 @@ impl Peer {
         Ok(())
     }
 
-    fn connect(&mut self, addr: &str) -> std::io::Result<()> {
+    pub fn connect(&mut self, addr: &str) -> std::io::Result<()> {
         assert!(!self.is_online());
+        self.active.store(true, Ordering::SeqCst);
         self.stream = Some(TcpStream::connect(addr)?);
         self.peer = Some(addr.parse().unwrap());
         self.stream.as_mut().unwrap().set_nonblocking(true)?;
@@ -127,11 +135,12 @@ impl Peer {
         Ok(())
     }
 
-    fn send_message(&mut self, message: Message) -> std::io::Result<()> {
+    pub fn send_message(&mut self, message: &Message) -> std::io::Result<()> {
         assert!(self.is_online());
         let mut writer_stream = self.stream.as_mut().unwrap().try_clone()?;
+        let message_clone = message.clone();
         thread::spawn(move || {
-            let _ = writer_stream.write_all(message.value.as_bytes());
+            let _ = writer_stream.write_all(message_clone.value.as_bytes());
         });
         Ok(())
     }
@@ -140,21 +149,23 @@ impl Peer {
         return self.stream.is_some() && self.peer.is_some();
     }
 
-    fn peek_message(&mut self) -> bool {
-        assert!(!self.is_online());
-        assert!(self.waiting_message.is_none());
-        match self.receiver.try_recv() {
-            Ok(message) => {
-                self.waiting_message = Some(message);
-                true
+    pub fn peek_message(&mut self) -> bool {
+        if self.is_online() {
+            assert!(self.waiting_message.is_none());
+            match self.receiver.try_recv() {
+                Ok(message) => {
+                    self.waiting_message = Some(message);
+                    return true;
+                }
+                Err(TryRecvError::Empty) => return false,
+                Err(TryRecvError::Disconnected) => return false,
             }
-            Err(TryRecvError::Empty) => false,
-            Err(TryRecvError::Disconnected) => false,
         }
+        return false;
     }
 
-    fn pop_message(&mut self) -> Message {
-        assert!(!self.is_online());
+    pub fn pop_message(&mut self) -> Message {
+        assert!(self.is_online());
         assert!(self.waiting_message.is_some());
         return self.waiting_message.take().unwrap();
     }
