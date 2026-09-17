@@ -5,6 +5,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError, channel};
 use std::thread;
 
+const PORT: &str = "57007";
+
 #[derive(Clone)]
 pub enum Direction {
     Inbound,
@@ -63,7 +65,7 @@ impl Peer {
 
     pub fn host(&mut self) -> std::io::Result<()> {
         assert!(!self.is_online());
-        let listener = TcpListener::bind("127.0.0.1:57007")?;
+        let listener = TcpListener::bind(format!("0.0.0.0:{PORT}"))?;
         listener.set_nonblocking(true)?;
         self.active.store(true, Ordering::SeqCst);
 
@@ -103,11 +105,12 @@ impl Peer {
     pub fn connect(&mut self, addr: &str) -> std::io::Result<()> {
         assert!(!self.is_online());
 
-        match TcpStream::connect(addr) {
+        let addr_port = format!("{addr}:{PORT}");
+        match TcpStream::connect(&addr_port) {
             Ok(stream) => {
                 stream.set_nonblocking(true)?;
                 self.stream = Some(stream);
-                self.peer = Some(addr.parse().unwrap());
+                self.peer = Some(addr_port.parse().unwrap());
                 self.active.store(true, Ordering::SeqCst);
             }
             Err(_) => {

@@ -309,23 +309,27 @@ fn render_chat(frame: &mut Frame, app: &App) {
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
             .split(pop_up);
 
-        let mut key_block = Block::default().title("connect to:").borders(Borders::ALL);
-        let mut value_block = Block::default().borders(Borders::ALL);
+        let mut connect_block = Block::default()
+            .title(" connect to: ")
+            .borders(Borders::ALL);
+        let mut host_block = Block::default().borders(Borders::ALL);
 
         let active_style = Style::default().bg(Color::LightYellow).fg(Color::Black);
 
         if app.context.host == 0 {
-            key_block = key_block.style(active_style)
+            connect_block = connect_block.style(active_style)
         } else {
-            value_block = value_block.style(active_style)
+            host_block = host_block.style(active_style)
         }
 
-        let key_text = Paragraph::new("127.0.0.1:57007").block(key_block);
+        let key_text = Paragraph::new(app.get_romanji().to_string())
+            .alignment(Alignment::Center)
+            .block(connect_block);
         frame.render_widget(key_text, popup_chunks[0]);
 
         let value_text = Paragraph::new("host")
             .alignment(Alignment::Center)
-            .block(value_block);
+            .block(host_block);
         frame.render_widget(value_text, popup_chunks[1]);
     }
 

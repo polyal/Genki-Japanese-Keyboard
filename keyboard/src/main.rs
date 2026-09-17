@@ -157,6 +157,12 @@ where
                                     app.context.host -= 1;
                                 }
                             }
+                            KeyCode::Char(value) => {
+                                app.push_char(value);
+                            }
+                            KeyCode::Backspace => {
+                                app.pop_char();
+                            }
                             KeyCode::Enter => {
                                 app.context.chat_screen = ChatSelection::Chat;
                                 if app.context.host == 0 {
@@ -164,6 +170,7 @@ where
                                 } else {
                                     app.create_server();
                                 }
+                                app.reset_keyboard();
                             }
                             KeyCode::Esc => {
                                 break;

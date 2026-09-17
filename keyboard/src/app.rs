@@ -799,7 +799,7 @@ impl App {
     }
 
     pub fn create_client(&mut self) {
-        let _ = self.peer.connect("127.0.0.1:57007");
+        let _ = self.peer.connect(&self.keyboard.romanji);
     }
 
     pub fn push_message(&mut self) {
