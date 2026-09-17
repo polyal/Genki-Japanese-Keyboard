@@ -272,13 +272,6 @@ fn render_chat(frame: &mut Frame, app: &App) {
         frame.render_stateful_widget(message_list, message_chunk, &mut list_state);
     }
 
-    // TODO: delete
-    // add debugging info here so we ca see it on the screen
-    /*let messages = Paragraph::new(app.debug.clone())
-        .block(Block::bordered().yellow())
-        .wrap(Wrap { trim: true });
-    frame.render_widget(messages, message_chunk);*/
-
     if let ChatSelection::Popup = app.context.chat_screen {
         let popup_block = Block::default()
             .borders(Borders::NONE)
