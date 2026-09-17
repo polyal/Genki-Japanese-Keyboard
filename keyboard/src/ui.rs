@@ -261,9 +261,18 @@ fn render_chat(frame: &mut Frame, app: &App) {
         }
     }
 
+    let num_messages = message_items.len();
     let message_list = List::new(message_items).block(Block::bordered());
-    frame.render_widget(message_list, message_chunk);
+    if num_messages == 0 {
+        frame.render_widget(message_list, message_chunk);
+    } else {
+        // autoscroll so latest message shows up on bottom
+        let mut list_state = ListState::default();
+        list_state.select(Some(num_messages - 1));
+        frame.render_stateful_widget(message_list, message_chunk, &mut list_state);
+    }
 
+    // TODO: delete
     // add debugging info here so we ca see it on the screen
     /*let messages = Paragraph::new(app.debug.clone())
         .block(Block::bordered().yellow())
