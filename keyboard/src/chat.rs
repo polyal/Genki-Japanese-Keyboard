@@ -6,19 +6,31 @@ use std::sync::mpsc::{Receiver, Sender, TryRecvError, channel};
 use std::thread;
 
 #[derive(Clone)]
+pub enum Direction {
+    Inbound,
+    Outbound,
+}
+
+#[derive(Clone)]
 pub struct Message {
     value: String,
+    direction: Direction,
 }
 
 impl Message {
     pub fn new(message: &str) -> Self {
         Message {
             value: message.to_string(),
+            direction: Direction::Outbound,
         }
     }
 
     pub fn get(&self) -> &String {
         return &self.value;
+    }
+
+    pub fn get_direction(&self) -> &Direction {
+        return &self.direction;
     }
 }
 
@@ -69,11 +81,13 @@ impl Peer {
                     // no connection is ready right now, try again
                     timeout += 1;
                     if timeout == 10 {
+                        self.active.store(false, Ordering::SeqCst);
                         break;
                     }
                     thread::sleep(std::time::Duration::from_millis(500));
                 }
                 Err(_) => {
+                    self.active.store(false, Ordering::SeqCst);
                     break;
                 }
             }
@@ -88,13 +102,24 @@ impl Peer {
 
     pub fn connect(&mut self, addr: &str) -> std::io::Result<()> {
         assert!(!self.is_online());
-        self.active.store(true, Ordering::SeqCst);
-        self.stream = Some(TcpStream::connect(addr)?);
-        self.peer = Some(addr.parse().unwrap());
-        self.stream.as_mut().unwrap().set_nonblocking(true)?;
+
+        match TcpStream::connect(addr) {
+            Ok(stream) => {
+                stream.set_nonblocking(true)?;
+                self.stream = Some(stream);
+                self.peer = Some(addr.parse().unwrap());
+                self.active.store(true, Ordering::SeqCst);
+            }
+            Err(_) => {
+                // couldnt connect
+            }
+        }
 
         // connected to server, create reading thread
-        return self.create_reader();
+        if self.active.load(Ordering::SeqCst) {
+            return self.create_reader();
+        }
+        Ok(())
     }
 
     fn create_reader(&mut self) -> std::io::Result<()> {
@@ -116,6 +141,7 @@ impl Peer {
                         let msg = String::from_utf8_lossy(&buffer[..bytes_read]);
                         let _ = sender_clone.send(Message {
                             value: msg.to_string(),
+                            direction: Direction::Inbound,
                         });
                     }
                     Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {

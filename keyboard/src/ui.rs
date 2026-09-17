@@ -7,7 +7,10 @@ use ratatui::{
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 
-use crate::app::{App, ChatSelection, CurrentScreen, CurrentSelection, TranslationDirection};
+use crate::{
+    app::{App, ChatSelection, CurrentScreen, CurrentSelection, TranslationDirection},
+    chat,
+};
 
 pub fn ui(frame: &mut Frame, app: &App) {
     match app.context.current_screen {
@@ -239,10 +242,23 @@ fn render_chat(frame: &mut Frame, app: &App) {
 
     let mut message_items = Vec::<ListItem>::new();
     for message in app.get_messages() {
-        message_items.push(ListItem::new(Line::from(Span::styled(
-            message.get(),
-            Style::default().fg(Color::Yellow),
-        ))));
+        if let chat::Direction::Inbound = message.get_direction() {
+            message_items.push(ListItem::new(
+                Line::from(Span::styled(
+                    message.get(),
+                    Style::default().fg(Color::LightYellow),
+                ))
+                .alignment(Alignment::Left),
+            ));
+        } else {
+            message_items.push(ListItem::new(
+                Line::from(Span::styled(
+                    message.get(),
+                    Style::default().fg(Color::Yellow),
+                ))
+                .alignment(Alignment::Right),
+            ));
+        }
     }
 
     let message_list = List::new(message_items).block(Block::bordered());
