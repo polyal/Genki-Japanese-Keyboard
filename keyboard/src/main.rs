@@ -332,10 +332,11 @@ where
                                     match prev_translation_direction {
                                         TranslationDirection::ToEN => {
                                             app.context.prev_answer =
-                                                Some(app.get_romanji().clone());
+                                                Some(app.get_romanji().to_string());
                                         }
                                         TranslationDirection::ToJP => {
-                                            app.context.prev_answer = Some(app.get_kana().clone());
+                                            app.context.prev_answer =
+                                                Some(app.get_kana().to_string());
                                         }
                                     }
                                 }

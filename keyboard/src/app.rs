@@ -754,15 +754,15 @@ impl App {
         self.keyboard.english = val;
     }
 
-    pub fn get_romanji(&self) -> &String {
+    pub fn get_romanji(&self) -> &str {
         return &self.keyboard.romanji;
     }
 
-    pub fn get_kana(&self) -> &String {
+    pub fn get_kana(&self) -> &str {
         return &self.keyboard.kana;
     }
 
-    pub fn get_merge_kana(&self) -> Option<&String> {
+    pub fn get_merge_kana(&self) -> Option<&str> {
         if let Some(merge_kana) = &self.keyboard.merge_kana {
             return Some(&merge_kana.kana);
         }

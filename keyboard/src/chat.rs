@@ -27,7 +27,7 @@ impl Message {
         }
     }
 
-    pub fn get(&self) -> &String {
+    pub fn get(&self) -> &str {
         return &self.value;
     }
 
