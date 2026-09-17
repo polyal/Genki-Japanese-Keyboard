@@ -220,14 +220,21 @@ fn render_chat(frame: &mut Frame, app: &App) {
         Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
             .areas(status_chunk);
 
-    let status = Paragraph::new(" online")
-        .alignment(Alignment::Left)
-        .style(Style::default().fg(Color::Green));
+    let status: Paragraph;
+    if app.is_online() {
+        status = Paragraph::new(" online")
+            .alignment(Alignment::Left)
+            .style(Style::default().fg(Color::Green));
+    } else {
+        status = Paragraph::new(" disconnected")
+            .alignment(Alignment::Left)
+            .style(Style::default().fg(Color::Red));
+    }
     frame.render_widget(status, online_chunk);
 
-    let connected_to = Paragraph::new("connected to: 127.0.0.1:57007 ")
+    let connected_to = Paragraph::new(app.get_peer())
         .alignment(Alignment::Right)
-        .style(Style::default().fg(Color::Red));
+        .style(Style::default().fg(Color::LightYellow));
     frame.render_widget(connected_to, connected_to_chunk);
 
     let mut message_items = Vec::<ListItem>::new();

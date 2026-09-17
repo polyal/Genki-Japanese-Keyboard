@@ -58,9 +58,8 @@ where
     std::io::Error: From<<B as Backend>::Error>,
 {
     loop {
-        if app.check_received_message() {
-            // update messages in ui
-            continue;
+        if app.is_online() {
+            app.check_received_message();
         }
         terminal.draw(|f| ui(f, app))?;
 
@@ -137,6 +136,7 @@ where
                                     app.reset_conversion_selection();
                                     reset_conversion = true;
                                 } else {
+                                    app.reset_peer();
                                     break;
                                 }
                             }

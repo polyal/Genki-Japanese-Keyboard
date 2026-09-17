@@ -80,7 +80,7 @@ impl Peer {
         }
 
         // client connected, create reading thread
-        if self.stream.is_some() {
+        if self.active.load(Ordering::SeqCst) {
             self.create_reader()?;
         }
         Ok(())
@@ -135,6 +135,14 @@ impl Peer {
         Ok(())
     }
 
+    pub fn is_online(&self) -> bool {
+        if self.active.load(Ordering::SeqCst) {
+            assert!(self.stream.is_some() && self.peer.is_some());
+            return true;
+        }
+        return false;
+    }
+
     pub fn send_message(&mut self, message: &Message) -> std::io::Result<()> {
         assert!(self.is_online());
         let mut writer_stream = self.stream.as_mut().unwrap().try_clone()?;
@@ -145,28 +153,34 @@ impl Peer {
         Ok(())
     }
 
-    fn is_online(&self) -> bool {
-        return self.stream.is_some() && self.peer.is_some();
-    }
-
     pub fn peek_message(&mut self) -> bool {
-        if self.is_online() {
-            assert!(self.waiting_message.is_none());
-            match self.receiver.try_recv() {
-                Ok(message) => {
-                    self.waiting_message = Some(message);
-                    return true;
-                }
-                Err(TryRecvError::Empty) => return false,
-                Err(TryRecvError::Disconnected) => return false,
+        assert!(self.waiting_message.is_none());
+        match self.receiver.try_recv() {
+            Ok(message) => {
+                self.waiting_message = Some(message);
+                return true;
             }
+            Err(TryRecvError::Empty) => return false,
+            Err(TryRecvError::Disconnected) => return false,
         }
-        return false;
     }
 
     pub fn pop_message(&mut self) -> Message {
-        assert!(self.is_online());
         assert!(self.waiting_message.is_some());
         return self.waiting_message.take().unwrap();
+    }
+
+    pub fn get_peer(&self) -> String {
+        if let Some(peer) = self.peer {
+            return peer.to_string();
+        } else {
+            return "".to_string();
+        }
+    }
+
+    pub fn reset_connection(&mut self) {
+        self.active.store(false, Ordering::SeqCst);
+        self.stream = None;
+        self.peer = None;
     }
 }

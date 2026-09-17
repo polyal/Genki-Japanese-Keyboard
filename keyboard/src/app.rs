@@ -805,7 +805,9 @@ impl App {
     pub fn push_message(&mut self) {
         if !self.keyboard.kana.is_empty() {
             let message = Message::new(&self.keyboard.kana);
-            let _ = self.peer.send_message(&message);
+            if self.is_online() {
+                let _ = self.peer.send_message(&message);
+            }
             self.messages.push_back(message);
         }
     }
@@ -820,5 +822,17 @@ impl App {
 
     pub fn get_messages(&self) -> &VecDeque<Message> {
         return &self.messages;
+    }
+
+    pub fn is_online(&self) -> bool {
+        return self.peer.is_online();
+    }
+
+    pub fn reset_peer(&mut self) {
+        self.peer.reset_connection();
+    }
+
+    pub fn get_peer(&self) -> String {
+        return self.peer.get_peer();
     }
 }
