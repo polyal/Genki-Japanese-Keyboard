@@ -191,8 +191,8 @@ pub struct App {
 
     peer: Peer,
     messages: VecDeque<Message>,
-
-    pub debug: String,
+    // TODO: remove
+    // pub debug: String,
 }
 
 impl App {
@@ -203,7 +203,7 @@ impl App {
             keyboard: Keyboard::new(),
             peer: Peer::new(),
             messages: VecDeque::new(),
-            debug: String::from("debug: "),
+            // debug: String::from("debug: "),
         }
     }
 
