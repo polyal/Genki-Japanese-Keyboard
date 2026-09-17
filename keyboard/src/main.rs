@@ -5,7 +5,6 @@ mod kanji_converter;
 mod lessons;
 mod ui;
 
-use rand::Rng;
 use std::{collections::HashSet, error::Error, io, time::Duration};
 
 use ratatui::{
@@ -194,7 +193,7 @@ where
                             }
                             KeyCode::Enter => {
                                 app.context.current_screen = CurrentScreen::Review;
-                                let translation_direction = rand::thread_rng().gen_range(0..=1);
+                                let translation_direction = rand::random_range(0..=1);
                                 if translation_direction == 0 {
                                     app.context.translation_direction = TranslationDirection::ToJP;
                                     app.set_english(false);
@@ -205,10 +204,10 @@ where
                                 assert!(app.context.lesson_idx < app.book.lessons.len());
                                 let lesson = &app.book.lessons[app.context.lesson_idx];
                                 app.context.section_idx =
-                                    Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
+                                    Some(rand::random_range(0..lesson.sections.len()));
                                 let section = &lesson.sections[app.context.section_idx.unwrap()];
                                 app.context.phrase_idx =
-                                    rand::thread_rng().gen_range(0..section.phrases.len());
+                                    rand::random_range(0..section.phrases.len());
                                 app.context.randomize_section = true;
                                 app.context.asked_questions.clear();
                                 app.context.asked_questions =
@@ -244,7 +243,7 @@ where
                             }
                             KeyCode::Enter => {
                                 app.context.current_screen = CurrentScreen::Review;
-                                let translation_direction = rand::thread_rng().gen_range(0..=1);
+                                let translation_direction = rand::random_range(0..=1);
                                 if translation_direction == 0 {
                                     app.context.translation_direction = TranslationDirection::ToJP;
                                     app.set_english(false);
@@ -260,7 +259,7 @@ where
                                 );
                                 let section = &lesson.sections[app.context.section_idx.unwrap()];
                                 app.context.phrase_idx =
-                                    rand::thread_rng().gen_range(0..section.phrases.len());
+                                    rand::random_range(0..section.phrases.len());
 
                                 app.context.randomize_section = false;
                                 app.context.asked_questions.clear();
@@ -340,7 +339,7 @@ where
                                         }
                                     }
                                 }
-                                let translation_direction = rand::thread_rng().gen_range(0..=1);
+                                let translation_direction = rand::random_range(0..=1);
                                 if translation_direction == 0 {
                                     app.context.translation_direction = TranslationDirection::ToJP;
                                 } else {
@@ -352,7 +351,7 @@ where
                                     let mut asked_sections = HashSet::<usize>::new();
                                     loop {
                                         let section_idx =
-                                            rand::thread_rng().gen_range(0..lesson.sections.len());
+                                            rand::random_range(0..lesson.sections.len());
                                         assert!(section_idx < app.context.asked_questions.len());
                                         if app.context.asked_questions[section_idx].len()
                                             == lesson.sections[section_idx].phrases.len()
@@ -383,8 +382,7 @@ where
                                 loop {
                                     let phrases_asked = &mut app.context.asked_questions
                                         [app.context.section_idx.unwrap()];
-                                    let phrase_idx =
-                                        rand::thread_rng().gen_range(0..section.phrases.len());
+                                    let phrase_idx = rand::random_range(0..section.phrases.len());
                                     if phrases_asked.insert(phrase_idx) {
                                         app.context.phrase_idx = phrase_idx;
                                         if !app.context.randomize_section

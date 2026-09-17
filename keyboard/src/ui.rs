@@ -1,4 +1,3 @@
-use rand::Rng;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -232,7 +231,7 @@ fn render_chat(frame: &mut Frame, app: &App) {
     if app.is_online() {
         status_ball = Paragraph::new(" ● ")
             .alignment(Alignment::Left)
-            .style(Style::default().fg(Color::Rgb(0, rand::thread_rng().gen_range(160..179), 0)));
+            .style(Style::default().fg(Color::Rgb(0, rand::random_range(160..179), 0)));
         status_text = Paragraph::new("online")
             .alignment(Alignment::Left)
             .style(Style::default().fg(Color::Green));
