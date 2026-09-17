@@ -63,7 +63,7 @@ where
         }
         terminal.draw(|f| ui(f, app))?;
 
-        if event::poll(Duration::from_millis(50))? {
+        if event::poll(Duration::from_millis(100))? {
             let mut reset_conversion = false;
             if let Event::Key(key) = event::read()? {
                 if key.kind == event::KeyEventKind::Release {

@@ -1,3 +1,4 @@
+use rand::Rng;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -223,17 +224,29 @@ fn render_chat(frame: &mut Frame, app: &App) {
         Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
             .areas(status_chunk);
 
-    let status: Paragraph;
+    let [blinker_chunk, text_chunk] =
+        Layout::horizontal([Constraint::Length(3), Constraint::Min(0)]).areas(online_chunk);
+
+    let status_ball: Paragraph;
+    let status_text: Paragraph;
     if app.is_online() {
-        status = Paragraph::new(" online")
+        status_ball = Paragraph::new(" ● ")
+            .alignment(Alignment::Left)
+            .style(Style::default().fg(Color::Rgb(0, rand::thread_rng().gen_range(160..179), 0)));
+        status_text = Paragraph::new("online")
             .alignment(Alignment::Left)
             .style(Style::default().fg(Color::Green));
     } else {
-        status = Paragraph::new(" disconnected")
+        status_ball = Paragraph::new(" ● ")
+            .alignment(Alignment::Left)
+            .style(Style::default().fg(Color::Red));
+
+        status_text = Paragraph::new("offline")
             .alignment(Alignment::Left)
             .style(Style::default().fg(Color::Red));
     }
-    frame.render_widget(status, online_chunk);
+    frame.render_widget(status_ball, blinker_chunk);
+    frame.render_widget(status_text, text_chunk);
 
     let connected_to = Paragraph::new(app.get_peer())
         .alignment(Alignment::Right)
