@@ -6,7 +6,7 @@ mod lessons;
 mod ui;
 
 use rand::Rng;
-use std::{collections::HashSet, error::Error, io};
+use std::{collections::HashSet, error::Error, io, time::Duration};
 
 use ratatui::{
     Terminal,
@@ -58,40 +58,339 @@ where
     std::io::Error: From<<B as Backend>::Error>,
 {
     loop {
-        terminal.draw(|f| ui(f, app))?;
-        let mut reset_conversion = false;
         if app.check_received_message() {
             // update messages in ui
             continue;
         }
-        if let Event::Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Release {
-                // Skip events that are not KeyEventKind::Press
-                break;
-            }
-            match app.context.current_screen {
-                CurrentScreen::Welcome => match key.code {
-                    KeyCode::Esc => {
-                        break;
-                    }
-                    KeyCode::Down | KeyCode::Up => {
-                        if app.context.chat == 0 {
-                            app.context.chat = 1;
-                        } else {
-                            app.context.chat = 0;
+        terminal.draw(|f| ui(f, app))?;
+
+        if event::poll(Duration::from_millis(50))? {
+            let mut reset_conversion = false;
+            if let Event::Key(key) = event::read()? {
+                if key.kind == event::KeyEventKind::Release {
+                    // Skip events that are not KeyEventKind::Press
+                    break;
+                }
+                match app.context.current_screen {
+                    CurrentScreen::Welcome => match key.code {
+                        KeyCode::Esc => {
+                            break;
                         }
-                    }
-                    KeyCode::Enter => {
-                        if app.context.chat == 1 {
-                            app.context.current_screen = CurrentScreen::Chat;
-                        } else {
-                            app.context.current_screen = CurrentScreen::LessonSelect;
+                        KeyCode::Down | KeyCode::Up => {
+                            if app.context.chat == 0 {
+                                app.context.chat = 1;
+                            } else {
+                                app.context.chat = 0;
+                            }
                         }
-                    }
-                    _ => {}
-                },
-                CurrentScreen::Chat => match app.context.chat_screen {
-                    ChatSelection::Chat => match key.code {
+                        KeyCode::Enter => {
+                            if app.context.chat == 1 {
+                                app.context.current_screen = CurrentScreen::Chat;
+                            } else {
+                                app.context.current_screen = CurrentScreen::LessonSelect;
+                            }
+                        }
+                        _ => {}
+                    },
+                    CurrentScreen::Chat => match app.context.chat_screen {
+                        ChatSelection::Chat => match key.code {
+                            KeyCode::Char(value) => {
+                                app.push_char(value);
+                            }
+                            KeyCode::Backspace => {
+                                app.pop_char();
+                            }
+                            KeyCode::Right => {
+                                if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                    app.cursor_highlight_right();
+                                } else {
+                                    app.cursor_right();
+                                }
+                            }
+                            KeyCode::Left => {
+                                if key.modifiers.contains(KeyModifiers::SHIFT) {
+                                    app.cursor_highlight_left();
+                                } else {
+                                    app.cursor_left();
+                                }
+                            }
+                            KeyCode::Up => {
+                                app.kanji_select_up();
+                            }
+                            KeyCode::Down => {
+                                app.kanji_select_down();
+                            }
+                            KeyCode::Enter => {
+                                if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
+                                    app.push_message();
+                                    app.reset_keyboard();
+                                }
+                            }
+                            KeyCode::Tab => {
+                                app.toggle_english();
+                            }
+                            KeyCode::Esc => {
+                                if !reset_conversion
+                                    && (app.get_merge_kana().is_some()
+                                        || app.get_kana_to_kanji().is_some())
+                                {
+                                    app.reset_conversion_selection();
+                                    reset_conversion = true;
+                                } else {
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        },
+                        ChatSelection::Popup => match key.code {
+                            KeyCode::Up => {
+                                if app.context.host == 0 {
+                                    app.context.host += 1;
+                                } else {
+                                    app.context.host -= 1;
+                                }
+                            }
+                            KeyCode::Down => {
+                                if app.context.host == 0 {
+                                    app.context.host += 1;
+                                } else {
+                                    app.context.host -= 1;
+                                }
+                            }
+                            KeyCode::Enter => {
+                                app.context.chat_screen = ChatSelection::Chat;
+                                if app.context.host == 0 {
+                                    app.create_client();
+                                } else {
+                                    app.create_server();
+                                }
+                            }
+                            KeyCode::Esc => {
+                                break;
+                            }
+                            _ => {}
+                        },
+                    },
+                    CurrentScreen::LessonSelect => match app.context.current_selection {
+                        CurrentSelection::Lesson => match key.code {
+                            KeyCode::Esc => {
+                                app.context.current_screen = CurrentScreen::Welcome;
+                                app.context.current_selection = CurrentSelection::Lesson;
+                                app.context.lesson_idx = 0;
+                                app.context.section_idx = None;
+                                app.context.prev_section_idx = None;
+                                app.context.prev_phrase_idx = None;
+                                app.context.prev_translation_direction = None;
+                                app.context.prev_answer = None;
+                                app.context.asked_questions.clear();
+                                app.reset_keyboard();
+                            }
+                            KeyCode::Enter => {
+                                app.context.current_screen = CurrentScreen::Review;
+                                let translation_direction = rand::thread_rng().gen_range(0..=1);
+                                if translation_direction == 0 {
+                                    app.context.translation_direction = TranslationDirection::ToJP;
+                                    app.set_english(false);
+                                } else {
+                                    app.context.translation_direction = TranslationDirection::ToEN;
+                                    app.set_english(true);
+                                }
+                                assert!(app.context.lesson_idx < app.book.lessons.len());
+                                let lesson = &app.book.lessons[app.context.lesson_idx];
+                                app.context.section_idx =
+                                    Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
+                                let section = &lesson.sections[app.context.section_idx.unwrap()];
+                                app.context.phrase_idx =
+                                    rand::thread_rng().gen_range(0..section.phrases.len());
+                                app.context.randomize_section = true;
+                                app.context.asked_questions.clear();
+                                app.context.asked_questions =
+                                    std::iter::repeat_with(HashSet::<usize>::new)
+                                        .take(lesson.sections.len())
+                                        .collect();
+                                assert!(app.context.asked_questions.len() == lesson.sections.len());
+                            }
+                            KeyCode::Down => {
+                                if app.context.lesson_idx + 1 >= app.book.lessons.len() {
+                                    app.context.lesson_idx = 0;
+                                } else {
+                                    app.context.lesson_idx += 1;
+                                }
+                            }
+                            KeyCode::Up => {
+                                if app.context.lesson_idx == 0 {
+                                    app.context.lesson_idx = app.book.lessons.len() - 1;
+                                } else {
+                                    app.context.lesson_idx -= 1;
+                                }
+                            }
+                            KeyCode::Right => {
+                                app.context.current_selection = CurrentSelection::Section;
+                                app.context.section_idx = Some(0);
+                                app.context.randomize_section = false;
+                            }
+                            _ => {}
+                        },
+                        CurrentSelection::Section => match key.code {
+                            KeyCode::Esc => {
+                                break;
+                            }
+                            KeyCode::Enter => {
+                                app.context.current_screen = CurrentScreen::Review;
+                                let translation_direction = rand::thread_rng().gen_range(0..=1);
+                                if translation_direction == 0 {
+                                    app.context.translation_direction = TranslationDirection::ToJP;
+                                    app.set_english(false);
+                                } else {
+                                    app.context.translation_direction = TranslationDirection::ToEN;
+                                    app.set_english(true);
+                                }
+                                assert!(app.context.lesson_idx < app.book.lessons.len());
+                                let lesson = &app.book.lessons[app.context.lesson_idx];
+                                assert!(
+                                    app.context.section_idx.expect("section index not set")
+                                        < lesson.sections.len()
+                                );
+                                let section = &lesson.sections[app.context.section_idx.unwrap()];
+                                app.context.phrase_idx =
+                                    rand::thread_rng().gen_range(0..section.phrases.len());
+
+                                app.context.randomize_section = false;
+                                app.context.asked_questions.clear();
+                                app.context.asked_questions =
+                                    std::iter::repeat_with(HashSet::<usize>::new)
+                                        .take(lesson.sections.len())
+                                        .collect();
+                                assert!(app.context.asked_questions.len() == lesson.sections.len());
+                            }
+                            KeyCode::Down => {
+                                assert!(app.context.lesson_idx < app.book.lessons.len());
+                                let lesson = &app.book.lessons[app.context.lesson_idx];
+                                if app.context.section_idx.expect("section index not set") + 1
+                                    >= lesson.sections.len()
+                                {
+                                    app.context.section_idx = Some(0);
+                                } else {
+                                    app.context.section_idx =
+                                        Some(app.context.section_idx.unwrap() + 1);
+                                }
+                            }
+                            KeyCode::Up => {
+                                assert!(app.context.lesson_idx < app.book.lessons.len());
+                                let lesson = &app.book.lessons[app.context.lesson_idx];
+                                if app.context.section_idx.expect("section index not set") == 0 {
+                                    app.context.section_idx = Some(lesson.sections.len() - 1);
+                                } else {
+                                    app.context.section_idx =
+                                        Some(app.context.section_idx.unwrap() - 1);
+                                }
+                            }
+                            KeyCode::Left => {
+                                app.context.current_selection = CurrentSelection::Lesson;
+                                app.context.section_idx = None;
+                            }
+                            _ => {}
+                        },
+                    },
+                    CurrentScreen::Review => match key.code {
+                        KeyCode::Esc => {
+                            if !reset_conversion
+                                && (app.get_merge_kana().is_some()
+                                    || app.get_kana_to_kanji().is_some())
+                            {
+                                app.reset_conversion_selection();
+                                reset_conversion = true;
+                            } else {
+                                app.context.current_screen = CurrentScreen::LessonSelect;
+                                app.context.current_selection = CurrentSelection::Lesson;
+                                app.context.lesson_idx = 0;
+                                app.context.section_idx = None;
+                                app.context.prev_section_idx = None;
+                                app.context.prev_phrase_idx = None;
+                                app.context.prev_translation_direction = None;
+                                app.context.prev_answer = None;
+                                app.context.asked_questions.clear();
+                                app.reset_keyboard();
+                            }
+                        }
+                        KeyCode::Enter => {
+                            if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
+                                app.context.prev_section_idx = app.context.section_idx;
+                                app.context.prev_phrase_idx = Some(app.context.phrase_idx);
+                                app.context.prev_translation_direction =
+                                    Some(app.context.translation_direction);
+                                if let Some(prev_translation_direction) =
+                                    app.context.prev_translation_direction
+                                {
+                                    match prev_translation_direction {
+                                        TranslationDirection::ToEN => {
+                                            app.context.prev_answer =
+                                                Some(app.get_romanji().clone());
+                                        }
+                                        TranslationDirection::ToJP => {
+                                            app.context.prev_answer = Some(app.get_kana().clone());
+                                        }
+                                    }
+                                }
+                                let translation_direction = rand::thread_rng().gen_range(0..=1);
+                                if translation_direction == 0 {
+                                    app.context.translation_direction = TranslationDirection::ToJP;
+                                } else {
+                                    app.context.translation_direction = TranslationDirection::ToEN;
+                                }
+                                assert!(app.context.lesson_idx < app.book.lessons.len());
+                                let lesson = &app.book.lessons[app.context.lesson_idx];
+                                if app.context.randomize_section {
+                                    let mut asked_sections = HashSet::<usize>::new();
+                                    loop {
+                                        let section_idx =
+                                            rand::thread_rng().gen_range(0..lesson.sections.len());
+                                        assert!(section_idx < app.context.asked_questions.len());
+                                        if app.context.asked_questions[section_idx].len()
+                                            == lesson.sections[section_idx].phrases.len()
+                                        {
+                                            asked_sections.insert(section_idx);
+                                            if asked_sections.len() == lesson.sections.len() {
+                                                app.context.asked_questions.clear();
+                                                app.context.asked_questions =
+                                                    std::iter::repeat_with(HashSet::<usize>::new)
+                                                        .take(lesson.sections.len())
+                                                        .collect();
+                                            }
+                                        } else {
+                                            app.context.section_idx = Some(section_idx);
+                                            break;
+                                        }
+                                    }
+                                }
+                                assert!(
+                                    app.context.section_idx.expect("section index not set")
+                                        < lesson.sections.len()
+                                );
+                                assert!(
+                                    app.context.section_idx.unwrap()
+                                        < app.context.asked_questions.len()
+                                );
+                                let section = &lesson.sections[app.context.section_idx.unwrap()];
+                                loop {
+                                    let phrases_asked = &mut app.context.asked_questions
+                                        [app.context.section_idx.unwrap()];
+                                    let phrase_idx =
+                                        rand::thread_rng().gen_range(0..section.phrases.len());
+                                    if phrases_asked.insert(phrase_idx) {
+                                        app.context.phrase_idx = phrase_idx;
+                                        if !app.context.randomize_section
+                                            && phrases_asked.len() == section.phrases.len()
+                                        {
+                                            phrases_asked.clear();
+                                        }
+                                        break;
+                                    }
+                                }
+                                app.reset_keyboard();
+                                app.set_english(translation_direction != 0);
+                            }
+                        }
                         KeyCode::Char(value) => {
                             app.push_char(value);
                         }
@@ -118,310 +417,16 @@ where
                         KeyCode::Down => {
                             app.kanji_select_down();
                         }
-                        KeyCode::Enter => {
-                            if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
-                                app.push_message();
-                                app.reset_keyboard();
-                            }
-                        }
                         KeyCode::Tab => {
                             app.toggle_english();
                         }
-                        KeyCode::Esc => {
-                            if !reset_conversion
-                                && (app.get_merge_kana().is_some()
-                                    || app.get_kana_to_kanji().is_some())
-                            {
-                                app.reset_conversion_selection();
-                                reset_conversion = true;
-                            } else {
-                                break;
-                            }
-                        }
                         _ => {}
                     },
-                    ChatSelection::Popup => match key.code {
-                        KeyCode::Up => {
-                            if app.context.host == 0 {
-                                app.context.host += 1;
-                            } else {
-                                app.context.host -= 1;
-                            }
-                        }
-                        KeyCode::Down => {
-                            if app.context.host == 0 {
-                                app.context.host += 1;
-                            } else {
-                                app.context.host -= 1;
-                            }
-                        }
-                        KeyCode::Enter => {
-                            app.context.chat_screen = ChatSelection::Chat;
-                            if app.context.host == 0 {
-                                app.create_client();
-                            } else {
-                                app.create_server();
-                            }
-                        }
-                        KeyCode::Esc => {
-                            break;
-                        }
-                        _ => {}
-                    },
-                },
-                CurrentScreen::LessonSelect => match app.context.current_selection {
-                    CurrentSelection::Lesson => match key.code {
-                        KeyCode::Esc => {
-                            app.context.current_screen = CurrentScreen::Welcome;
-                            app.context.current_selection = CurrentSelection::Lesson;
-                            app.context.lesson_idx = 0;
-                            app.context.section_idx = None;
-                            app.context.prev_section_idx = None;
-                            app.context.prev_phrase_idx = None;
-                            app.context.prev_translation_direction = None;
-                            app.context.prev_answer = None;
-                            app.context.asked_questions.clear();
-                            app.reset_keyboard();
-                        }
-                        KeyCode::Enter => {
-                            app.context.current_screen = CurrentScreen::Review;
-                            let translation_direction = rand::thread_rng().gen_range(0..=1);
-                            if translation_direction == 0 {
-                                app.context.translation_direction = TranslationDirection::ToJP;
-                                app.set_english(false);
-                            } else {
-                                app.context.translation_direction = TranslationDirection::ToEN;
-                                app.set_english(true);
-                            }
-                            assert!(app.context.lesson_idx < app.book.lessons.len());
-                            let lesson = &app.book.lessons[app.context.lesson_idx];
-                            app.context.section_idx =
-                                Some(rand::thread_rng().gen_range(0..lesson.sections.len()));
-                            let section = &lesson.sections[app.context.section_idx.unwrap()];
-                            app.context.phrase_idx =
-                                rand::thread_rng().gen_range(0..section.phrases.len());
-                            app.context.randomize_section = true;
-                            app.context.asked_questions.clear();
-                            app.context.asked_questions =
-                                std::iter::repeat_with(HashSet::<usize>::new)
-                                    .take(lesson.sections.len())
-                                    .collect();
-                            assert!(app.context.asked_questions.len() == lesson.sections.len());
-                        }
-                        KeyCode::Down => {
-                            if app.context.lesson_idx + 1 >= app.book.lessons.len() {
-                                app.context.lesson_idx = 0;
-                            } else {
-                                app.context.lesson_idx += 1;
-                            }
-                        }
-                        KeyCode::Up => {
-                            if app.context.lesson_idx == 0 {
-                                app.context.lesson_idx = app.book.lessons.len() - 1;
-                            } else {
-                                app.context.lesson_idx -= 1;
-                            }
-                        }
-                        KeyCode::Right => {
-                            app.context.current_selection = CurrentSelection::Section;
-                            app.context.section_idx = Some(0);
-                            app.context.randomize_section = false;
-                        }
-                        _ => {}
-                    },
-                    CurrentSelection::Section => match key.code {
-                        KeyCode::Esc => {
-                            break;
-                        }
-                        KeyCode::Enter => {
-                            app.context.current_screen = CurrentScreen::Review;
-                            let translation_direction = rand::thread_rng().gen_range(0..=1);
-                            if translation_direction == 0 {
-                                app.context.translation_direction = TranslationDirection::ToJP;
-                                app.set_english(false);
-                            } else {
-                                app.context.translation_direction = TranslationDirection::ToEN;
-                                app.set_english(true);
-                            }
-                            assert!(app.context.lesson_idx < app.book.lessons.len());
-                            let lesson = &app.book.lessons[app.context.lesson_idx];
-                            assert!(
-                                app.context.section_idx.expect("section index not set")
-                                    < lesson.sections.len()
-                            );
-                            let section = &lesson.sections[app.context.section_idx.unwrap()];
-                            app.context.phrase_idx =
-                                rand::thread_rng().gen_range(0..section.phrases.len());
-
-                            app.context.randomize_section = false;
-                            app.context.asked_questions.clear();
-                            app.context.asked_questions =
-                                std::iter::repeat_with(HashSet::<usize>::new)
-                                    .take(lesson.sections.len())
-                                    .collect();
-                            assert!(app.context.asked_questions.len() == lesson.sections.len());
-                        }
-                        KeyCode::Down => {
-                            assert!(app.context.lesson_idx < app.book.lessons.len());
-                            let lesson = &app.book.lessons[app.context.lesson_idx];
-                            if app.context.section_idx.expect("section index not set") + 1
-                                >= lesson.sections.len()
-                            {
-                                app.context.section_idx = Some(0);
-                            } else {
-                                app.context.section_idx =
-                                    Some(app.context.section_idx.unwrap() + 1);
-                            }
-                        }
-                        KeyCode::Up => {
-                            assert!(app.context.lesson_idx < app.book.lessons.len());
-                            let lesson = &app.book.lessons[app.context.lesson_idx];
-                            if app.context.section_idx.expect("section index not set") == 0 {
-                                app.context.section_idx = Some(lesson.sections.len() - 1);
-                            } else {
-                                app.context.section_idx =
-                                    Some(app.context.section_idx.unwrap() - 1);
-                            }
-                        }
-                        KeyCode::Left => {
-                            app.context.current_selection = CurrentSelection::Lesson;
-                            app.context.section_idx = None;
-                        }
-                        _ => {}
-                    },
-                },
-                CurrentScreen::Review => match key.code {
-                    KeyCode::Esc => {
-                        if !reset_conversion
-                            && (app.get_merge_kana().is_some() || app.get_kana_to_kanji().is_some())
-                        {
-                            app.reset_conversion_selection();
-                            reset_conversion = true;
-                        } else {
-                            app.context.current_screen = CurrentScreen::LessonSelect;
-                            app.context.current_selection = CurrentSelection::Lesson;
-                            app.context.lesson_idx = 0;
-                            app.context.section_idx = None;
-                            app.context.prev_section_idx = None;
-                            app.context.prev_phrase_idx = None;
-                            app.context.prev_translation_direction = None;
-                            app.context.prev_answer = None;
-                            app.context.asked_questions.clear();
-                            app.reset_keyboard();
-                        }
-                    }
-                    KeyCode::Enter => {
-                        if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
-                            app.context.prev_section_idx = app.context.section_idx;
-                            app.context.prev_phrase_idx = Some(app.context.phrase_idx);
-                            app.context.prev_translation_direction =
-                                Some(app.context.translation_direction);
-                            if let Some(prev_translation_direction) =
-                                app.context.prev_translation_direction
-                            {
-                                match prev_translation_direction {
-                                    TranslationDirection::ToEN => {
-                                        app.context.prev_answer = Some(app.get_romanji().clone());
-                                    }
-                                    TranslationDirection::ToJP => {
-                                        app.context.prev_answer = Some(app.get_kana().clone());
-                                    }
-                                }
-                            }
-                            let translation_direction = rand::thread_rng().gen_range(0..=1);
-                            if translation_direction == 0 {
-                                app.context.translation_direction = TranslationDirection::ToJP;
-                            } else {
-                                app.context.translation_direction = TranslationDirection::ToEN;
-                            }
-                            assert!(app.context.lesson_idx < app.book.lessons.len());
-                            let lesson = &app.book.lessons[app.context.lesson_idx];
-                            if app.context.randomize_section {
-                                let mut asked_sections = HashSet::<usize>::new();
-                                loop {
-                                    let section_idx =
-                                        rand::thread_rng().gen_range(0..lesson.sections.len());
-                                    assert!(section_idx < app.context.asked_questions.len());
-                                    if app.context.asked_questions[section_idx].len()
-                                        == lesson.sections[section_idx].phrases.len()
-                                    {
-                                        asked_sections.insert(section_idx);
-                                        if asked_sections.len() == lesson.sections.len() {
-                                            app.context.asked_questions.clear();
-                                            app.context.asked_questions =
-                                                std::iter::repeat_with(HashSet::<usize>::new)
-                                                    .take(lesson.sections.len())
-                                                    .collect();
-                                        }
-                                    } else {
-                                        app.context.section_idx = Some(section_idx);
-                                        break;
-                                    }
-                                }
-                            }
-                            assert!(
-                                app.context.section_idx.expect("section index not set")
-                                    < lesson.sections.len()
-                            );
-                            assert!(
-                                app.context.section_idx.unwrap()
-                                    < app.context.asked_questions.len()
-                            );
-                            let section = &lesson.sections[app.context.section_idx.unwrap()];
-                            loop {
-                                let phrases_asked = &mut app.context.asked_questions
-                                    [app.context.section_idx.unwrap()];
-                                let phrase_idx =
-                                    rand::thread_rng().gen_range(0..section.phrases.len());
-                                if phrases_asked.insert(phrase_idx) {
-                                    app.context.phrase_idx = phrase_idx;
-                                    if !app.context.randomize_section
-                                        && phrases_asked.len() == section.phrases.len()
-                                    {
-                                        phrases_asked.clear();
-                                    }
-                                    break;
-                                }
-                            }
-                            app.reset_keyboard();
-                            app.set_english(translation_direction != 0);
-                        }
-                    }
-                    KeyCode::Char(value) => {
-                        app.push_char(value);
-                    }
-                    KeyCode::Backspace => {
-                        app.pop_char();
-                    }
-                    KeyCode::Right => {
-                        if key.modifiers.contains(KeyModifiers::SHIFT) {
-                            app.cursor_highlight_right();
-                        } else {
-                            app.cursor_right();
-                        }
-                    }
-                    KeyCode::Left => {
-                        if key.modifiers.contains(KeyModifiers::SHIFT) {
-                            app.cursor_highlight_left();
-                        } else {
-                            app.cursor_left();
-                        }
-                    }
-                    KeyCode::Up => {
-                        app.kanji_select_up();
-                    }
-                    KeyCode::Down => {
-                        app.kanji_select_down();
-                    }
-                    KeyCode::Tab => {
-                        app.toggle_english();
-                    }
-                    _ => {}
-                },
-            }
-            if !reset_conversion {
-                app.check_merge_kana();
-                app.check_kana_to_kanji();
+                }
+                if !reset_conversion {
+                    app.check_merge_kana();
+                    app.check_kana_to_kanji();
+                }
             }
         }
     }
