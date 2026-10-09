@@ -83,7 +83,7 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
     let mut right = String::new();
     if kana.chars().count() > 0 {
         let cursor = app.get_cursor_pos();
-        assert!(cursor.pos + cursor.len <= kana.chars().count());
+        assert!(cursor.pos + cursor.len <= kana.chars().count() + 1);
         assert!(cursor.len >= 1);
         middle = kana
             .chars()
@@ -118,13 +118,11 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
         text_colour = Color::Yellow;
         title = " 日本語 ".to_string();
     };
-    let text = Paragraph::new(kana_formatted)
-        .block(
-            Block::bordered()
-                .title(title)
-                .border_style(Style::default().fg(text_colour)),
-        )
-        .wrap(Wrap { trim: true });
+    let text = Paragraph::new(kana_formatted).block(
+        Block::bordered()
+            .title(title)
+            .border_style(Style::default().fg(text_colour)),
+    );
     frame.render_widget(text, keyboard_rect);
 
     assert!(

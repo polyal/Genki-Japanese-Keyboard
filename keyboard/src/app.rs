@@ -145,7 +145,7 @@ struct Cursor {
 impl Cursor {
     fn new() -> Self {
         Cursor {
-            offset: Offset::new(0, 0),
+            offset: Offset::new(0, 1),
             highlight_dir: HilightDirection::None,
         }
     }
@@ -173,8 +173,8 @@ impl Keyboard {
         Keyboard {
             kana_converter: RomanjiToKanaConverter::new(),
             kanji_converter: HiragaToKanjiConverter::new(),
-            romanji: String::new(),
-            kana: String::new(),
+            romanji: String::from(' '),
+            kana: String::from(' '),
             kana_offsets: Vec::new(),
             merge_kana: None,
             kana_to_kanji: None,
@@ -433,14 +433,36 @@ impl App {
         let mut cursor_len = 1;
         let mut is_converted = false;
 
-        self.keyboard.romanji.push(value);
+        // get insert position
+        let romanji_offset: Offset;
+        let mut last_offset: Option<OffsetMap> = None;
+        {
+            for offset in self.keyboard.kana_offsets.iter() {
+                if offset.dest.pos < self.keyboard.cursor.offset.pos {
+                    last_offset = Some(*offset);
+                }
+            }
+
+            if let Some(last_offset) = last_offset {
+                let unconverted_len =
+                    self.keyboard.cursor.offset.pos - (last_offset.dest.pos + last_offset.dest.len);
+                let romanji_pos = last_offset.src.pos + last_offset.src.len + unconverted_len;
+                romanji_offset = Offset::new(romanji_pos, 1);
+            } else {
+                romanji_offset = Offset::new(self.keyboard.cursor.offset.pos, 1);
+            }
+        }
+        assert!(romanji_offset.pos < self.keyboard.romanji.chars().count());
+        assert!(self.keyboard.cursor.offset.pos < self.keyboard.kana.chars().count());
+        self.keyboard.romanji.insert(romanji_offset.pos, value);
+
         if !self.keyboard.english {
-            let end = self.keyboard.romanji.chars().count();
+            let end = romanji_offset.pos + romanji_offset.len;
             let start: usize;
             {
                 // the longest kana conversion is 4 chars, so we use a moving window of 4 chars
                 let gap: usize;
-                if let Some(last_offset) = self.keyboard.kana_offsets.last() {
+                if let Some(last_offset) = last_offset {
                     gap = end - (last_offset.src.pos + last_offset.src.len)
                 } else {
                     gap = end
@@ -460,36 +482,84 @@ impl App {
                 {
                     is_converted = true;
 
-                    // remove unconverted string from end of output string
-                    if let Some((byte_idx, _)) = self.keyboard.kana.char_indices().nth(
-                        self.keyboard
-                            .kana
-                            .chars()
-                            .count()
-                            .saturating_sub(end - i - 1),
-                    ) {
-                        self.keyboard.kana.truncate(byte_idx);
+                    // update converted string
+                    let romanji_len = romanji_substr.chars().count() - 1;
+                    let start_idx = self.keyboard.cursor.offset.pos - romanji_len;
+                    let end_idx: usize = self.keyboard.cursor.offset.pos;
+                    let start_byte_index = self
+                        .keyboard
+                        .kana
+                        .char_indices()
+                        .nth(start_idx)
+                        .map(|(i, _)| i)
+                        .unwrap_or(self.keyboard.kana.len());
+                    let end_byte_index = self
+                        .keyboard
+                        .kana
+                        .char_indices()
+                        .nth(end_idx)
+                        .map(|(i, _)| i)
+                        .unwrap_or(self.keyboard.kana.len());
+                    self.keyboard.kana.replace_range(
+                        start_byte_index..end_byte_index,
+                        &converted_str.to_string(),
+                    );
+
+                    // update offset positions after conversion
+                    if romanji_len > converted_str.chars().count() {
+                        let len_diff = romanji_len - converted_str.chars().count();
+                        for offset in &mut self.keyboard.kana_offsets {
+                            if start_idx <= offset.dest.pos {
+                                offset.dest.pos -= len_diff;
+                                offset.src.pos += 1;
+                            }
+                        }
+                    } else if romanji_len <= converted_str.chars().count() {
+                        // even if len diff is 0, the src.pos still has to be updated
+                        let len_diff = converted_str.chars().count() - romanji_len;
+                        for offset in &mut self.keyboard.kana_offsets {
+                            if start_idx <= offset.dest.pos {
+                                offset.dest.pos += len_diff;
+                                offset.src.pos += 1
+                            }
+                        }
                     }
 
-                    // update converted string
+                    // insert new offset
                     self.keyboard.kana_offsets.push(OffsetMap::new(
                         Offset::new(i, end - i),
-                        Offset::new(
-                            self.keyboard.kana.chars().count(),
-                            converted_str.chars().count(),
-                        ),
+                        Offset::new(start_idx, converted_str.chars().count()),
                     ));
-                    self.keyboard.kana.push_str(&converted_str.to_string());
+                    self.keyboard
+                        .kana_offsets
+                        .sort_by_key(|offset| offset.src.pos);
                     cursor_len = converted_str.chars().count();
+                    self.keyboard.cursor.offset.pos = start_idx + cursor_len;
                     break;
                 }
             }
         }
 
         if !is_converted {
-            self.keyboard.kana.push(value);
+            let insert_idx = self
+                .keyboard
+                .kana
+                .char_indices()
+                .nth(self.keyboard.cursor.offset.pos)
+                .map(|(idx, _)| idx)
+                .unwrap_or(self.keyboard.kana.len());
+            self.keyboard.kana.insert(insert_idx, value);
+
+            // update offsets passed cursor to account for insersion of new char
+            for offset in &mut self.keyboard.kana_offsets {
+                if self.keyboard.cursor.offset.pos <= offset.dest.pos {
+                    offset.dest.pos += 1;
+                    offset.src.pos += 1
+                }
+            }
+
+            self.keyboard.cursor.offset.pos += 1;
         }
-        self.keyboard.cursor.offset.pos = self.keyboard.kana.chars().count() - cursor_len;
         self.keyboard.cursor.offset.len = cursor_len;
         self.keyboard.cursor.highlight_dir = HilightDirection::None;
     }
@@ -785,10 +855,14 @@ impl App {
     pub fn reset_keyboard(&mut self) {
         self.keyboard.romanji.clear();
         self.keyboard.kana.clear();
+        self.keyboard.romanji.push(' ');
+        self.keyboard.kana.push(' ');
         self.keyboard.merge_kana = None;
         self.keyboard.kana_to_kanji = None;
         self.keyboard.english = false;
         self.keyboard.kana_offsets.clear();
+        self.keyboard.cursor.offset.pos = 0;
+        self.keyboard.cursor.offset.len = 1;
     }
 
     pub fn create_server(&mut self) {
