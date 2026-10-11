@@ -86,7 +86,7 @@ impl Offset {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 struct OffsetMap {
     src: Offset,
     dest: Offset,
@@ -430,16 +430,15 @@ impl App {
     }
 
     pub fn push_char(&mut self, value: char) {
-        let mut cursor_len = 1;
         let mut is_converted = false;
 
         // get insert position
         let romanji_offset: Offset;
-        let mut last_offset: Option<OffsetMap> = None;
+        let mut last_offset: Option<&OffsetMap> = None;
         {
             for offset in self.keyboard.kana_offsets.iter() {
                 if offset.dest.pos < self.keyboard.cursor.offset.pos {
-                    last_offset = Some(*offset);
+                    last_offset = Some(offset);
                 }
             }
 
@@ -476,16 +475,16 @@ impl App {
 
             for i in start..end {
                 let romanji_substr = self.keyboard.romanji.substring(i, end);
-                // conversion successful
                 if let Some(converted_str) =
                     self.keyboard.kana_converter.convert(romanji_substr, true)
                 {
+                    // conversion successful
                     is_converted = true;
 
                     // update converted string
                     let romanji_len = romanji_substr.chars().count() - 1;
                     let start_idx = self.keyboard.cursor.offset.pos - romanji_len;
-                    let end_idx: usize = self.keyboard.cursor.offset.pos;
+                    let end_idx = self.keyboard.cursor.offset.pos;
                     let start_byte_index = self
                         .keyboard
                         .kana
@@ -509,7 +508,7 @@ impl App {
                     if romanji_len > converted_str.chars().count() {
                         let len_diff = romanji_len - converted_str.chars().count();
                         for offset in &mut self.keyboard.kana_offsets {
-                            if start_idx <= offset.dest.pos {
+                            if self.keyboard.cursor.offset.pos <= offset.dest.pos {
                                 offset.dest.pos -= len_diff;
                                 offset.src.pos += 1;
                             }
@@ -518,7 +517,7 @@ impl App {
                         // even if len diff is 0, the src.pos still has to be updated
                         let len_diff = converted_str.chars().count() - romanji_len;
                         for offset in &mut self.keyboard.kana_offsets {
-                            if start_idx <= offset.dest.pos {
+                            if self.keyboard.cursor.offset.pos <= offset.dest.pos {
                                 offset.dest.pos += len_diff;
                                 offset.src.pos += 1
                             }
@@ -533,8 +532,7 @@ impl App {
                     self.keyboard
                         .kana_offsets
                         .sort_by_key(|offset| offset.src.pos);
-                    cursor_len = converted_str.chars().count();
-                    self.keyboard.cursor.offset.pos = start_idx + cursor_len;
+                    self.keyboard.cursor.offset.pos = start_idx + converted_str.chars().count();
                     break;
                 }
             }
@@ -560,56 +558,125 @@ impl App {
 
             self.keyboard.cursor.offset.pos += 1;
         }
-        self.keyboard.cursor.offset.len = cursor_len;
         self.keyboard.cursor.highlight_dir = HilightDirection::None;
     }
 
     pub fn pop_char(&mut self) {
-        // check if we removed kana
-        if let Some(last_offset) = self.keyboard.kana_offsets.last()
-            && self.keyboard.romanji.chars().count() == last_offset.src.pos + last_offset.src.len
+        if self.keyboard.cursor.offset.pos == 0 {
+            self.keyboard.cursor.highlight_dir = HilightDirection::None;
+            return;
+        }
+
+        let src_removed_size: usize;
+        let dest_removed_size: usize;
+        // check if we need to remove kana
+        if let Some(&last_offset) =
+            self.keyboard.kana_offsets.iter().find(|&offset| {
+                self.keyboard.cursor.offset.pos == offset.dest.pos + offset.dest.len
+            })
         {
+            assert!(
+                last_offset.src.pos + last_offset.src.len < self.keyboard.romanji.chars().count()
+            );
+            assert!(
+                last_offset.dest.pos + last_offset.dest.len < self.keyboard.kana.chars().count()
+            );
+
             // remove romanji
-            if let Some((byte_idx, _)) = self.keyboard.romanji.char_indices().nth(
-                self.keyboard
-                    .romanji
-                    .chars()
-                    .count()
-                    .saturating_sub(last_offset.src.len),
-            ) {
-                self.keyboard.romanji.truncate(byte_idx);
-            }
+            self.keyboard.romanji.replace_range(
+                last_offset.src.pos..last_offset.src.pos + last_offset.src.len,
+                "",
+            );
 
             // remove kana
-            if let Some((byte_idx, _)) = self.keyboard.kana.char_indices().nth(
-                self.keyboard
-                    .kana
-                    .chars()
-                    .count()
-                    .saturating_sub(last_offset.dest.len),
-            ) {
-                self.keyboard.kana.truncate(byte_idx);
-            }
-            self.keyboard.kana_offsets.pop();
+            let start_idx = last_offset.dest.pos;
+            let end_idx = last_offset.dest.pos + last_offset.dest.len;
+            let start_byte_index = self
+                .keyboard
+                .kana
+                .char_indices()
+                .nth(start_idx)
+                .map(|(i, _)| i)
+                .unwrap_or(self.keyboard.kana.len());
+            let end_byte_index = self
+                .keyboard
+                .kana
+                .char_indices()
+                .nth(end_idx)
+                .map(|(i, _)| i)
+                .unwrap_or(self.keyboard.kana.len());
+            self.keyboard
+                .kana
+                .replace_range(start_byte_index..end_byte_index, "");
+
+            src_removed_size = last_offset.src.len;
+            dest_removed_size = last_offset.dest.len;
         } else {
-            self.keyboard.romanji.pop();
-            self.keyboard.kana.pop();
+            // get insert position
+            let romanji_offset: Offset;
+            {
+                let mut last_offset: Option<&OffsetMap> = None;
+                for offset in self.keyboard.kana_offsets.iter() {
+                    if offset.dest.pos < self.keyboard.cursor.offset.pos {
+                        last_offset = Some(offset);
+                    }
+                }
+
+                if let Some(last_offset) = last_offset {
+                    let gap = self.keyboard.cursor.offset.pos
+                        - (last_offset.dest.pos + last_offset.dest.len);
+                    let romanji_pos = last_offset.src.pos + last_offset.src.len + gap;
+                    romanji_offset = Offset::new(romanji_pos, 1);
+                } else {
+                    romanji_offset = Offset::new(self.keyboard.cursor.offset.pos, 1);
+                }
+            }
+            assert!(romanji_offset.pos < self.keyboard.romanji.chars().count());
+            assert!(self.keyboard.cursor.offset.pos < self.keyboard.kana.chars().count());
+
+            self.keyboard
+                .romanji
+                .replace_range(romanji_offset.pos - 1..romanji_offset.pos, "");
+
+            let start_idx = self.keyboard.cursor.offset.pos - 1;
+            let end_idx: usize = self.keyboard.cursor.offset.pos;
+            let start_byte_index = self
+                .keyboard
+                .kana
+                .char_indices()
+                .nth(start_idx)
+                .map(|(i, _)| i)
+                .unwrap_or(self.keyboard.kana.len());
+            let end_byte_index = self
+                .keyboard
+                .kana
+                .char_indices()
+                .nth(end_idx)
+                .map(|(i, _)| i)
+                .unwrap_or(self.keyboard.kana.len());
+            self.keyboard
+                .kana
+                .replace_range(start_byte_index..end_byte_index, "");
+
+            src_removed_size = 1;
+            dest_removed_size = 1;
+        }
+
+        // remove offset
+        self.keyboard
+            .kana_offsets
+            .retain(|offset| self.keyboard.cursor.offset.pos != offset.dest.pos + offset.dest.len);
+
+        // update offsets
+        for offset in &mut self.keyboard.kana_offsets {
+            if self.keyboard.cursor.offset.pos <= offset.dest.pos {
+                offset.src.pos -= src_removed_size;
+                offset.dest.pos -= dest_removed_size;
+            }
         }
 
         // update cursor
-        if self.keyboard.kana.chars().count() != 0 {
-            // cursor touching last kana char
-            if let Some(last_offset) = self.keyboard.kana_offsets.last()
-                && self.keyboard.romanji.chars().count()
-                    == last_offset.src.pos + last_offset.src.len
-            {
-                self.keyboard.cursor.offset.len = last_offset.dest.len;
-            } else {
-                self.keyboard.cursor.offset.len = 1;
-            }
-            self.keyboard.cursor.offset.pos =
-                self.keyboard.kana.chars().count() - self.keyboard.cursor.offset.len;
-        }
+        self.keyboard.cursor.offset.pos -= dest_removed_size;
         self.keyboard.cursor.highlight_dir = HilightDirection::None;
     }
 
