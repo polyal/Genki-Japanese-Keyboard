@@ -86,7 +86,7 @@ impl Offset {
     }
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(Clone, Copy)]
 struct OffsetMap {
     src: Offset,
     dest: Offset,
