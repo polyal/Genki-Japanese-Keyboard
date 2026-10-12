@@ -1,5 +1,3 @@
-use substring::Substring;
-
 use crate::chat::{Message, Peer};
 use crate::kana_converter::RomanjiToKanaConverter;
 use crate::kanji_converter::HiragaToKanjiConverter;
@@ -474,7 +472,7 @@ impl App {
             }
 
             for i in start..end {
-                let romanji_substr = self.keyboard.romanji.substring(i, end);
+                let romanji_substr = self.keyboard.romanji.get(i..end).unwrap();
                 if let Some(converted_str) =
                     self.keyboard.kana_converter.convert(romanji_substr, true)
                 {
@@ -698,10 +696,11 @@ impl App {
                     start_offset.src.pos,
                     start_offset.src.len + end_offset.src.len,
                 );
-                let romanji_substr: &str = self
+                let romanji_substr = self
                     .keyboard
                     .romanji
-                    .substring(romanji_offset.pos, romanji_offset.pos + romanji_offset.len);
+                    .get(romanji_offset.pos..romanji_offset.pos + romanji_offset.len)
+                    .unwrap();
                 if let Some(merge_kana) = self.keyboard.kana_converter.convert(romanji_substr, true)
                 {
                     let len: usize = merge_kana.chars().count();
@@ -793,11 +792,17 @@ impl App {
             }
 
             if self.keyboard.kana_to_kanji.is_none() {
-                let kana_substr: &str = self.keyboard.kana.substring(
-                    self.keyboard.cursor.offset.pos,
-                    self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len,
-                );
-                let kanji = self.keyboard.kanji_converter.convert(kana_substr);
+                let kana_substr: String = self
+                    .keyboard
+                    .kana
+                    .chars()
+                    .skip(self.keyboard.cursor.offset.pos)
+                    .take(self.keyboard.cursor.offset.len)
+                    .collect();
+                let kanji = self
+                    .keyboard
+                    .kanji_converter
+                    .convert(&kana_substr.to_string());
                 if !kanji.is_empty() {
                     self.keyboard.kana_to_kanji = Some(KanaToKanji::new(
                         SelectKanji::new(kanji, 0),
