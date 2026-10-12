@@ -111,12 +111,12 @@ impl MergeKana {
 
 pub struct SelectKanji {
     pub kanji_list: Vec<char>,
-    pub offset: usize,
+    pub idx: usize,
 }
 
 impl SelectKanji {
-    fn new(kanji_list: Vec<char>, offset: usize) -> Self {
-        SelectKanji { kanji_list, offset }
+    fn new(kanji_list: Vec<char>, idx: usize) -> Self {
+        SelectKanji { kanji_list, idx }
     }
 }
 
@@ -851,7 +851,7 @@ impl App {
                 .unwrap_or(self.keyboard.kana.len());
             let mut buf = [0; 4];
             let kanji_char: &str =
-                kana_to_kanji.kanji.kanji_list[kana_to_kanji.kanji.offset].encode_utf8(&mut buf);
+                kana_to_kanji.kanji.kanji_list[kana_to_kanji.kanji.idx].encode_utf8(&mut buf);
             self.keyboard
                 .kana
                 .replace_range(start_byte_index..end_byte_index, kanji_char);
@@ -866,17 +866,17 @@ impl App {
 
     pub fn kanji_select_down(&mut self) {
         if let Some(kana_to_kanji) = &mut self.keyboard.kana_to_kanji
-            && kana_to_kanji.kanji.offset < kana_to_kanji.kanji.kanji_list.len() - 1
+            && kana_to_kanji.kanji.idx < kana_to_kanji.kanji.kanji_list.len() - 1
         {
-            kana_to_kanji.kanji.offset += 1;
+            kana_to_kanji.kanji.idx += 1;
         }
     }
 
     pub fn kanji_select_up(&mut self) {
         if let Some(kana_to_kanji) = &mut self.keyboard.kana_to_kanji
-            && kana_to_kanji.kanji.offset > 0
+            && kana_to_kanji.kanji.idx > 0
         {
-            kana_to_kanji.kanji.offset -= 1;
+            kana_to_kanji.kanji.idx -= 1;
         }
     }
 

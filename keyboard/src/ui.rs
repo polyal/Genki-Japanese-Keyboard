@@ -177,7 +177,7 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
             .iter()
             .enumerate()
             .map(|(idx, kanji_char)| {
-                if Some(kana_to_kanji.offset) == Some(idx) {
+                if Some(kana_to_kanji.idx) == Some(idx) {
                     // Apply the highlight background directly to the text/span
                     ListItem::new(
                         Line::from(Span::styled(
@@ -202,7 +202,7 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
             .collect();
 
         let mut state = ListState::default();
-        state.select(Some(kana_to_kanji.offset));
+        state.select(Some(kana_to_kanji.idx));
 
         let kanji_list = List::new(items).block(Block::bordered().border_set(border::DOUBLE).red());
         frame.render_stateful_widget(kanji_list, popup_area, &mut state);
