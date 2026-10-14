@@ -84,7 +84,7 @@ impl Offset {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 struct OffsetMap {
     src: Offset,
     dest: Offset,
@@ -452,7 +452,7 @@ impl App {
                 if let Some(last_offset) = last_offset {
                     // check if last_offset is an n conversion so we can auto merge conversion
                     // eg. ni -> に not んい
-                    // because n is gets converted to ん at previous insertion
+                    // because n gets converted to ん at previous insertion
                     if last_offset.src.len == 1
                         && self
                             .keyboard
@@ -585,14 +585,16 @@ impl App {
             return;
         }
 
-        let src_removed_size: usize;
-        let dest_removed_size: usize;
+        let split_kana: bool;
+        let split_kana_offsets: Option<(OffsetMap, OffsetMap)>;
+        let src_diff_size: usize;
+        let dest_diff_size: usize;
         // check if we need to remove kana
-        if let Some(&last_offset) =
-            self.keyboard.kana_offsets.iter().find(|&offset| {
-                self.keyboard.cursor.offset.pos == offset.dest.pos + offset.dest.len
-            })
-        {
+        if let Some(last_idx) = self.keyboard.kana_offsets.iter().position(|&offset| {
+            self.keyboard.cursor.offset.pos == offset.dest.pos + offset.dest.len
+        }) {
+            // remove last offset
+            let last_offset = self.keyboard.kana_offsets.remove(last_idx);
             assert!(
                 last_offset.src.pos + last_offset.src.len < self.keyboard.romanji.chars().count()
             );
@@ -600,36 +602,115 @@ impl App {
                 last_offset.dest.pos + last_offset.dest.len < self.keyboard.kana.chars().count()
             );
 
-            // remove romanji
-            self.keyboard.romanji.replace_range(
-                last_offset.src.pos..last_offset.src.pos + last_offset.src.len,
-                "",
-            );
+            // check if last_offset is an n conversion so we can split conversion instead of deletion
+            // eg. に -> んい
+            if last_offset.src.len > 1
+                && self
+                    .keyboard
+                    .romanji
+                    .chars()
+                    .nth(last_offset.src.pos)
+                    .unwrap()
+                    == 'n'
+            {
+                split_kana = true;
 
-            // remove kana
-            let start_idx = last_offset.dest.pos;
-            let end_idx = last_offset.dest.pos + last_offset.dest.len;
-            let start_byte_index = self
-                .keyboard
-                .kana
-                .char_indices()
-                .nth(start_idx)
-                .map(|(i, _)| i)
-                .unwrap_or(self.keyboard.kana.len());
-            let end_byte_index = self
-                .keyboard
-                .kana
-                .char_indices()
-                .nth(end_idx)
-                .map(|(i, _)| i)
-                .unwrap_or(self.keyboard.kana.len());
-            self.keyboard
-                .kana
-                .replace_range(start_byte_index..end_byte_index, "");
+                // redo conversion for split
+                let n_substr = self
+                    .keyboard
+                    .romanji
+                    .get(last_offset.src.pos..last_offset.src.pos + 1)
+                    .unwrap();
+                let r_substr = self
+                    .keyboard
+                    .romanji
+                    .get(last_offset.src.pos + 1..last_offset.src.pos + last_offset.src.len)
+                    .unwrap();
+                let n_split = self
+                    .keyboard
+                    .kana_converter
+                    .convert(n_substr, true)
+                    .unwrap();
+                let r_split: String = self
+                    .keyboard
+                    .kana_converter
+                    .convert(r_substr, true)
+                    .unwrap();
+                let combined = n_split + &r_split;
 
-            src_removed_size = last_offset.src.len;
-            dest_removed_size = last_offset.dest.len;
+                // update newly split string
+                let start_byte_index = self
+                    .keyboard
+                    .kana
+                    .char_indices()
+                    .nth(last_offset.dest.pos)
+                    .map(|(i, _)| i)
+                    .unwrap_or(self.keyboard.kana.len());
+                let end_byte_index = self
+                    .keyboard
+                    .kana
+                    .char_indices()
+                    .nth(last_offset.dest.pos + last_offset.dest.len)
+                    .map(|(i, _)| i)
+                    .unwrap_or(self.keyboard.kana.len());
+                self.keyboard
+                    .kana
+                    .replace_range(start_byte_index..end_byte_index, &combined);
+
+                assert!(r_substr.chars().count() == last_offset.src.len - 1);
+                assert!(r_split.chars().count() == combined.chars().count() - 1);
+                split_kana_offsets = Some((
+                    OffsetMap::new(
+                        Offset::new(last_offset.src.pos, 1),
+                        Offset::new(last_offset.dest.pos, 1),
+                    ),
+                    OffsetMap::new(
+                        Offset::new(last_offset.src.pos + 1, r_substr.chars().count()),
+                        Offset::new(last_offset.dest.pos + 1, r_split.chars().count()),
+                    ),
+                ));
+
+                assert!(combined.chars().count() >= last_offset.dest.len);
+                src_diff_size = 0;
+                dest_diff_size = combined.chars().count() - last_offset.dest.len;
+            } else {
+                split_kana = false;
+                split_kana_offsets = None;
+
+                // remove romanji
+                self.keyboard.romanji.replace_range(
+                    last_offset.src.pos..last_offset.src.pos + last_offset.src.len,
+                    "",
+                );
+
+                // remove kana
+                let start_idx = last_offset.dest.pos;
+                let end_idx = last_offset.dest.pos + last_offset.dest.len;
+                let start_byte_index = self
+                    .keyboard
+                    .kana
+                    .char_indices()
+                    .nth(start_idx)
+                    .map(|(i, _)| i)
+                    .unwrap_or(self.keyboard.kana.len());
+                let end_byte_index = self
+                    .keyboard
+                    .kana
+                    .char_indices()
+                    .nth(end_idx)
+                    .map(|(i, _)| i)
+                    .unwrap_or(self.keyboard.kana.len());
+                self.keyboard
+                    .kana
+                    .replace_range(start_byte_index..end_byte_index, "");
+
+                src_diff_size = last_offset.src.len;
+                dest_diff_size = last_offset.dest.len;
+            }
         } else {
+            split_kana = false;
+            split_kana_offsets = None;
+
             // get insert position
             let romanji_offset: Offset;
             {
@@ -676,25 +757,45 @@ impl App {
                 .kana
                 .replace_range(start_byte_index..end_byte_index, "");
 
-            src_removed_size = 1;
-            dest_removed_size = 1;
+            src_diff_size = 1;
+            dest_diff_size = 1;
         }
 
-        // remove offset
-        self.keyboard
-            .kana_offsets
-            .retain(|offset| self.keyboard.cursor.offset.pos != offset.dest.pos + offset.dest.len);
-
         // update offsets
-        for offset in &mut self.keyboard.kana_offsets {
-            if self.keyboard.cursor.offset.pos <= offset.dest.pos {
-                offset.src.pos -= src_removed_size;
-                offset.dest.pos -= dest_removed_size;
+        if !split_kana {
+            for offset in &mut self.keyboard.kana_offsets {
+                if self.keyboard.cursor.offset.pos <= offset.dest.pos {
+                    offset.src.pos -= src_diff_size;
+                    offset.dest.pos -= dest_diff_size;
+                }
             }
+        } else {
+            assert!(src_diff_size == 0);
+            for offset in &mut self.keyboard.kana_offsets {
+                if self.keyboard.cursor.offset.pos <= offset.dest.pos {
+                    offset.dest.pos += dest_diff_size;
+                }
+            }
+
+            // push offset for newly split kana
+            assert!(split_kana_offsets.is_some());
+            self.keyboard
+                .kana_offsets
+                .push(split_kana_offsets.unwrap().0);
+            self.keyboard
+                .kana_offsets
+                .push(split_kana_offsets.unwrap().1);
+            self.keyboard
+                .kana_offsets
+                .sort_by_key(|offset| offset.src.pos);
         }
 
         // update cursor
-        self.keyboard.cursor.offset.pos -= dest_removed_size;
+        if split_kana {
+            self.keyboard.cursor.offset.pos += dest_diff_size;
+        } else {
+            self.keyboard.cursor.offset.pos -= dest_diff_size;
+        }
         self.keyboard.cursor.highlight_dir = HilightDirection::None;
     }
 
