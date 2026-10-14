@@ -125,36 +125,8 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
     );
     frame.render_widget(text, keyboard_rect);
 
-    assert!(
-        (app.get_merge_kana().is_some() ^ app.get_kana_to_kanji().is_some())
-            || (app.get_merge_kana().is_none() && app.get_kana_to_kanji().is_none())
-    );
-    // popup for merge kana option or kana to kanji options
-    if let Some(merge_kana) = app.get_merge_kana() {
-        let area = frame.area();
-        let popup_layout = Layout::horizontal([
-            Constraint::Length(frame.area().width - 6),
-            Constraint::Length(6),
-        ])
-        .split(area);
-        let popup_area = Layout::vertical([
-            Constraint::Length((frame.area().height as f32 * 0.65) as u16),
-            Constraint::Length(3),
-        ])
-        .split(popup_layout[1])[1];
-        frame.render_widget(Clear, popup_area);
-
-        let paragraph = Paragraph::new(
-            Line::from(Span::styled(
-                merge_kana,
-                Style::default().fg(Color::Yellow).reversed(),
-            ))
-            .centered(),
-        )
-        .block(Block::bordered().border_set(border::DOUBLE).red())
-        .bold();
-        frame.render_widget(paragraph, popup_area);
-    } else if let Some(kana_to_kanji) = app.get_kana_to_kanji() {
+    // popup for kana to kanji options
+    if let Some(kana_to_kanji) = app.get_kana_to_kanji() {
         let area = frame.area();
         let popup_layout = Layout::horizontal([
             Constraint::Length(frame.area().width - 6),

@@ -96,17 +96,6 @@ impl OffsetMap {
     }
 }
 
-struct MergeKana {
-    kana: String,
-    offset_map: OffsetMap,
-}
-
-impl MergeKana {
-    fn new(kana: String, offset_map: OffsetMap) -> Self {
-        MergeKana { kana, offset_map }
-    }
-}
-
 pub struct SelectKanji {
     pub kanji_list: Vec<char>,
     pub idx: usize,
@@ -158,7 +147,6 @@ struct Keyboard {
 
     kana_offsets: Vec<OffsetMap>,
 
-    merge_kana: Option<MergeKana>,
     kana_to_kanji: Option<KanaToKanji>,
 
     english: bool,
@@ -174,7 +162,6 @@ impl Keyboard {
             romanji: String::from(' '),
             kana: String::from(' '),
             kana_offsets: Vec::new(),
-            merge_kana: None,
             kana_to_kanji: None,
             english: false,
             cursor: Cursor::new(),
@@ -711,96 +698,6 @@ impl App {
         self.keyboard.cursor.highlight_dir = HilightDirection::None;
     }
 
-    pub fn check_merge_kana(&mut self) {
-        self.keyboard.merge_kana = None;
-        if let Some(start_offset) = self
-            .keyboard
-            .kana_offsets
-            .iter()
-            .find(|&offset| self.keyboard.cursor.offset.pos == offset.dest.pos)
-            && let Some(end_offset) = self.keyboard.kana_offsets.iter().find(|&offset| {
-                self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len
-                    == offset.dest.pos + offset.dest.len
-            })
-        {
-            // make sure theyre contiguous, only support merging of contiguous kana
-            if start_offset.dest.pos + start_offset.dest.len == end_offset.dest.pos {
-                let romanji_offset = Offset::new(
-                    start_offset.src.pos,
-                    start_offset.src.len + end_offset.src.len,
-                );
-                let romanji_substr = self
-                    .keyboard
-                    .romanji
-                    .get(romanji_offset.pos..romanji_offset.pos + romanji_offset.len)
-                    .unwrap();
-                if let Some(merge_kana) = self.keyboard.kana_converter.convert(romanji_substr, true)
-                {
-                    let len: usize = merge_kana.chars().count();
-                    self.keyboard.merge_kana = Some(MergeKana::new(
-                        merge_kana,
-                        OffsetMap::new(romanji_offset, Offset::new(start_offset.dest.pos, len)),
-                    ));
-                }
-            }
-        }
-    }
-
-    pub fn update_merge_kana(&mut self) -> bool {
-        if let Some(merge_kana) = &self.keyboard.merge_kana {
-            assert!(self.keyboard.kana_to_kanji.is_none());
-            // remove first part of contiguous merge offsets
-            self.keyboard
-                .kana_offsets
-                .retain(|offset| offset.src.pos != merge_kana.offset_map.src.pos);
-            // remove second part of contiguous merge offsets
-            self.keyboard.kana_offsets.retain(|offset| {
-                offset.src.pos + offset.src.len
-                    != merge_kana.offset_map.src.pos + merge_kana.offset_map.src.len
-            });
-            // update offset positions when merged kana is shorter than original
-            assert!(self.keyboard.cursor.offset.len >= merge_kana.offset_map.dest.len);
-            let offset_diff = self.keyboard.cursor.offset.len - merge_kana.offset_map.dest.len;
-            if offset_diff > 0 {
-                for offset in &mut self.keyboard.kana_offsets {
-                    if merge_kana.offset_map.dest.pos + merge_kana.offset_map.dest.len
-                        <= offset.dest.pos
-                    {
-                        offset.dest.pos -= offset_diff;
-                    }
-                }
-            }
-            self.keyboard.kana_offsets.push(merge_kana.offset_map);
-            self.keyboard
-                .kana_offsets
-                .sort_by_key(|offset_map| offset_map.src.pos);
-            let start_byte_index = self
-                .keyboard
-                .kana
-                .char_indices()
-                .nth(self.keyboard.cursor.offset.pos)
-                .map(|(i, _)| i)
-                .unwrap_or(self.keyboard.kana.len());
-            let end_byte_index = self
-                .keyboard
-                .kana
-                .char_indices()
-                .nth(self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len)
-                .map(|(i, _)| i)
-                .unwrap_or(self.keyboard.kana.len());
-            self.keyboard.kana.replace_range(
-                start_byte_index..end_byte_index,
-                &merge_kana.kana.to_string(),
-            );
-            // update cursor
-            self.keyboard.cursor.offset = merge_kana.offset_map.dest;
-            self.keyboard.cursor.highlight_dir = HilightDirection::None;
-            self.keyboard.merge_kana = None;
-            return true;
-        }
-        return false;
-    }
-
     pub fn check_kana_to_kanji(&mut self) {
         if let Some(start_offset) = self
             .keyboard
@@ -850,7 +747,6 @@ impl App {
 
     pub fn convert_kana_to_kanji(&mut self) -> bool {
         if let Some(kana_to_kanji) = &self.keyboard.kana_to_kanji {
-            assert!(self.keyboard.merge_kana.is_none());
             // remove offsets that are replaced by new kanji offse
             self.keyboard.kana_offsets.retain(|offset| {
                 !(offset.dest.pos >= self.keyboard.cursor.offset.pos
@@ -934,13 +830,6 @@ impl App {
         return &self.keyboard.kana;
     }
 
-    pub fn get_merge_kana(&self) -> Option<&str> {
-        if let Some(merge_kana) = &self.keyboard.merge_kana {
-            return Some(&merge_kana.kana);
-        }
-        return None;
-    }
-
     pub fn get_kana_to_kanji(&self) -> Option<&SelectKanji> {
         if let Some(kana_to_kanji) = &self.keyboard.kana_to_kanji {
             return Some(&kana_to_kanji.kanji);
@@ -953,7 +842,6 @@ impl App {
     }
 
     pub fn reset_conversion_selection(&mut self) {
-        self.keyboard.merge_kana = None;
         self.keyboard.kana_to_kanji = None;
     }
 
@@ -962,7 +850,6 @@ impl App {
         self.keyboard.kana.clear();
         self.keyboard.romanji.push(' ');
         self.keyboard.kana.push(' ');
-        self.keyboard.merge_kana = None;
         self.keyboard.kana_to_kanji = None;
         self.keyboard.english = false;
         self.keyboard.kana_offsets.clear();

@@ -119,7 +119,7 @@ where
                                 app.kanji_select_down();
                             }
                             KeyCode::Enter => {
-                                if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
+                                if !app.convert_kana_to_kanji() {
                                     app.push_message();
                                     app.reset_keyboard();
                                 }
@@ -128,10 +128,7 @@ where
                                 app.toggle_english();
                             }
                             KeyCode::Esc => {
-                                if !reset_conversion
-                                    && (app.get_merge_kana().is_some()
-                                        || app.get_kana_to_kanji().is_some())
-                                {
+                                if !reset_conversion && app.get_kana_to_kanji().is_some() {
                                     app.reset_conversion_selection();
                                     reset_conversion = true;
                                 } else {
@@ -300,10 +297,7 @@ where
                     },
                     CurrentScreen::Review => match key.code {
                         KeyCode::Esc => {
-                            if !reset_conversion
-                                && (app.get_merge_kana().is_some()
-                                    || app.get_kana_to_kanji().is_some())
-                            {
+                            if !reset_conversion && app.get_kana_to_kanji().is_some() {
                                 app.reset_conversion_selection();
                                 reset_conversion = true;
                             } else {
@@ -320,7 +314,7 @@ where
                             }
                         }
                         KeyCode::Enter => {
-                            if !app.update_merge_kana() && !app.convert_kana_to_kanji() {
+                            if !app.convert_kana_to_kanji() {
                                 app.context.prev_section_idx = app.context.section_idx;
                                 app.context.prev_phrase_idx = Some(app.context.phrase_idx);
                                 app.context.prev_translation_direction =
@@ -430,7 +424,6 @@ where
                     },
                 }
                 if !reset_conversion {
-                    app.check_merge_kana();
                     app.check_kana_to_kanji();
                 }
             }
