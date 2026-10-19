@@ -501,14 +501,14 @@ impl App {
                         .char_indices()
                         .nth(start_idx)
                         .map(|(i, _)| i)
-                        .unwrap_or(self.keyboard.kana.len());
+                        .unwrap();
                     let end_byte_index = self
                         .keyboard
                         .kana
                         .char_indices()
                         .nth(end_idx)
                         .map(|(i, _)| i)
-                        .unwrap_or(self.keyboard.kana.len());
+                        .unwrap();
                     self.keyboard.kana.replace_range(
                         start_byte_index..end_byte_index,
                         &converted_str.to_string(),
@@ -563,7 +563,7 @@ impl App {
                 .char_indices()
                 .nth(self.keyboard.cursor.offset.pos)
                 .map(|(idx, _)| idx)
-                .unwrap_or(self.keyboard.kana.len());
+                .unwrap();
             self.keyboard.kana.insert(insert_idx, value);
 
             // update offsets passed cursor to account for insersion of new char
@@ -727,14 +727,14 @@ impl App {
                 .char_indices()
                 .nth(start_idx)
                 .map(|(i, _)| i)
-                .unwrap_or(self.keyboard.kana.len());
+                .unwrap();
             let end_byte_index = self
                 .keyboard
                 .kana
                 .char_indices()
                 .nth(end_idx)
                 .map(|(i, _)| i)
-                .unwrap_or(self.keyboard.kana.len());
+                .unwrap();
             self.keyboard
                 .kana
                 .replace_range(start_byte_index..end_byte_index, "");
@@ -858,14 +858,14 @@ impl App {
                 .char_indices()
                 .nth(self.keyboard.cursor.offset.pos)
                 .map(|(i, _)| i)
-                .unwrap_or(self.keyboard.kana.len());
+                .unwrap();
             let end_byte_index = self
                 .keyboard
                 .kana
                 .char_indices()
                 .nth(self.keyboard.cursor.offset.pos + self.keyboard.cursor.offset.len)
                 .map(|(i, _)| i)
-                .unwrap_or(self.keyboard.kana.len());
+                .unwrap();
             let mut buf = [0; 4];
             let kanji_char: &str =
                 kana_to_kanji.kanji.kanji_list[kana_to_kanji.kanji.idx].encode_utf8(&mut buf);
