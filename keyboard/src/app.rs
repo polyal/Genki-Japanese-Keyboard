@@ -452,7 +452,7 @@ impl App {
                 if let Some(last_offset) = last_offset {
                     // check if last_offset is an n conversion so we can auto merge conversion
                     // eg. ni -> に not んい
-                    // because n gets converted to ん at previous insertion
+                    // because n/N gets converted to ん/ン at previous insertion
                     if last_offset.src.len == 1
                         && self
                             .keyboard
@@ -460,7 +460,7 @@ impl App {
                             .chars()
                             .nth(last_offset.src.pos)
                             .unwrap()
-                            == 'n'
+                            .eq_ignore_ascii_case(&'n')
                     {
                         gap = end - last_offset.src.pos;
                         try_merge_kana = true;
@@ -602,17 +602,29 @@ impl App {
                 last_offset.dest.pos + last_offset.dest.len < self.keyboard.kana.chars().count()
             );
 
-            // check if last_offset is an n conversion so we can split conversion instead of deletion
+            let start_byte_index = self
+                .keyboard
+                .kana
+                .char_indices()
+                .nth(last_offset.dest.pos)
+                .map(|(i, _)| i)
+                .unwrap();
+            let end_byte_index = self
+                .keyboard
+                .kana
+                .char_indices()
+                .nth(last_offset.dest.pos + last_offset.dest.len)
+                .map(|(i, _)| i)
+                .unwrap();
+            let remove_kana = &self.keyboard.kana[start_byte_index..end_byte_index];
+
+            // check if last_offset is a merge kana conversion so we can split conversion instead of delete
             // eg. に -> んい
-            if last_offset.src.len > 1
-                && self
-                    .keyboard
-                    .romanji
-                    .chars()
-                    .nth(last_offset.src.pos)
-                    .unwrap()
-                    == 'n'
-            {
+            let merge_kana = [
+                "な", "に", "ぬ", "ね", "の", "にゃ", "にゅ", "にょ", "ナ", "ニ", "ヌ", "ネ", "ノ",
+                "ニャ", "ニュ", "ニョ",
+            ];
+            if merge_kana.contains(&remove_kana) {
                 split_kana = true;
 
                 // redo conversion for split
@@ -631,7 +643,7 @@ impl App {
                     .kana_converter
                     .convert(n_substr, true)
                     .unwrap();
-                let r_split: String = self
+                let r_split = self
                     .keyboard
                     .kana_converter
                     .convert(r_substr, true)
@@ -639,20 +651,6 @@ impl App {
                 let combined = n_split + &r_split;
 
                 // update newly split string
-                let start_byte_index = self
-                    .keyboard
-                    .kana
-                    .char_indices()
-                    .nth(last_offset.dest.pos)
-                    .map(|(i, _)| i)
-                    .unwrap_or(self.keyboard.kana.len());
-                let end_byte_index = self
-                    .keyboard
-                    .kana
-                    .char_indices()
-                    .nth(last_offset.dest.pos + last_offset.dest.len)
-                    .map(|(i, _)| i)
-                    .unwrap_or(self.keyboard.kana.len());
                 self.keyboard
                     .kana
                     .replace_range(start_byte_index..end_byte_index, &combined);
@@ -684,22 +682,6 @@ impl App {
                 );
 
                 // remove kana
-                let start_idx = last_offset.dest.pos;
-                let end_idx = last_offset.dest.pos + last_offset.dest.len;
-                let start_byte_index = self
-                    .keyboard
-                    .kana
-                    .char_indices()
-                    .nth(start_idx)
-                    .map(|(i, _)| i)
-                    .unwrap_or(self.keyboard.kana.len());
-                let end_byte_index = self
-                    .keyboard
-                    .kana
-                    .char_indices()
-                    .nth(end_idx)
-                    .map(|(i, _)| i)
-                    .unwrap_or(self.keyboard.kana.len());
                 self.keyboard
                     .kana
                     .replace_range(start_byte_index..end_byte_index, "");
