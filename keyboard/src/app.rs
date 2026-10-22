@@ -74,6 +74,7 @@ impl Context {
 pub struct App {
     pub book: Book,
     pub context: Context,
+
     keyboard: Keyboard,
 
     peer: Peer,
