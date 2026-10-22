@@ -224,37 +224,39 @@ fn render_chat(frame: &mut Frame, app: &App) {
         .style(Style::default().fg(Color::LightYellow));
     frame.render_widget(connected_to, connected_to_chunk);
 
-    let mut message_items = Vec::<ListItem>::new();
+    let mut wrapped_lines = 0;
+    let mut message_list = Vec::<Line>::new();
     for message in app.get_messages() {
+        let message_text = message.get();
+        wrapped_lines += message_text.len() as u16 / frame.area().width;
         if let chat::Direction::Inbound = message.get_direction() {
-            message_items.push(ListItem::new(
+            message_list.push(
                 Line::from(Span::styled(
-                    message.get(),
+                    message_text,
                     Style::default().fg(Color::LightYellow),
                 ))
                 .alignment(Alignment::Left),
-            ));
+            );
         } else {
-            message_items.push(ListItem::new(
+            message_list.push(
                 Line::from(Span::styled(
-                    message.get(),
+                    message_text,
                     Style::default().fg(Color::Yellow),
                 ))
                 .alignment(Alignment::Right),
-            ));
+            );
         }
     }
 
-    let num_messages = message_items.len();
-    let message_list = List::new(message_items).block(Block::bordered());
-    if num_messages == 0 {
-        frame.render_widget(message_list, message_chunk);
+    let scroll_height = if message_list.len() as u16 + wrapped_lines > message_chunk.height {
+        message_list.len() as u16 + wrapped_lines - message_chunk.height
     } else {
-        // autoscroll so latest message shows up on bottom
-        let mut list_state = ListState::default();
-        list_state.select(Some(num_messages - 1));
-        frame.render_stateful_widget(message_list, message_chunk, &mut list_state);
-    }
+        0
+    };
+    let messages = Paragraph::new(Text::from(message_list))
+        .wrap(Wrap { trim: true })
+        .scroll((scroll_height, 0));
+    frame.render_widget(messages, message_chunk);
 
     if let ChatSelection::Popup = app.context.chat_screen {
         let popup_block = Block::default()
