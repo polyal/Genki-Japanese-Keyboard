@@ -4,6 +4,8 @@ use crate::lessons::Book;
 
 use std::collections::{HashSet, VecDeque};
 
+const MAX_MESSAGES: usize = 50;
+
 pub enum CurrentScreen {
     Welcome,
     Chat,
@@ -111,6 +113,12 @@ impl App {
     }
 
     pub fn check_received_message(&mut self) -> bool {
+        // prune first
+        if self.messages.len() > MAX_MESSAGES {
+            for _ in 0..self.messages.len() - MAX_MESSAGES {
+                self.messages.pop_front();
+            }
+        }
         if self.peer.peek_message() {
             self.messages.push_back(self.peer.pop_message());
             return true;
