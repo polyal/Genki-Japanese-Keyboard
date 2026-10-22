@@ -7,13 +7,11 @@ use std::thread;
 
 const PORT: &str = "57007";
 
-#[derive(Clone)]
 pub enum Direction {
     Inbound,
     Outbound,
 }
 
-#[derive(Clone)]
 pub struct Message {
     value: String,
     direction: Direction,
@@ -175,9 +173,9 @@ impl Peer {
     pub fn send_message(&mut self, message: &Message) -> std::io::Result<()> {
         assert!(self.is_online());
         let mut writer_stream = self.stream.as_mut().unwrap().try_clone()?;
-        let message_clone = message.clone();
+        let message_value = message.value.clone();
         thread::spawn(move || {
-            let _ = writer_stream.write_all(message_clone.value.as_bytes());
+            let _ = writer_stream.write_all(message_value.as_bytes());
         });
         Ok(())
     }
