@@ -2,6 +2,7 @@ mod app;
 mod chat;
 mod kana_converter;
 mod kanji_converter;
+mod keyboard;
 mod lessons;
 mod ui;
 
