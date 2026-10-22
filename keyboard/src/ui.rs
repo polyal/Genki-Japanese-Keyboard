@@ -118,11 +118,13 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
         text_colour = Color::Yellow;
         title = " 日本語 ".to_string();
     };
-    let text = Paragraph::new(kana_formatted).block(
-        Block::bordered()
-            .title(title)
-            .border_style(Style::default().fg(text_colour)),
-    );
+    let text = Paragraph::new(kana_formatted)
+        .block(
+            Block::bordered()
+                .title(title)
+                .border_style(Style::default().fg(text_colour)),
+        )
+        .wrap(Wrap { trim: false });
     frame.render_widget(text, keyboard_rect);
 
     // popup for kana to kanji options
