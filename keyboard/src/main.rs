@@ -85,6 +85,7 @@ where
                         KeyCode::Enter => {
                             if app.context.chat == 1 {
                                 app.context.current_screen = CurrentScreen::Chat;
+                                app.context.chat_screen = ChatSelection::Popup;
                             } else {
                                 app.context.current_screen = CurrentScreen::LessonSelect;
                             }
@@ -134,7 +135,17 @@ where
                                     reset_conversion = true;
                                 } else {
                                     app.reset_peer();
-                                    break;
+                                    app.context.current_screen = CurrentScreen::Welcome;
+                                    app.context.current_selection = CurrentSelection::Lesson;
+                                    app.context.chat = 0;
+                                    app.context.lesson_idx = 0;
+                                    app.context.section_idx = None;
+                                    app.context.prev_section_idx = None;
+                                    app.context.prev_phrase_idx = None;
+                                    app.context.prev_translation_direction = None;
+                                    app.context.prev_answer = None;
+                                    app.context.asked_questions.clear();
+                                    app.keyboard.reset();
                                 }
                             }
                             _ => {}
@@ -170,7 +181,9 @@ where
                                 app.keyboard.reset();
                             }
                             KeyCode::Esc => {
-                                break;
+                                app.context.chat_screen = ChatSelection::Chat;
+                                app.reset_peer();
+                                app.keyboard.reset();
                             }
                             _ => {}
                         },
@@ -180,6 +193,7 @@ where
                             KeyCode::Esc => {
                                 app.context.current_screen = CurrentScreen::Welcome;
                                 app.context.current_selection = CurrentSelection::Lesson;
+                                app.context.chat = 0;
                                 app.context.lesson_idx = 0;
                                 app.context.section_idx = None;
                                 app.context.prev_section_idx = None;
@@ -237,7 +251,17 @@ where
                         },
                         CurrentSelection::Section => match key.code {
                             KeyCode::Esc => {
-                                break;
+                                app.context.current_screen = CurrentScreen::Welcome;
+                                app.context.current_selection = CurrentSelection::Lesson;
+                                app.context.chat = 0;
+                                app.context.lesson_idx = 0;
+                                app.context.section_idx = None;
+                                app.context.prev_section_idx = None;
+                                app.context.prev_phrase_idx = None;
+                                app.context.prev_translation_direction = None;
+                                app.context.prev_answer = None;
+                                app.context.asked_questions.clear();
+                                app.keyboard.reset();
                             }
                             KeyCode::Enter => {
                                 app.context.current_screen = CurrentScreen::Review;
@@ -304,6 +328,7 @@ where
                             } else {
                                 app.context.current_screen = CurrentScreen::LessonSelect;
                                 app.context.current_selection = CurrentSelection::Lesson;
+                                app.context.chat = 0;
                                 app.context.lesson_idx = 0;
                                 app.context.section_idx = None;
                                 app.context.prev_section_idx = None;
