@@ -326,7 +326,7 @@ where
                                     match prev_translation_direction {
                                         TranslationDirection::ToEN => {
                                             app.context.prev_answer =
-                                                Some(app.get_romanji().to_string());
+                                                Some(app.get_romaji().to_string());
                                         }
                                         TranslationDirection::ToJP => {
                                             app.context.prev_answer =

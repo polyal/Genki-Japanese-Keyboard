@@ -143,8 +143,8 @@ impl App {
         self.keyboard.set_english(val);
     }
 
-    pub fn get_romanji(&self) -> &str {
-        return self.keyboard.get_romanji();
+    pub fn get_romaji(&self) -> &str {
+        return self.keyboard.get_romaji();
     }
 
     pub fn get_kana(&self) -> &str {
@@ -172,7 +172,7 @@ impl App {
     }
 
     pub fn create_client(&mut self) {
-        let _ = self.peer.connect(self.keyboard.get_romanji());
+        let _ = self.peer.connect(self.keyboard.get_romaji());
     }
 
     pub fn push_message(&mut self) {

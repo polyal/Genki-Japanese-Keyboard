@@ -297,7 +297,7 @@ fn render_chat(frame: &mut Frame, app: &App) {
             host_block = host_block.style(active_style)
         }
 
-        let key_text = Paragraph::new(app.get_romanji().to_string())
+        let key_text = Paragraph::new(app.get_romaji().to_string())
             .alignment(Alignment::Center)
             .block(connect_block);
         frame.render_widget(key_text, popup_chunks[0]);

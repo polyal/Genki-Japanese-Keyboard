@@ -16,7 +16,7 @@ struct Kana {
 }
 
 struct Phrase<'a> {
-    romanji: &'a str,
+    romaji: &'a str,
     kana: String,
     offset: usize,
     len: usize,
@@ -25,7 +25,7 @@ struct Phrase<'a> {
 impl<'a> Phrase<'a> {
     fn new(phrase: &'a str) -> Self {
         Phrase {
-            romanji: phrase,
+            romaji: phrase,
             kana: String::new(),
             offset: 0,
             len: 0,
@@ -33,7 +33,7 @@ impl<'a> Phrase<'a> {
     }
 
     fn compare(&mut self, node: &Kana) -> bool {
-        let first = self.romanji.chars().nth(self.offset + self.len);
+        let first = self.romaji.chars().nth(self.offset + self.len);
         if let Some(first) = &first
             && node.key == *first
         {
@@ -47,7 +47,7 @@ impl<'a> Phrase<'a> {
     }
 
     fn done(&self) -> bool {
-        return self.offset >= self.romanji.chars().count();
+        return self.offset >= self.romaji.chars().count();
     }
 
     fn next(&mut self) {
@@ -56,9 +56,9 @@ impl<'a> Phrase<'a> {
     }
 
     fn skip(&mut self) {
-        // cant match romanji
+        // cant match romaji
         // push unmatched char onto result
-        let first = self.romanji.chars().nth(self.offset);
+        let first = self.romaji.chars().nth(self.offset);
         if let Some(first) = &first {
             self.kana.push(*first);
             // continue matching with next char
@@ -76,17 +76,17 @@ impl<'a> Phrase<'a> {
     }
 }
 
-pub struct RomanjiToKanaConverter {
+pub struct RomajiToKanaConverter {
     head: Head,
 }
 
-impl RomanjiToKanaConverter {
+impl RomajiToKanaConverter {
     pub fn new() -> Self {
         // read hiragana/katakana rules json
         let json =
             fs::read_to_string("resources/kana.json").expect("couldnt read resources/kana.json");
 
-        RomanjiToKanaConverter {
+        RomajiToKanaConverter {
             head: serde_json::from_str::<Head>(&json).unwrap(),
         }
     }
@@ -117,8 +117,8 @@ impl RomanjiToKanaConverter {
         return matched;
     }
 
-    pub fn convert(&self, romanji: &str, single_char: bool) -> Option<String> {
-        let mut phrase = Phrase::new(romanji);
+    pub fn convert(&self, romaji: &str, single_char: bool) -> Option<String> {
+        let mut phrase = Phrase::new(romaji);
         while !phrase.done() {
             if self.convert_phrase(&mut phrase) {
                 phrase.next();
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_converter() {
-        let converter = RomanjiToKanaConverter::new();
+        let converter = RomajiToKanaConverter::new();
         let test_cases = vec![
             ("a", "あ"),
             ("i", "い"),
@@ -460,13 +460,13 @@ mod tests {
             (".", "。"),
         ];
 
-        for (romanji, expected) in test_cases {
-            let result = converter.convert(romanji, true);
+        for (romaji, expected) in test_cases {
+            let result = converter.convert(romaji, true);
             assert_eq!(
                 result.unwrap_or_default(),
                 expected,
-                "Failed for romanji: {}",
-                romanji
+                "Failed for romaji: {}",
+                romaji
             );
         }
     }

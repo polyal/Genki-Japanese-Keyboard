@@ -1,4 +1,4 @@
-use crate::{kana_converter::RomanjiToKanaConverter, kanji_converter::HiragaToKanjiConverter};
+use crate::{kana_converter::RomajiToKanaConverter, kanji_converter::HiragaToKanjiConverter};
 
 #[derive(PartialEq, Clone, Copy)]
 pub struct Offset {
@@ -67,10 +67,10 @@ impl Cursor {
 }
 
 pub struct Keyboard {
-    kana_converter: RomanjiToKanaConverter,
+    kana_converter: RomajiToKanaConverter,
     kanji_converter: HiragaToKanjiConverter,
 
-    romanji: String,
+    romaji: String,
     kana: String,
 
     kana_offsets: Vec<OffsetMap>,
@@ -85,9 +85,9 @@ pub struct Keyboard {
 impl Keyboard {
     pub fn new() -> Self {
         Keyboard {
-            kana_converter: RomanjiToKanaConverter::new(),
+            kana_converter: RomajiToKanaConverter::new(),
             kanji_converter: HiragaToKanjiConverter::new(),
-            romanji: String::from(' '),
+            romaji: String::from(' '),
             kana: String::from(' '),
             kana_offsets: Vec::new(),
             kana_to_kanji: None,
@@ -313,23 +313,23 @@ impl Keyboard {
         };
 
         // get insert position
-        let romanji_offset: Offset;
+        let romaji_offset: Offset;
         let last_offset = get_last_offset();
         if let Some(last_offset) = last_offset {
             let unconverted_len =
                 self.cursor.offset.pos - (last_offset.dest.pos + last_offset.dest.len);
-            let romanji_pos = last_offset.src.pos + last_offset.src.len + unconverted_len;
-            romanji_offset = Offset::new(romanji_pos, 1);
+            let romaji_pos = last_offset.src.pos + last_offset.src.len + unconverted_len;
+            romaji_offset = Offset::new(romaji_pos, 1);
         } else {
-            romanji_offset = Offset::new(self.cursor.offset.pos, 1);
+            romaji_offset = Offset::new(self.cursor.offset.pos, 1);
         }
-        assert!(romanji_offset.pos < self.romanji.chars().count());
+        assert!(romaji_offset.pos < self.romaji.chars().count());
         assert!(self.cursor.offset.pos < self.kana.chars().count());
-        self.romanji.insert(romanji_offset.pos, value);
+        self.romaji.insert(romaji_offset.pos, value);
 
         if !self.english {
             let mut try_merge_kana: bool;
-            let end = romanji_offset.pos + romanji_offset.len;
+            let end = romaji_offset.pos + romaji_offset.len;
             let start: usize;
             {
                 // the longest kana conversion is 4 chars, so we use a moving window of 4 chars
@@ -340,7 +340,7 @@ impl Keyboard {
                     // because n/N gets converted to ん/ン at previous insertion
                     if last_offset.src.len == 1
                         && self
-                            .romanji
+                            .romaji
                             .chars()
                             .nth(last_offset.src.pos)
                             .unwrap()
@@ -368,14 +368,14 @@ impl Keyboard {
                     try_merge_kana = false;
                 }
 
-                let romanji_substr = self.romanji.get(i..end).unwrap();
-                if let Some(converted_str) = self.kana_converter.convert(romanji_substr, true) {
+                let romaji_substr = self.romaji.get(i..end).unwrap();
+                if let Some(converted_str) = self.kana_converter.convert(romaji_substr, true) {
                     // conversion successful
                     is_converted = true;
 
                     // update converted string
-                    let romanji_len = romanji_substr.chars().count() - 1;
-                    let start_idx = self.cursor.offset.pos - romanji_len;
+                    let romaji_len = romaji_substr.chars().count() - 1;
+                    let start_idx = self.cursor.offset.pos - romaji_len;
                     let end_idx = self.cursor.offset.pos;
                     let start_byte_index = self
                         .kana
@@ -395,18 +395,18 @@ impl Keyboard {
                     );
 
                     // update offset positions after conversion
-                    if romanji_len > converted_str.chars().count() {
+                    if romaji_len > converted_str.chars().count() {
                         assert!(!try_merge_kana);
-                        let len_diff = romanji_len - converted_str.chars().count();
+                        let len_diff = romaji_len - converted_str.chars().count();
                         for offset in &mut self.kana_offsets {
                             if self.cursor.offset.pos <= offset.dest.pos {
                                 offset.dest.pos -= len_diff;
                                 offset.src.pos += 1;
                             }
                         }
-                    } else if romanji_len <= converted_str.chars().count() {
+                    } else if romaji_len <= converted_str.chars().count() {
                         // even if len diff is 0, the src.pos still has to be updated
-                        let len_diff = converted_str.chars().count() - romanji_len;
+                        let len_diff = converted_str.chars().count() - romaji_len;
                         for offset in &mut self.kana_offsets {
                             if try_merge_kana && last_offset.unwrap().dest == offset.dest {
                                 // we if did an n merge conversion then just update existing offset
@@ -474,7 +474,7 @@ impl Keyboard {
         {
             // remove last offset
             let last_offset = self.kana_offsets.remove(last_idx);
-            assert!(last_offset.src.pos + last_offset.src.len < self.romanji.chars().count());
+            assert!(last_offset.src.pos + last_offset.src.len < self.romaji.chars().count());
             assert!(last_offset.dest.pos + last_offset.dest.len < self.kana.chars().count());
 
             let start_byte_index = self
@@ -502,11 +502,11 @@ impl Keyboard {
 
                 // redo conversion for split
                 let n_substr = self
-                    .romanji
+                    .romaji
                     .get(last_offset.src.pos..last_offset.src.pos + 1)
                     .unwrap();
                 let r_substr = self
-                    .romanji
+                    .romaji
                     .get(last_offset.src.pos + 1..last_offset.src.pos + last_offset.src.len)
                     .unwrap();
                 let n_split = self.kana_converter.convert(n_substr, true).unwrap();
@@ -537,8 +537,8 @@ impl Keyboard {
                 split_kana = false;
                 split_kana_offsets = None;
 
-                // remove romanji
-                self.romanji.replace_range(
+                // remove romaji
+                self.romaji.replace_range(
                     last_offset.src.pos..last_offset.src.pos + last_offset.src.len,
                     "",
                 );
@@ -555,7 +555,7 @@ impl Keyboard {
             split_kana_offsets = None;
 
             // get insert position
-            let romanji_offset: Offset;
+            let romaji_offset: Offset;
             {
                 let mut last_offset: Option<&OffsetMap> = None;
                 for offset in self.kana_offsets.iter() {
@@ -567,17 +567,17 @@ impl Keyboard {
                 if let Some(last_offset) = last_offset {
                     let gap =
                         self.cursor.offset.pos - (last_offset.dest.pos + last_offset.dest.len);
-                    let romanji_pos = last_offset.src.pos + last_offset.src.len + gap;
-                    romanji_offset = Offset::new(romanji_pos, 1);
+                    let romaji_pos = last_offset.src.pos + last_offset.src.len + gap;
+                    romaji_offset = Offset::new(romaji_pos, 1);
                 } else {
-                    romanji_offset = Offset::new(self.cursor.offset.pos, 1);
+                    romaji_offset = Offset::new(self.cursor.offset.pos, 1);
                 }
             }
-            assert!(romanji_offset.pos < self.romanji.chars().count());
+            assert!(romaji_offset.pos < self.romaji.chars().count());
             assert!(self.cursor.offset.pos < self.kana.chars().count());
 
-            self.romanji
-                .replace_range(romanji_offset.pos - 1..romanji_offset.pos, "");
+            self.romaji
+                .replace_range(romaji_offset.pos - 1..romaji_offset.pos, "");
 
             let start_idx = self.cursor.offset.pos - 1;
             let end_idx: usize = self.cursor.offset.pos;
@@ -641,14 +641,14 @@ impl Keyboard {
                 self.cursor.offset.pos + self.cursor.offset.len == offset.dest.pos + offset.dest.len
             })
         {
-            let romanji_offset = Offset::new(
+            let romaji_offset = Offset::new(
                 start_offset.src.pos,
                 end_offset.src.pos + end_offset.src.len - start_offset.src.pos,
             );
 
             // keep existing conversion if the same
             if let Some(existing_kana_to_kanji) = &self.kana_to_kanji
-                && existing_kana_to_kanji.offset_map.src != romanji_offset
+                && existing_kana_to_kanji.offset_map.src != romaji_offset
             {
                 self.kana_to_kanji = None;
             }
@@ -664,7 +664,7 @@ impl Keyboard {
                 if !kanji.is_empty() {
                     self.kana_to_kanji = Some(KanaToKanji::new(
                         SelectKanji::new(kanji, 0),
-                        OffsetMap::new(romanji_offset, Offset::new(start_offset.dest.pos, 1)),
+                        OffsetMap::new(romaji_offset, Offset::new(start_offset.dest.pos, 1)),
                     ));
                 }
             }
@@ -746,8 +746,8 @@ impl Keyboard {
         self.english = val;
     }
 
-    pub fn get_romanji(&self) -> &str {
-        return &self.romanji;
+    pub fn get_romaji(&self) -> &str {
+        return &self.romaji;
     }
 
     pub fn get_kana(&self) -> &str {
@@ -770,9 +770,9 @@ impl Keyboard {
     }
 
     pub fn reset(&mut self) {
-        self.romanji.clear();
+        self.romaji.clear();
         self.kana.clear();
-        self.romanji.push(' ');
+        self.romaji.push(' ');
         self.kana.push(' ');
         self.kana_to_kanji = None;
         self.english = false;
