@@ -77,12 +77,12 @@ fn render_welcome(frame: &mut Frame, app: &App) {
 
 fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
     // kana box with highlighting
-    let kana = app.get_kana();
+    let kana = app.keyboard.get_kana();
     let mut left = String::new();
     let mut middle = String::new();
     let mut right = String::new();
     if kana.chars().count() > 0 {
-        let cursor = app.get_cursor_pos();
+        let cursor = app.keyboard.get_cursor_pos();
         assert!(cursor.pos + cursor.len <= kana.chars().count() + 1);
         assert!(cursor.len >= 1);
         middle = kana
@@ -111,7 +111,7 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
 
     let text_colour: Color;
     let title: String;
-    if app.get_use_english() {
+    if app.keyboard.get_use_english() {
         text_colour = Color::White;
         title = " en ".to_string();
     } else {
@@ -126,7 +126,7 @@ fn render_keyboard(frame: &mut Frame, keyboard_rect: Rect, app: &App) {
     frame.render_widget(text, keyboard_rect);
 
     // popup for kana to kanji options
-    if let Some(kana_to_kanji) = app.get_kana_to_kanji() {
+    if let Some(kana_to_kanji) = app.keyboard.get_kana_to_kanji() {
         let area = frame.area();
         let popup_layout = Layout::horizontal([
             Constraint::Length(frame.area().width - 6),
@@ -297,7 +297,7 @@ fn render_chat(frame: &mut Frame, app: &App) {
             host_block = host_block.style(active_style)
         }
 
-        let key_text = Paragraph::new(app.get_romaji().to_string())
+        let key_text = Paragraph::new(app.keyboard.get_romaji().to_string())
             .alignment(Alignment::Center)
             .block(connect_block);
         frame.render_widget(key_text, popup_chunks[0]);

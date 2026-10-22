@@ -1,5 +1,5 @@
 use crate::chat::{Message, Peer};
-use crate::keyboard::{Keyboard, Offset, SelectKanji};
+use crate::keyboard::Keyboard;
 use crate::lessons::Book;
 
 use std::collections::{HashSet, VecDeque};
@@ -75,7 +75,7 @@ pub struct App {
     pub book: Book,
     pub context: Context,
 
-    keyboard: Keyboard,
+    pub keyboard: Keyboard,
 
     peer: Peer,
     messages: VecDeque<Message>,
@@ -92,82 +92,6 @@ impl App {
         }
     }
 
-    pub fn get_cursor_pos(&self) -> &Offset {
-        return &self.keyboard.get_cursor_pos();
-    }
-
-    pub fn cursor_right(&mut self) {
-        self.keyboard.cursor_right();
-    }
-
-    pub fn cursor_left(&mut self) {
-        self.keyboard.cursor_left();
-    }
-
-    pub fn cursor_highlight_right(&mut self) {
-        self.keyboard.cursor_highlight_right();
-    }
-
-    pub fn cursor_highlight_left(&mut self) {
-        self.keyboard.cursor_highlight_left();
-    }
-
-    pub fn push_char(&mut self, value: char) {
-        self.keyboard.push_char(value);
-    }
-
-    pub fn pop_char(&mut self) {
-        self.keyboard.pop_char();
-    }
-
-    pub fn check_kana_to_kanji(&mut self) {
-        self.keyboard.check_kana_to_kanji();
-    }
-
-    pub fn convert_kana_to_kanji(&mut self) -> bool {
-        return self.keyboard.convert_kana_to_kanji();
-    }
-
-    pub fn kanji_select_down(&mut self) {
-        self.keyboard.kanji_select_down();
-    }
-
-    pub fn kanji_select_up(&mut self) {
-        self.keyboard.kanji_select_up();
-    }
-
-    pub fn toggle_english(&mut self) {
-        self.keyboard.toggle_english();
-    }
-
-    pub fn set_english(&mut self, val: bool) {
-        self.keyboard.set_english(val);
-    }
-
-    pub fn get_romaji(&self) -> &str {
-        return self.keyboard.get_romaji();
-    }
-
-    pub fn get_kana(&self) -> &str {
-        return self.keyboard.get_kana();
-    }
-
-    pub fn get_kana_to_kanji(&self) -> Option<&SelectKanji> {
-        return self.keyboard.get_kana_to_kanji();
-    }
-
-    pub fn get_use_english(&self) -> bool {
-        return self.keyboard.get_use_english();
-    }
-
-    pub fn reset_conversion_selection(&mut self) {
-        self.keyboard.reset_conversion_selection();
-    }
-
-    pub fn reset_keyboard(&mut self) {
-        self.keyboard.reset();
-    }
-
     pub fn create_server(&mut self) {
         let _ = self.peer.host();
     }
@@ -178,7 +102,7 @@ impl App {
 
     pub fn push_message(&mut self) {
         if !self.keyboard.get_kana().is_empty() {
-            let message = Message::new(self.get_kana());
+            let message = Message::new(self.keyboard.get_kana());
             if self.is_online() {
                 let _ = self.peer.send_message(&message);
             }
