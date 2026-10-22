@@ -138,6 +138,7 @@ where
                                     app.context.current_screen = CurrentScreen::Welcome;
                                     app.context.current_selection = CurrentSelection::Lesson;
                                     app.context.chat = 0;
+                                    app.context.host = 0;
                                     app.context.lesson_idx = 0;
                                     app.context.section_idx = None;
                                     app.context.prev_section_idx = None;

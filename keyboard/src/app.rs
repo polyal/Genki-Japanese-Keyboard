@@ -97,7 +97,7 @@ impl App {
     }
 
     pub fn create_client(&mut self) {
-        let _ = self.peer.connect(self.keyboard.get_romaji());
+        let _ = self.peer.connect(self.keyboard.get_romaji().trim());
     }
 
     pub fn push_message(&mut self) {
@@ -128,6 +128,7 @@ impl App {
 
     pub fn reset_peer(&mut self) {
         self.peer.reset_connection();
+        self.messages.clear();
     }
 
     pub fn get_peer(&self) -> String {
