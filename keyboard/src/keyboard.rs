@@ -1,5 +1,7 @@
 use crate::{kana_converter::RomajiToKanaConverter, kanji_converter::HiragaToKanjiConverter};
 
+const MAX_VALID_ROMAJI_LEN: usize = 4;
+
 #[derive(PartialEq, Clone, Copy)]
 pub struct Offset {
     pub pos: usize,
@@ -332,7 +334,7 @@ impl Keyboard {
             let end = romaji_offset.pos + romaji_offset.len;
             let start: usize;
             {
-                // the longest kana conversion is 4 chars, so we use a moving window of 4 chars
+                // look behind to see if we can convert unconverted romaji
                 let gap: usize;
                 if let Some(last_offset) = last_offset {
                     // check if last_offset is an n conversion so we can auto merge conversion
@@ -356,13 +358,15 @@ impl Keyboard {
                     try_merge_kana = false;
                     gap = end;
                 }
-                if gap > 4 {
-                    start = end - 4;
+                // the longest kana conversion is 4 chars, so we look back a max of 4 chars
+                if gap > MAX_VALID_ROMAJI_LEN {
+                    start = end - MAX_VALID_ROMAJI_LEN;
                 } else {
                     start = end - gap;
                 }
             }
 
+            // try look back sliding window conversion
             for i in start..end {
                 if i != start {
                     try_merge_kana = false;
