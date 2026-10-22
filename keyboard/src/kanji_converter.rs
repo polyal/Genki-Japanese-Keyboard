@@ -188,7 +188,7 @@ mod tests {
         ];
 
         for (romaji, expected) in test_cases {
-            let result = converter.convert(&romaji.to_string());
+            let result = converter.convert(romaji);
             assert_eq!(result, expected, "Failed for romaji: {}", romaji);
         }
     }
