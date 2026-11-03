@@ -102,16 +102,16 @@ where
                             }
                             KeyCode::Right => {
                                 if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                    app.keyboard.cursor_highlight_right();
+                                    app.keyboard.highlight_right();
                                 } else {
-                                    app.keyboard.cursor_right();
+                                    app.keyboard.right();
                                 }
                             }
                             KeyCode::Left => {
                                 if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                    app.keyboard.cursor_highlight_left();
+                                    app.keyboard.highlight_left();
                                 } else {
-                                    app.keyboard.cursor_left();
+                                    app.keyboard.left();
                                 }
                             }
                             KeyCode::Up => {
@@ -426,16 +426,16 @@ where
                         }
                         KeyCode::Right => {
                             if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.keyboard.cursor_highlight_right();
+                                app.keyboard.highlight_right();
                             } else {
-                                app.keyboard.cursor_right();
+                                app.keyboard.right();
                             }
                         }
                         KeyCode::Left => {
                             if key.modifiers.contains(KeyModifiers::SHIFT) {
-                                app.keyboard.cursor_highlight_left();
+                                app.keyboard.highlight_left();
                             } else {
-                                app.keyboard.cursor_left();
+                                app.keyboard.left();
                             }
                         }
                         KeyCode::Up => {

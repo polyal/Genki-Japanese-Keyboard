@@ -103,7 +103,7 @@ impl Keyboard {
         return &self.cursor.offset;
     }
 
-    pub fn cursor_right(&mut self) {
+    pub fn right(&mut self) {
         if let Some(offset) = self
             .kana_offsets
             .iter()
@@ -134,7 +134,7 @@ impl Keyboard {
         assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
     }
 
-    pub fn cursor_left(&mut self) {
+    pub fn left(&mut self) {
         // update highlighting
         if let Some(offset) = self
             .kana_offsets
@@ -166,7 +166,7 @@ impl Keyboard {
         assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
     }
 
-    pub fn cursor_highlight_right(&mut self) {
+    pub fn highlight_right(&mut self) {
         match self.cursor.highlight_dir {
             HilightDirection::None | HilightDirection::Right => {
                 if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
@@ -237,7 +237,7 @@ impl Keyboard {
         assert!(self.cursor.offset.pos + self.cursor.offset.len <= self.kana.chars().count());
     }
 
-    pub fn cursor_highlight_left(&mut self) {
+    pub fn highlight_left(&mut self) {
         match self.cursor.highlight_dir {
             HilightDirection::Right => {
                 if let Some(offset) = self.kana_offsets.iter().find(|&offset| {
@@ -844,30 +844,30 @@ mod tests {
         assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // move left
-        keyboard.cursor_left();
+        keyboard.left();
         assert_keyboard(&keyboard, 2, 1, HilightDirection::None, "abc ", "abc ");
 
         // move left
-        keyboard.cursor_left();
-        keyboard.cursor_left();
+        keyboard.left();
+        keyboard.left();
         assert_keyboard(&keyboard, 0, 1, HilightDirection::None, "abc ", "abc ");
 
         // move left past limit
-        keyboard.cursor_left();
+        keyboard.left();
         assert_keyboard(&keyboard, 0, 1, HilightDirection::None, "abc ", "abc ");
 
         // move right
-        keyboard.cursor_right();
-        keyboard.cursor_right();
-        keyboard.cursor_right();
+        keyboard.right();
+        keyboard.right();
+        keyboard.right();
         assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // move right past limit
-        keyboard.cursor_right();
+        keyboard.right();
         assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // move left pop char
-        keyboard.cursor_left();
+        keyboard.left();
         keyboard.pop_char();
         assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "ac ", "ac ");
 
@@ -888,51 +888,51 @@ mod tests {
         assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // highlight left
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(&keyboard, 2, 2, HilightDirection::Left, "abc ", "abc ");
 
         // highlight left
-        keyboard.cursor_highlight_left();
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(&keyboard, 0, 4, HilightDirection::Left, "abc ", "abc ");
 
         // highlight left past limit
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(&keyboard, 0, 4, HilightDirection::Left, "abc ", "abc ");
 
         // undo highlight left
-        keyboard.cursor_left();
+        keyboard.left();
         assert_keyboard(&keyboard, 0, 1, HilightDirection::None, "abc ", "abc ");
 
         // highlight right
-        keyboard.cursor_highlight_right();
-        keyboard.cursor_highlight_right();
-        keyboard.cursor_highlight_right();
+        keyboard.highlight_right();
+        keyboard.highlight_right();
+        keyboard.highlight_right();
         assert_keyboard(&keyboard, 0, 4, HilightDirection::Right, "abc ", "abc ");
 
         // highlight right past limit
-        keyboard.cursor_highlight_right();
+        keyboard.highlight_right();
         assert_keyboard(&keyboard, 0, 4, HilightDirection::Right, "abc ", "abc ");
 
         // undo highlight right
-        keyboard.cursor_right();
+        keyboard.right();
         assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // highlight direction change
-        keyboard.cursor_left();
-        keyboard.cursor_left();
+        keyboard.left();
+        keyboard.left();
         assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "abc ", "abc ");
 
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(&keyboard, 0, 2, HilightDirection::Left, "abc ", "abc ");
 
-        keyboard.cursor_highlight_right();
+        keyboard.highlight_right();
         assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "abc ", "abc ");
 
-        keyboard.cursor_highlight_right();
+        keyboard.highlight_right();
         assert_keyboard(&keyboard, 1, 2, HilightDirection::Right, "abc ", "abc ");
 
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "abc ", "abc ");
     }
 
@@ -1051,7 +1051,7 @@ mod tests {
         );
 
         // move left
-        keyboard.cursor_left();
+        keyboard.left();
         assert_keyboard(
             &keyboard,
             3,
@@ -1062,8 +1062,8 @@ mod tests {
         );
 
         // move left
-        keyboard.cursor_left();
-        keyboard.cursor_left();
+        keyboard.left();
+        keyboard.left();
         assert_keyboard(
             &keyboard,
             0,
@@ -1074,8 +1074,8 @@ mod tests {
         );
 
         // move left past limit
-        keyboard.cursor_left();
-        keyboard.cursor_left();
+        keyboard.left();
+        keyboard.left();
         assert_keyboard(
             &keyboard,
             0,
@@ -1086,8 +1086,8 @@ mod tests {
         );
 
         // move right
-        keyboard.cursor_right();
-        keyboard.cursor_right();
+        keyboard.right();
+        keyboard.right();
         assert_keyboard(
             &keyboard,
             3,
@@ -1098,8 +1098,8 @@ mod tests {
         );
 
         // move right past limit
-        keyboard.cursor_right();
-        keyboard.cursor_right();
+        keyboard.right();
+        keyboard.right();
         assert_keyboard(
             &keyboard,
             6,
@@ -1110,7 +1110,7 @@ mod tests {
         );
 
         // move left pop char
-        keyboard.cursor_left();
+        keyboard.left();
         keyboard.pop_char();
         assert_eq!(
             keyboard.kana_offsets,
@@ -1171,7 +1171,7 @@ mod tests {
         );
 
         // highlight left
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(
             &keyboard,
             3,
@@ -1182,8 +1182,8 @@ mod tests {
         );
 
         // highlight left
-        keyboard.cursor_highlight_left();
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(
             &keyboard,
             0,
@@ -1194,7 +1194,7 @@ mod tests {
         );
 
         // highlight left past limit
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(
             &keyboard,
             0,
@@ -1205,7 +1205,7 @@ mod tests {
         );
 
         // undo highlight left
-        keyboard.cursor_left();
+        keyboard.left();
         assert_keyboard(
             &keyboard,
             0,
@@ -1216,9 +1216,9 @@ mod tests {
         );
 
         // highlight right
-        keyboard.cursor_highlight_right();
-        keyboard.cursor_highlight_right();
-        keyboard.cursor_highlight_right();
+        keyboard.highlight_right();
+        keyboard.highlight_right();
+        keyboard.highlight_right();
         assert_keyboard(
             &keyboard,
             0,
@@ -1229,7 +1229,7 @@ mod tests {
         );
 
         // highlight right past limit
-        keyboard.cursor_highlight_right();
+        keyboard.highlight_right();
         assert_keyboard(
             &keyboard,
             0,
@@ -1240,7 +1240,7 @@ mod tests {
         );
 
         // undo highlight right
-        keyboard.cursor_right();
+        keyboard.right();
         assert_keyboard(
             &keyboard,
             6,
@@ -1251,8 +1251,8 @@ mod tests {
         );
 
         // highlight direction change
-        keyboard.cursor_left();
-        keyboard.cursor_left();
+        keyboard.left();
+        keyboard.left();
         assert_keyboard(
             &keyboard,
             1,
@@ -1262,7 +1262,7 @@ mod tests {
             "あちょっきゃ ",
         );
 
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(
             &keyboard,
             0,
@@ -1272,7 +1272,7 @@ mod tests {
             "あちょっきゃ ",
         );
 
-        keyboard.cursor_highlight_right();
+        keyboard.highlight_right();
         assert_keyboard(
             &keyboard,
             1,
@@ -1282,7 +1282,7 @@ mod tests {
             "あちょっきゃ ",
         );
 
-        keyboard.cursor_highlight_right();
+        keyboard.highlight_right();
         assert_keyboard(
             &keyboard,
             1,
@@ -1292,7 +1292,7 @@ mod tests {
             "あちょっきゃ ",
         );
 
-        keyboard.cursor_highlight_left();
+        keyboard.highlight_left();
         assert_keyboard(
             &keyboard,
             1,
@@ -1359,8 +1359,8 @@ mod tests {
         // split kana
         for _ in 0..16 {
             keyboard.pop_char();
-            keyboard.cursor_left();
-            keyboard.cursor_left();
+            keyboard.left();
+            keyboard.left();
         }
 
         assert_keyboard(
@@ -1384,7 +1384,7 @@ mod tests {
 
         // reset keyboard
         for _ in 0..20 {
-            keyboard.cursor_right();
+            keyboard.right();
             keyboard.pop_char();
         }
 
@@ -1438,8 +1438,8 @@ mod tests {
         // split kana
         for _ in 0..6 {
             keyboard.pop_char();
-            keyboard.cursor_left();
-            keyboard.cursor_left();
+            keyboard.left();
+            keyboard.left();
         }
 
         assert_keyboard(
@@ -1537,8 +1537,8 @@ mod tests {
         );
 
         // highlight さん
-        keyboard.cursor_left();
-        keyboard.cursor_highlight_left();
+        keyboard.left();
+        keyboard.highlight_left();
         assert!(keyboard.kana_to_kanji.is_none());
         keyboard.check_kana_to_kanji();
         assert!(keyboard.kana_to_kanji.is_some());
@@ -1587,7 +1587,7 @@ mod tests {
         );
 
         // highlight に
-        keyboard.cursor_left();
+        keyboard.left();
         assert!(keyboard.kana_to_kanji.is_none());
         keyboard.check_kana_to_kanji();
         keyboard.kanji_select_down();
@@ -1640,9 +1640,9 @@ mod tests {
         );
 
         // highlight いち
-        keyboard.cursor_left();
-        keyboard.cursor_left();
-        keyboard.cursor_highlight_right();
+        keyboard.left();
+        keyboard.left();
+        keyboard.highlight_right();
         assert!(keyboard.kana_to_kanji.is_none());
         keyboard.check_kana_to_kanji();
         assert!(keyboard.kana_to_kanji.is_some());
