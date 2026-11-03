@@ -2,7 +2,7 @@ use crate::{kana_converter::RomajiToKanaConverter, kanji_converter::HiragaToKanj
 
 const MAX_VALID_ROMAJI_LEN: usize = 4;
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub struct Offset {
     pub pos: usize,
     pub len: usize,
@@ -14,7 +14,7 @@ impl Offset {
     }
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 struct OffsetMap {
     src: Offset,
     dest: Offset,
@@ -1018,16 +1018,54 @@ mod tests {
         assert_eq!(keyboard.cursor.offset.pos, 0);
         assert_eq!(keyboard.cursor.offset.len, 1);
         assert!(!keyboard.english);
+        assert!(keyboard.kana_offsets.is_empty());
 
         // simple push
         keyboard.push_char('a');
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![OffsetMap {
+                src: Offset { pos: 0, len: 1 },
+                dest: Offset { pos: 0, len: 1 }
+            }]
+        );
         keyboard.push_char('c');
         keyboard.push_char('h');
         keyboard.push_char('o');
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![
+                OffsetMap {
+                    src: Offset { pos: 0, len: 1 },
+                    dest: Offset { pos: 0, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 1, len: 3 },
+                    dest: Offset { pos: 1, len: 2 }
+                }
+            ]
+        );
         keyboard.push_char('k');
         keyboard.push_char('k');
         keyboard.push_char('y');
         keyboard.push_char('a');
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![
+                OffsetMap {
+                    src: Offset { pos: 0, len: 1 },
+                    dest: Offset { pos: 0, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 1, len: 3 },
+                    dest: Offset { pos: 1, len: 2 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 4, len: 4 },
+                    dest: Offset { pos: 3, len: 3 }
+                }
+            ]
+        );
         assert_eq!(keyboard.cursor.offset.pos, 6);
         assert_eq!(keyboard.cursor.offset.len, 1);
         assert_eq!(keyboard.romaji, "achokkya ");
@@ -1035,6 +1073,19 @@ mod tests {
 
         // simple pop
         keyboard.pop_char();
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![
+                OffsetMap {
+                    src: Offset { pos: 0, len: 1 },
+                    dest: Offset { pos: 0, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 1, len: 3 },
+                    dest: Offset { pos: 1, len: 2 }
+                }
+            ]
+        );
         assert_eq!(keyboard.cursor.offset.pos, 3);
         assert_eq!(keyboard.cursor.offset.len, 1);
         assert_eq!(keyboard.romaji, "acho ");
@@ -1042,6 +1093,7 @@ mod tests {
 
         keyboard.pop_char();
         keyboard.pop_char();
+        assert!(keyboard.kana_offsets.is_empty());
         assert_eq!(keyboard.cursor.offset.pos, 0);
         assert_eq!(keyboard.cursor.offset.len, 1);
         assert_eq!(keyboard.romaji, " ");
@@ -1049,6 +1101,7 @@ mod tests {
 
         // pop past limit
         keyboard.pop_char();
+        assert!(keyboard.kana_offsets.is_empty());
         assert_eq!(keyboard.cursor.offset.pos, 0);
         assert_eq!(keyboard.cursor.offset.len, 1);
         assert_eq!(keyboard.romaji, " ");
@@ -1117,6 +1170,19 @@ mod tests {
         // move left pop char
         keyboard.cursor_left();
         keyboard.pop_char();
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![
+                OffsetMap {
+                    src: Offset { pos: 0, len: 1 },
+                    dest: Offset { pos: 0, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 1, len: 4 },
+                    dest: Offset { pos: 1, len: 3 }
+                }
+            ]
+        );
         assert_eq!(keyboard.cursor.offset.pos, 1);
         assert_eq!(keyboard.cursor.offset.len, 3);
         assert_eq!(keyboard.romaji, "akkya ");
