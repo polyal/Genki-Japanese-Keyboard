@@ -1149,8 +1149,7 @@ mod tests {
     #[test]
     fn test_highlight_jp() {
         let mut keyboard = Keyboard::new();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
         assert!(!keyboard.english);
         assert!(keyboard.kana_offsets.is_empty());
 
@@ -1307,8 +1306,7 @@ mod tests {
     #[test]
     fn test_merge_kana() {
         let mut keyboard = Keyboard::new();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
         assert!(!keyboard.english);
         assert!(keyboard.kana_offsets.is_empty());
 
@@ -1471,5 +1469,225 @@ mod tests {
                 src_pos += 2;
             }
         }
+    }
+
+    fn assert_kana_to_kanji(
+        kana_to_kanji: &KanaToKanji,
+        expected_offset_map: OffsetMap,
+        expected_kanji: &[char],
+        expected_idx: usize,
+    ) {
+        assert_eq!(kana_to_kanji.offset_map, expected_offset_map);
+        assert_eq!(kana_to_kanji.kanji.kanji_list, expected_kanji);
+        assert_eq!(kana_to_kanji.kanji.idx, expected_idx);
+    }
+
+    #[test]
+    fn test_kana_to_kanji() {
+        let mut keyboard = Keyboard::new();
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
+        assert!(!keyboard.english);
+        assert!(keyboard.kana_offsets.is_empty());
+        assert!(keyboard.kana_to_kanji.is_none());
+
+        // hiragana
+        keyboard.push_char('i');
+        keyboard.push_char('c');
+        keyboard.push_char('h');
+        keyboard.push_char('i');
+        keyboard.push_char('n');
+        keyboard.push_char('i');
+        keyboard.push_char('s');
+        keyboard.push_char('a');
+        keyboard.push_char('n');
+
+        assert_keyboard(
+            &keyboard,
+            5,
+            1,
+            HilightDirection::None,
+            "ichinisan ",
+            "いちにさん ",
+        );
+        assert_eq!(keyboard.kana_offsets.len(), 5);
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![
+                OffsetMap {
+                    src: Offset { pos: 0, len: 1 },
+                    dest: Offset { pos: 0, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 1, len: 3 },
+                    dest: Offset { pos: 1, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 4, len: 2 },
+                    dest: Offset { pos: 2, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 6, len: 2 },
+                    dest: Offset { pos: 3, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 8, len: 1 },
+                    dest: Offset { pos: 4, len: 1 }
+                }
+            ]
+        );
+
+        // highlight さん
+        keyboard.cursor_left();
+        keyboard.cursor_highlight_left();
+        assert!(keyboard.kana_to_kanji.is_none());
+        keyboard.check_kana_to_kanji();
+        assert!(keyboard.kana_to_kanji.is_some());
+        assert_kana_to_kanji(
+            keyboard.kana_to_kanji.as_ref().unwrap(),
+            OffsetMap {
+                src: Offset { pos: 6, len: 3 },
+                dest: Offset { pos: 3, len: 1 },
+            },
+            &['三'],
+            0,
+        );
+
+        // convert
+        keyboard.convert_kana_to_kanji();
+        assert!(keyboard.kana_to_kanji.is_none());
+        assert_keyboard(
+            &keyboard,
+            3,
+            1,
+            HilightDirection::None,
+            "ichinisan ",
+            "いちに三 ",
+        );
+        assert_eq!(keyboard.kana_offsets.len(), 4);
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![
+                OffsetMap {
+                    src: Offset { pos: 0, len: 1 },
+                    dest: Offset { pos: 0, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 1, len: 3 },
+                    dest: Offset { pos: 1, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 4, len: 2 },
+                    dest: Offset { pos: 2, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 6, len: 3 },
+                    dest: Offset { pos: 3, len: 1 }
+                }
+            ]
+        );
+
+        // highlight に
+        keyboard.cursor_left();
+        assert!(keyboard.kana_to_kanji.is_none());
+        keyboard.check_kana_to_kanji();
+        keyboard.kanji_select_down();
+        keyboard.kanji_select_up();
+        keyboard.kanji_select_up();
+        keyboard.kanji_select_down();
+        assert!(keyboard.kana_to_kanji.is_some());
+        assert_kana_to_kanji(
+            keyboard.kana_to_kanji.as_ref().unwrap(),
+            OffsetMap {
+                src: Offset { pos: 4, len: 2 },
+                dest: Offset { pos: 2, len: 1 },
+            },
+            &['二', '日'],
+            1,
+        );
+
+        // convert
+        keyboard.convert_kana_to_kanji();
+        assert!(keyboard.kana_to_kanji.is_none());
+        assert_keyboard(
+            &keyboard,
+            2,
+            1,
+            HilightDirection::None,
+            "ichinisan ",
+            "いち日三 ",
+        );
+        assert_eq!(keyboard.kana_offsets.len(), 4);
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![
+                OffsetMap {
+                    src: Offset { pos: 0, len: 1 },
+                    dest: Offset { pos: 0, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 1, len: 3 },
+                    dest: Offset { pos: 1, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 4, len: 2 },
+                    dest: Offset { pos: 2, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 6, len: 3 },
+                    dest: Offset { pos: 3, len: 1 }
+                }
+            ]
+        );
+
+        // highlight いち
+        keyboard.cursor_left();
+        keyboard.cursor_left();
+        keyboard.cursor_highlight_right();
+        assert!(keyboard.kana_to_kanji.is_none());
+        keyboard.check_kana_to_kanji();
+        assert!(keyboard.kana_to_kanji.is_some());
+        keyboard.reset_conversion_selection();
+        assert!(keyboard.kana_to_kanji.is_none());
+        keyboard.check_kana_to_kanji();
+        assert!(keyboard.kana_to_kanji.is_some());
+        assert_kana_to_kanji(
+            keyboard.kana_to_kanji.as_ref().unwrap(),
+            OffsetMap {
+                src: Offset { pos: 0, len: 4 },
+                dest: Offset { pos: 0, len: 1 },
+            },
+            &['一'],
+            0,
+        );
+
+        // convert
+        keyboard.convert_kana_to_kanji();
+        assert!(keyboard.kana_to_kanji.is_none());
+        assert_keyboard(
+            &keyboard,
+            0,
+            1,
+            HilightDirection::None,
+            "ichinisan ",
+            "一日三 ",
+        );
+        assert_eq!(keyboard.kana_offsets.len(), 3);
+        assert_eq!(
+            keyboard.kana_offsets,
+            vec![
+                OffsetMap {
+                    src: Offset { pos: 0, len: 4 },
+                    dest: Offset { pos: 0, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 4, len: 2 },
+                    dest: Offset { pos: 1, len: 1 }
+                },
+                OffsetMap {
+                    src: Offset { pos: 6, len: 3 },
+                    dest: Offset { pos: 2, len: 1 }
+                }
+            ]
+        );
     }
 }
