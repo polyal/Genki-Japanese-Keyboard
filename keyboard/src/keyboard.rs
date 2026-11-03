@@ -792,231 +792,154 @@ mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
+    fn assert_keyboard(
+        keyboard: &Keyboard,
+        expected_pos: usize,
+        expected_len: usize,
+        expected_highlight_dir: HilightDirection,
+        expected_romaji: &str,
+        expected_kana: &str,
+    ) {
+        assert_eq!(keyboard.cursor.offset.pos, expected_pos);
+        assert_eq!(keyboard.cursor.offset.len, expected_len);
+        assert_eq!(keyboard.cursor.highlight_dir, expected_highlight_dir);
+        assert_eq!(keyboard.romaji, expected_romaji);
+        assert_eq!(keyboard.kana, expected_kana);
+    }
+
     #[test]
     fn test_basic_en() {
         let mut keyboard = Keyboard::new();
         keyboard.english = true;
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
 
         // simple push
         keyboard.push_char('a');
         keyboard.push_char('b');
         keyboard.push_char('c');
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // simple pop
         keyboard.pop_char();
         keyboard.pop_char();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "a ");
-        assert_eq!(keyboard.kana, "a ");
+        assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "a ", "a ");
 
         keyboard.pop_char();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, " ");
-        assert_eq!(keyboard.kana, " ");
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
 
         // pop past limit
         keyboard.pop_char();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, " ");
-        assert_eq!(keyboard.kana, " ");
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
     }
 
     #[test]
     fn test_cursor_en() {
         let mut keyboard = Keyboard::new();
         keyboard.english = true;
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
 
         keyboard.push_char('a');
         keyboard.push_char('b');
         keyboard.push_char('c');
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // move left
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 2);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 2, 1, HilightDirection::None, "abc ", "abc ");
 
         // move left
         keyboard.cursor_left();
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, "abc ", "abc ");
 
         // move left past limit
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, "abc ", "abc ");
 
         // move right
         keyboard.cursor_right();
         keyboard.cursor_right();
         keyboard.cursor_right();
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // move right past limit
         keyboard.cursor_right();
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // move left pop char
         keyboard.cursor_left();
         keyboard.pop_char();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "ac ");
-        assert_eq!(keyboard.kana, "ac ");
+        assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "ac ", "ac ");
 
         // push char
         keyboard.push_char('z');
-        assert_eq!(keyboard.cursor.offset.pos, 2);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "azc ");
-        assert_eq!(keyboard.kana, "azc ");
+        assert_keyboard(&keyboard, 2, 1, HilightDirection::None, "azc ", "azc ");
     }
 
     #[test]
     fn test_highlight_en() {
         let mut keyboard = Keyboard::new();
         keyboard.english = true;
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
 
         keyboard.push_char('a');
         keyboard.push_char('b');
         keyboard.push_char('c');
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // highlight left
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 2);
-        assert_eq!(keyboard.cursor.offset.len, 2);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 2, 2, HilightDirection::Left, "abc ", "abc ");
 
         // highlight left
         keyboard.cursor_highlight_left();
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 4);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 0, 4, HilightDirection::Left, "abc ", "abc ");
 
         // highlight left past limit
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 4);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 0, 4, HilightDirection::Left, "abc ", "abc ");
 
         // undo highlight left
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, "abc ", "abc ");
 
         // highlight right
         keyboard.cursor_highlight_right();
         keyboard.cursor_highlight_right();
         keyboard.cursor_highlight_right();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 4);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 0, 4, HilightDirection::Right, "abc ", "abc ");
 
         // highlight right past limit
         keyboard.cursor_highlight_right();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 4);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 0, 4, HilightDirection::Right, "abc ", "abc ");
 
         // undo highlight right
         keyboard.cursor_right();
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "abc ", "abc ");
 
         // highlight direction change
         keyboard.cursor_left();
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "abc ", "abc ");
 
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 2);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 0, 2, HilightDirection::Left, "abc ", "abc ");
 
         keyboard.cursor_highlight_right();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "abc ", "abc ");
 
         keyboard.cursor_highlight_right();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 2);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 1, 2, HilightDirection::Right, "abc ", "abc ");
 
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "abc ");
-        assert_eq!(keyboard.kana, "abc ");
+        assert_keyboard(&keyboard, 1, 1, HilightDirection::None, "abc ", "abc ");
     }
 
     #[test]
     fn test_basic_jp() {
         let mut keyboard = Keyboard::new();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
         assert!(!keyboard.english);
         assert!(keyboard.kana_offsets.is_empty());
 
@@ -1066,10 +989,14 @@ mod tests {
                 }
             ]
         );
-        assert_eq!(keyboard.cursor.offset.pos, 6);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            6,
+            1,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // simple pop
         keyboard.pop_char();
@@ -1086,34 +1013,25 @@ mod tests {
                 }
             ]
         );
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "acho ");
-        assert_eq!(keyboard.kana, "あちょ ");
+        assert_keyboard(&keyboard, 3, 1, HilightDirection::None, "acho ", "あちょ ");
 
         keyboard.pop_char();
         keyboard.pop_char();
         assert!(keyboard.kana_offsets.is_empty());
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, " ");
-        assert_eq!(keyboard.kana, " ");
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
 
         // pop past limit
         keyboard.pop_char();
         assert!(keyboard.kana_offsets.is_empty());
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, " ");
-        assert_eq!(keyboard.kana, " ");
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
     }
 
     #[test]
     fn test_cursor_jp() {
         let mut keyboard = Keyboard::new();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_keyboard(&keyboard, 0, 1, HilightDirection::None, " ", " ");
         assert!(!keyboard.english);
+        assert!(keyboard.kana_offsets.is_empty());
 
         keyboard.push_char('a');
         keyboard.push_char('c');
@@ -1123,49 +1041,73 @@ mod tests {
         keyboard.push_char('k');
         keyboard.push_char('y');
         keyboard.push_char('a');
-        assert_eq!(keyboard.cursor.offset.pos, 6);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            6,
+            1,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // move left
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 3);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            3,
+            3,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // move left
         keyboard.cursor_left();
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            0,
+            1,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // move left past limit
         keyboard.cursor_left();
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            0,
+            1,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // move right
         keyboard.cursor_right();
         keyboard.cursor_right();
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 3);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            3,
+            3,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // move right past limit
         keyboard.cursor_right();
         keyboard.cursor_right();
-        assert_eq!(keyboard.cursor.offset.pos, 6);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            6,
+            1,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // move left pop char
         keyboard.cursor_left();
@@ -1183,17 +1125,25 @@ mod tests {
                 }
             ]
         );
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 3);
-        assert_eq!(keyboard.romaji, "akkya ");
-        assert_eq!(keyboard.kana, "あっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            1,
+            3,
+            HilightDirection::None,
+            "akkya ",
+            "あっきゃ ",
+        );
 
         // push char
         keyboard.push_char('o');
-        assert_eq!(keyboard.cursor.offset.pos, 2);
-        assert_eq!(keyboard.cursor.offset.len, 3);
-        assert_eq!(keyboard.romaji, "aokkya ");
-        assert_eq!(keyboard.kana, "あおっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            2,
+            3,
+            HilightDirection::None,
+            "aokkya ",
+            "あおっきゃ ",
+        );
     }
 
     #[test]
@@ -1211,105 +1161,145 @@ mod tests {
         keyboard.push_char('k');
         keyboard.push_char('y');
         keyboard.push_char('a');
-        assert_eq!(keyboard.cursor.offset.pos, 6);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            6,
+            1,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // highlight left
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 3);
-        assert_eq!(keyboard.cursor.offset.len, 4);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            3,
+            4,
+            HilightDirection::Left,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // highlight left
         keyboard.cursor_highlight_left();
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 7);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            0,
+            7,
+            HilightDirection::Left,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // highlight left past limit
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 7);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            0,
+            7,
+            HilightDirection::Left,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // undo highlight left
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            0,
+            1,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // highlight right
         keyboard.cursor_highlight_right();
         keyboard.cursor_highlight_right();
         keyboard.cursor_highlight_right();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 7);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            0,
+            7,
+            HilightDirection::Right,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // highlight right past limit
         keyboard.cursor_highlight_right();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 7);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            0,
+            7,
+            HilightDirection::Right,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // undo highlight right
         keyboard.cursor_right();
-        assert_eq!(keyboard.cursor.offset.pos, 6);
-        assert_eq!(keyboard.cursor.offset.len, 1);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            6,
+            1,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         // highlight direction change
         keyboard.cursor_left();
         keyboard.cursor_left();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 2);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            1,
+            2,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 0);
-        assert_eq!(keyboard.cursor.offset.len, 3);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            0,
+            3,
+            HilightDirection::Left,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         keyboard.cursor_highlight_right();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 2);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            1,
+            2,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         keyboard.cursor_highlight_right();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 5);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            1,
+            5,
+            HilightDirection::Right,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
 
         keyboard.cursor_highlight_left();
-        assert_eq!(keyboard.cursor.offset.pos, 1);
-        assert_eq!(keyboard.cursor.offset.len, 2);
-        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
-        assert_eq!(keyboard.romaji, "achokkya ");
-        assert_eq!(keyboard.kana, "あちょっきゃ ");
+        assert_keyboard(
+            &keyboard,
+            1,
+            2,
+            HilightDirection::None,
+            "achokkya ",
+            "あちょっきゃ ",
+        );
     }
 }
