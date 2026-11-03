@@ -1152,6 +1152,7 @@ mod tests {
         assert_eq!(keyboard.cursor.offset.pos, 0);
         assert_eq!(keyboard.cursor.offset.len, 1);
         assert!(!keyboard.english);
+        assert!(keyboard.kana_offsets.is_empty());
 
         keyboard.push_char('a');
         keyboard.push_char('c');
@@ -1301,5 +1302,174 @@ mod tests {
             "achokkya ",
             "あちょっきゃ ",
         );
+    }
+
+    #[test]
+    fn test_merge_kana() {
+        let mut keyboard = Keyboard::new();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert!(!keyboard.english);
+        assert!(keyboard.kana_offsets.is_empty());
+
+        // hiragana
+        keyboard.push_char('n');
+        keyboard.push_char('a');
+        keyboard.push_char('n');
+        keyboard.push_char('i');
+        keyboard.push_char('n');
+        keyboard.push_char('u');
+        keyboard.push_char('n');
+        keyboard.push_char('e');
+        keyboard.push_char('n');
+        keyboard.push_char('o');
+
+        // katakana
+        keyboard.push_char('N');
+        keyboard.push_char('A');
+        keyboard.push_char('N');
+        keyboard.push_char('I');
+        keyboard.push_char('N');
+        keyboard.push_char('U');
+        keyboard.push_char('N');
+        keyboard.push_char('E');
+        keyboard.push_char('N');
+        keyboard.push_char('O');
+
+        assert_keyboard(
+            &keyboard,
+            10,
+            1,
+            HilightDirection::None,
+            "naninunenoNANINUNENO ",
+            "なにぬねのナニヌネノ ",
+        );
+        assert_eq!(keyboard.kana_offsets.len(), 10);
+        for idx in 0..10 {
+            assert_eq!(
+                keyboard.kana_offsets[idx],
+                OffsetMap {
+                    src: Offset {
+                        pos: idx * 2,
+                        len: 2
+                    },
+                    dest: Offset { pos: idx, len: 1 }
+                }
+            );
+        }
+
+        // split kana
+        for _ in 0..16 {
+            keyboard.pop_char();
+            keyboard.cursor_left();
+            keyboard.cursor_left();
+        }
+
+        assert_keyboard(
+            &keyboard,
+            0,
+            1,
+            HilightDirection::None,
+            "naninunenoNANINUNENO ",
+            "んあんいんうんえんおンアンインウンエンオ ",
+        );
+        assert_eq!(keyboard.kana_offsets.len(), 20);
+        for idx in 0..20 {
+            assert_eq!(
+                keyboard.kana_offsets[idx],
+                OffsetMap {
+                    src: Offset { pos: idx, len: 1 },
+                    dest: Offset { pos: idx, len: 1 }
+                }
+            );
+        }
+
+        // reset keyboard
+        for _ in 0..20 {
+            keyboard.cursor_right();
+            keyboard.pop_char();
+        }
+
+        // advanced hiragana
+        keyboard.push_char('n');
+        keyboard.push_char('y');
+        keyboard.push_char('a');
+        keyboard.push_char('n');
+        keyboard.push_char('y');
+        keyboard.push_char('u');
+        keyboard.push_char('n');
+        keyboard.push_char('y');
+        keyboard.push_char('o');
+
+        // advanced katakana
+        keyboard.push_char('N');
+        keyboard.push_char('Y');
+        keyboard.push_char('A');
+        keyboard.push_char('N');
+        keyboard.push_char('Y');
+        keyboard.push_char('U');
+        keyboard.push_char('N');
+        keyboard.push_char('Y');
+        keyboard.push_char('O');
+
+        assert_keyboard(
+            &keyboard,
+            12,
+            1,
+            HilightDirection::None,
+            "nyanyunyoNYANYUNYO ",
+            "にゃにゅにょニャニュニョ ",
+        );
+        assert_eq!(keyboard.kana_offsets.len(), 6);
+        for idx in 0..6 {
+            assert_eq!(
+                keyboard.kana_offsets[idx],
+                OffsetMap {
+                    src: Offset {
+                        pos: idx * 3,
+                        len: 3
+                    },
+                    dest: Offset {
+                        pos: idx * 2,
+                        len: 2
+                    }
+                }
+            );
+        }
+
+        // split kana
+        for _ in 0..6 {
+            keyboard.pop_char();
+            keyboard.cursor_left();
+            keyboard.cursor_left();
+        }
+
+        assert_keyboard(
+            &keyboard,
+            0,
+            1,
+            HilightDirection::None,
+            "nyanyunyoNYANYUNYO ",
+            "んやんゆんよンヤンユンヨ ",
+        );
+        assert_eq!(keyboard.kana_offsets.len(), 12);
+        let mut src_pos = 0;
+        for idx in 0..12 {
+            assert_eq!(
+                keyboard.kana_offsets[idx],
+                OffsetMap {
+                    src: Offset {
+                        pos: src_pos,
+                        len: idx % 2 + 1
+                    },
+                    dest: Offset { pos: idx, len: 1 }
+                }
+            );
+            if idx % 2 == 0 {
+                src_pos += 1;
+            } else {
+                src_pos += 2;
+            }
+        }
     }
 }
