@@ -48,6 +48,7 @@ impl KanaToKanji {
     }
 }
 
+#[derive(PartialEq, Debug)]
 enum HilightDirection {
     None,
     Left,
@@ -783,5 +784,234 @@ impl Keyboard {
         self.kana_offsets.clear();
         self.cursor.offset.pos = 0;
         self.cursor.offset.len = 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_basic_en() {
+        let mut keyboard = Keyboard::new();
+        keyboard.english = true;
+
+        // base case
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+
+        // simple push
+        keyboard.push_char('a');
+        keyboard.push_char('b');
+        keyboard.push_char('c');
+        assert_eq!(keyboard.cursor.offset.pos, 3);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // simple pop
+        keyboard.pop_char();
+        keyboard.pop_char();
+        assert_eq!(keyboard.cursor.offset.pos, 1);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "a ");
+        assert_eq!(keyboard.kana, "a ");
+
+        keyboard.pop_char();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, " ");
+        assert_eq!(keyboard.kana, " ");
+
+        // pop past limit
+        keyboard.pop_char();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, " ");
+        assert_eq!(keyboard.kana, " ");
+    }
+
+    #[test]
+    fn test_cursor_en() {
+        let mut keyboard = Keyboard::new();
+        keyboard.english = true;
+
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+
+        keyboard.push_char('a');
+        keyboard.push_char('b');
+        keyboard.push_char('c');
+        assert_eq!(keyboard.cursor.offset.pos, 3);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // move left
+        keyboard.cursor_left();
+        assert_eq!(keyboard.cursor.offset.pos, 2);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // move left
+        keyboard.cursor_left();
+        keyboard.cursor_left();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // move left past limit
+        keyboard.cursor_left();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // move right
+        keyboard.cursor_right();
+        keyboard.cursor_right();
+        keyboard.cursor_right();
+        assert_eq!(keyboard.cursor.offset.pos, 3);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // move right past limit
+        keyboard.cursor_right();
+        assert_eq!(keyboard.cursor.offset.pos, 3);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // move left pop char
+        keyboard.cursor_left();
+        keyboard.pop_char();
+        assert_eq!(keyboard.cursor.offset.pos, 1);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "ac ");
+        assert_eq!(keyboard.kana, "ac ");
+
+        // push char
+        keyboard.push_char('z');
+        assert_eq!(keyboard.cursor.offset.pos, 2);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.romaji, "azc ");
+        assert_eq!(keyboard.kana, "azc ");
+    }
+
+    #[test]
+    fn test_highlight_en() {
+        let mut keyboard = Keyboard::new();
+        keyboard.english = true;
+
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+
+        keyboard.push_char('a');
+        keyboard.push_char('b');
+        keyboard.push_char('c');
+        assert_eq!(keyboard.cursor.offset.pos, 3);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // highlight left
+        keyboard.cursor_highlight_left();
+        assert_eq!(keyboard.cursor.offset.pos, 2);
+        assert_eq!(keyboard.cursor.offset.len, 2);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // highlight left
+        keyboard.cursor_highlight_left();
+        keyboard.cursor_highlight_left();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 4);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // highlight left past limit
+        keyboard.cursor_highlight_left();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 4);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // undo highlight left
+        keyboard.cursor_left();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // highlight right
+        keyboard.cursor_highlight_right();
+        keyboard.cursor_highlight_right();
+        keyboard.cursor_highlight_right();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 4);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // highlight right past limit
+        keyboard.cursor_highlight_right();
+        assert_eq!(keyboard.cursor.offset.pos, 0);
+        assert_eq!(keyboard.cursor.offset.len, 4);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // undo highlight right
+        keyboard.cursor_right();
+        assert_eq!(keyboard.cursor.offset.pos, 3);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        // highlight direction change
+        keyboard.cursor_left();
+        assert_eq!(keyboard.cursor.offset.pos, 2);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        keyboard.cursor_highlight_left();
+        assert_eq!(keyboard.cursor.offset.pos, 1);
+        assert_eq!(keyboard.cursor.offset.len, 2);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Left);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        keyboard.cursor_highlight_right();
+        assert_eq!(keyboard.cursor.offset.pos, 2);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        keyboard.cursor_highlight_right();
+        assert_eq!(keyboard.cursor.offset.pos, 2);
+        assert_eq!(keyboard.cursor.offset.len, 2);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::Right);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
+
+        keyboard.cursor_highlight_left();
+        assert_eq!(keyboard.cursor.offset.pos, 2);
+        assert_eq!(keyboard.cursor.offset.len, 1);
+        assert_eq!(keyboard.cursor.highlight_dir, HilightDirection::None);
+        assert_eq!(keyboard.romaji, "abc ");
+        assert_eq!(keyboard.kana, "abc ");
     }
 }
