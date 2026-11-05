@@ -211,3 +211,95 @@ impl Peer {
         self.peer = None;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{assert_eq, assert_ne, time::Duration};
+
+    use local_ip_address::linux::local_ip;
+
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    fn wait_for_message(peer: &mut Peer) -> Message {
+        let mut timeout = 0;
+        while !peer.peek_message() {
+            thread::sleep(Duration::from_millis(100));
+            timeout += 1;
+            if timeout == 10 {
+                break;
+            }
+        }
+        assert_ne!(timeout, 10);
+        return peer.pop_message();
+    }
+
+    #[test]
+    fn test_chat() {
+        let local_ip: std::net::IpAddr = local_ip().unwrap();
+
+        let mut peer_1 = Peer::new();
+        let thread_1 = thread::spawn(move || -> std::io::Result<()> {
+            let _ = peer_1.host();
+            assert!(peer_1.is_online());
+
+            // wait for client to connect
+            thread::sleep(Duration::from_millis(50));
+
+            let out_message = Message::new("Hello World!");
+            let _ = peer_1.send_message(&out_message);
+
+            let in_message = wait_for_message(&mut peer_1);
+            assert_eq!(in_message.value, "Ack, Hello!");
+
+            peer_1.reset_connection();
+            assert!(!peer_1.is_online());
+
+            // wait for server
+            thread::sleep(Duration::from_millis(100));
+            let _ = peer_1.connect(&local_ip.to_string());
+            assert!(peer_1.active.load(Ordering::SeqCst));
+
+            let out_message = Message::new("Hello, Again...");
+            let _ = peer_1.send_message(&out_message);
+
+            let in_message = wait_for_message(&mut peer_1);
+            assert_eq!(in_message.value, "yes...");
+
+            Ok(())
+        });
+
+        let mut peer_2 = Peer::new();
+        let thread_2 = thread::spawn(move || -> std::io::Result<()> {
+            let _ = peer_2.connect(&local_ip.to_string());
+            assert!(peer_2.is_online());
+
+            let in_message = wait_for_message(&mut peer_2);
+            assert_eq!(in_message.value, "Hello World!");
+
+            let out_message = Message::new("Ack, Hello!");
+            let _ = peer_2.send_message(&out_message);
+
+            // wait for server to receive message
+            thread::sleep(Duration::from_millis(50));
+            peer_2.reset_connection();
+            assert!(!peer_2.is_online());
+
+            // wait for server to reset
+            thread::sleep(Duration::from_millis(100));
+            let _ = peer_2.host();
+            assert!(peer_2.active.load(Ordering::SeqCst));
+
+            let in_message = wait_for_message(&mut peer_2);
+            assert_eq!(in_message.value, "Hello, Again...");
+
+            let out_message = Message::new("yes...");
+            let _ = peer_2.send_message(&out_message);
+
+            Ok(())
+        });
+
+        let _ = thread_1.join().expect("peer 1 failed");
+        let _ = thread_2.join().expect("peer 2 failed");
+    }
+}
