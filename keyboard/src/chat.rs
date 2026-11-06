@@ -214,12 +214,22 @@ impl Peer {
 
 #[cfg(test)]
 mod tests {
-    use std::{assert_eq, assert_ne, time::Duration};
+    use std::{
+        assert_eq, assert_ne,
+        sync::{Condvar, Mutex},
+        time::Duration,
+    };
 
     use local_ip_address::linux::local_ip;
 
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
+
+    #[derive(PartialEq)]
+    enum Turn {
+        Peer1,
+        Peer2,
+    }
 
     fn wait_for_message(peer: &mut Peer) -> Message {
         let mut timeout = 0;
@@ -237,69 +247,159 @@ mod tests {
     #[test]
     fn test_chat() {
         let local_ip: std::net::IpAddr = local_ip().unwrap();
+        let turn = Arc::new((Mutex::new(Turn::Peer2), Condvar::new()));
 
         let mut peer_1 = Peer::new();
-        let thread_1 = thread::spawn(move || -> std::io::Result<()> {
+        let turn_peer_1 = Arc::clone(&turn);
+        let thread_1 = thread::spawn(move || {
             let _ = peer_1.host();
             assert!(peer_1.is_online());
 
-            // wait for client to connect
-            thread::sleep(Duration::from_millis(50));
+            // wait for client to connect and send message
+            {
+                let (lock, cvar) = &*turn_peer_1;
+                let mut turn = lock.lock().unwrap();
+                while *turn != Turn::Peer1 {
+                    turn = cvar.wait(turn).unwrap();
+                }
 
-            let out_message = Message::new("Hello World!");
-            let _ = peer_1.send_message(&out_message);
+                let out_message = Message::new("Hello World!");
+                let _ = peer_1.send_message(&out_message);
 
-            let in_message = wait_for_message(&mut peer_1);
-            assert_eq!(in_message.value, "Ack, Hello!");
+                *turn = Turn::Peer2;
+                cvar.notify_one();
+            }
 
-            peer_1.reset_connection();
-            assert!(!peer_1.is_online());
+            // wait for client to return message then reset connection
+            {
+                let (lock, cvar) = &*turn_peer_1;
+                let mut turn = lock.lock().unwrap();
+                while *turn != Turn::Peer1 {
+                    turn = cvar.wait(turn).unwrap();
+                }
 
-            // wait for server
-            thread::sleep(Duration::from_millis(100));
-            let _ = peer_1.connect(&local_ip.to_string());
-            assert!(peer_1.active.load(Ordering::SeqCst));
+                let in_message = wait_for_message(&mut peer_1);
+                assert_eq!(in_message.value, "Ack, Hello!");
 
-            let out_message = Message::new("Hello, Again...");
-            let _ = peer_1.send_message(&out_message);
+                peer_1.reset_connection();
+                assert!(!peer_1.is_online());
 
-            let in_message = wait_for_message(&mut peer_1);
-            assert_eq!(in_message.value, "yes...");
+                *turn = Turn::Peer2;
+                cvar.notify_one();
+            }
 
-            Ok(())
+            // wait for host to be available, then connect and send message
+            {
+                let (lock, cvar) = &*turn_peer_1;
+                let mut turn = lock.lock().unwrap();
+                while *turn != Turn::Peer1 {
+                    turn = cvar.wait(turn).unwrap();
+                }
+
+                // short sleep to make sure host is ready
+                thread::sleep(std::time::Duration::from_millis(50));
+
+                let _ = peer_1.connect(&local_ip.to_string());
+                assert!(peer_1.is_online());
+
+                let out_message = Message::new("Hello, Again...");
+                let _ = peer_1.send_message(&out_message);
+
+                *turn = Turn::Peer2;
+                cvar.notify_one();
+            }
+
+            // receive return message
+            {
+                let (lock, cvar) = &*turn_peer_1;
+                let mut turn = lock.lock().unwrap();
+                while *turn != Turn::Peer1 {
+                    turn = cvar.wait(turn).unwrap();
+                }
+
+                let in_message = wait_for_message(&mut peer_1);
+                assert_eq!(in_message.value, "yes...");
+            }
         });
 
         let mut peer_2 = Peer::new();
-        let thread_2 = thread::spawn(move || -> std::io::Result<()> {
-            let _ = peer_2.connect(&local_ip.to_string());
+        let turn_peer_2 = Arc::clone(&turn);
+        let thread_2 = thread::spawn(move || {
+            // wait for host then connect
+            {
+                let (lock, cvar) = &*turn_peer_2;
+                let mut turn = lock.lock().unwrap();
+                while *turn != Turn::Peer2 {
+                    turn = cvar.wait(turn).unwrap();
+                }
+
+                // short sleep to make sure host is ready
+                thread::sleep(std::time::Duration::from_millis(50));
+
+                let _ = peer_2.connect(&local_ip.to_string());
+                assert!(peer_2.is_online());
+
+                *turn = Turn::Peer1;
+                cvar.notify_one();
+            }
+
+            // wait for message then respond
+            {
+                let (lock, cvar) = &*turn_peer_2;
+                let mut turn = lock.lock().unwrap();
+                while *turn != Turn::Peer2 {
+                    turn = cvar.wait(turn).unwrap();
+                }
+
+                let in_message = wait_for_message(&mut peer_2);
+                assert_eq!(in_message.value, "Hello World!");
+
+                let out_message = Message::new("Ack, Hello!");
+                let _ = peer_2.send_message(&out_message);
+
+                *turn = Turn::Peer1;
+                cvar.notify_one();
+            }
+
+            // wait for message to be received, reset connection
+            {
+                let (lock, cvar) = &*turn_peer_2;
+                let mut turn = lock.lock().unwrap();
+                while *turn != Turn::Peer2 {
+                    turn = cvar.wait(turn).unwrap();
+                }
+                peer_2.reset_connection();
+                assert!(!peer_2.is_online());
+
+                // must notify before hosting because host() blocks
+                *turn = Turn::Peer1;
+                cvar.notify_one();
+            }
+
+            // ..  and host
+            let _ = peer_2.host();
             assert!(peer_2.is_online());
 
-            let in_message = wait_for_message(&mut peer_2);
-            assert_eq!(in_message.value, "Hello World!");
+            // wait for client to connect and send message
+            {
+                let (lock, cvar) = &*turn_peer_2;
+                let mut turn = lock.lock().unwrap();
 
-            let out_message = Message::new("Ack, Hello!");
-            let _ = peer_2.send_message(&out_message);
+                while *turn != Turn::Peer2 {
+                    turn = cvar.wait(turn).unwrap();
+                }
 
-            // wait for server to receive message
-            thread::sleep(Duration::from_millis(50));
-            peer_2.reset_connection();
-            assert!(!peer_2.is_online());
+                let in_message = wait_for_message(&mut peer_2);
+                assert_eq!(in_message.value, "Hello, Again...");
 
-            // wait for server to reset
-            thread::sleep(Duration::from_millis(100));
-            let _ = peer_2.host();
-            assert!(peer_2.active.load(Ordering::SeqCst));
-
-            let in_message = wait_for_message(&mut peer_2);
-            assert_eq!(in_message.value, "Hello, Again...");
-
-            let out_message = Message::new("yes...");
-            let _ = peer_2.send_message(&out_message);
-
-            Ok(())
+                let out_message = Message::new("yes...");
+                let _ = peer_2.send_message(&out_message);
+                *turn = Turn::Peer1;
+                cvar.notify_one();
+            }
         });
 
-        let _ = thread_1.join().expect("peer 1 failed");
-        let _ = thread_2.join().expect("peer 2 failed");
+        thread_1.join().expect("peer 1 failed");
+        thread_2.join().expect("peer 2 failed");
     }
 }
