@@ -220,7 +220,7 @@ mod tests {
         time::Duration,
     };
 
-    use local_ip_address::linux::local_ip;
+    use local_ip_address::local_ip;
 
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
