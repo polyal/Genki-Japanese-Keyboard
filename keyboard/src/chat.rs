@@ -246,7 +246,8 @@ mod tests {
 
     #[test]
     fn test_chat() {
-        let local_ip: std::net::IpAddr = local_ip().unwrap();
+        let local_ip: std::net::IpAddr =
+            local_ip().unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
         let turn = Arc::new((Mutex::new(Turn::Peer2), Condvar::new()));
 
         let mut peer_1 = Peer::new();
